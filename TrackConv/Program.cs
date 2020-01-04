@@ -28,14 +28,14 @@ namespace TrackConv
             Console.WriteLine("Patterns:");
             for (int i = 0; i < xmreader.Patterns.Length; i++)
             {
-                XMRead.XMPattern pattern = xmreader.Patterns[i];
+                XMPattern pattern = xmreader.Patterns[i];
                 Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
             }
 
             Console.WriteLine("Instruments:");
             for (int i = 0; i < xmreader.Instruments.Length; i++)
             {
-                XMRead.XMInstrument instrument = xmreader.Instruments[i];
+                XMInstrument instrument = xmreader.Instruments[i];
                 Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
             }
 
