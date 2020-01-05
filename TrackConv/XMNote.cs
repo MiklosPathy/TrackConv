@@ -20,14 +20,14 @@ namespace TrackConv
             Effect = 0;
             EffectParam = 0;
         }
-        public static string ToString()
+        public static new string ToString()
         {
             string FormatByte(byte b, string format)
             {
                 if (b == 0) return "--";
                 return b.ToString(format);
             }
-            return ToNote() + " " + FormatByte(Instrument, "D2") + " " + FormatByte(Volume, "X") + " " + FormatByte(Effect, "X") + FormatByte(EffectParam, "X") + "|";
+            return ToNote() + " " + FormatByte(Instrument, "D2") + " " + FormatByte(Volume, "X2") + " " + FormatByte(Effect, "X2") + FormatByte(EffectParam, "X2") + "|";
         }
 
         private static string ToNote()
@@ -55,6 +55,41 @@ namespace TrackConv
                     break;
             }
             return ns + octave;
+        }
+
+        public static void TryParseNextNoteFrom(ref int offset, byte[] data)
+        {
+            bool IsBitSet(byte b, int pos)
+            {
+                return (b & (1 << pos)) != 0;
+            }
+
+            byte GetByte(ref int offset)
+            {
+                if (offset == data.Length) return 0;
+                byte result = data[offset];
+                if (offset < data.Length) offset++;
+                return result;
+            }
+
+            Reset();
+            byte b = GetByte(ref offset);
+            if (IsBitSet(b, 7))
+            {
+                if (IsBitSet(b, 0)) XMNote.Note = GetByte(ref offset);
+                if (IsBitSet(b, 1)) XMNote.Instrument = GetByte(ref offset);
+                if (IsBitSet(b, 2)) XMNote.Volume = GetByte(ref offset);
+                if (IsBitSet(b, 3)) XMNote.Effect = GetByte(ref offset);
+                if (IsBitSet(b, 4)) XMNote.EffectParam = GetByte(ref offset);
+            }
+            else
+            {
+                XMNote.Note = b;
+                XMNote.Instrument = GetByte(ref offset);
+                XMNote.Volume = GetByte(ref offset);
+                XMNote.Effect = GetByte(ref offset);
+                XMNote.EffectParam = GetByte(ref offset);
+            }
         }
     }
 

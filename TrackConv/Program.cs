@@ -12,6 +12,9 @@ namespace TrackConv
             XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\modz\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
             xmreader.Open();
 
+            Console.WindowWidth = 200;
+            Console.WindowHeight = 60;
+
             Console.WriteLine(xmreader.Header.IDString);
             Console.WriteLine(xmreader.Header.Modulename);
             Console.WriteLine(xmreader.Header.OneCharID);
@@ -50,38 +53,14 @@ namespace TrackConv
 
             while (j < a.Length)
             {
-                bool IsBitSet(byte b, int pos)
+                XMNote.TryParseNextNoteFrom(ref j, a);
+                if (channel == 0)
                 {
-                    return (b & (1 << pos)) != 0;
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(row.ToString("D2"));
+                    Console.ResetColor();
+                    Console.Write("|");
                 }
-
-                byte GetByte()
-                {
-                    if (j == a.Length) return 0;
-                    byte result = a[j];
-                    if (j < a.Length) j++;
-                    return result;
-                }
-
-                XMNote.Reset();
-                byte b = GetByte();
-                if (IsBitSet(b, 7))
-                {
-                    if (IsBitSet(b, 0)) XMNote.Note = GetByte();
-                    if (IsBitSet(b, 1)) XMNote.Instrument = GetByte();
-                    if (IsBitSet(b, 2)) XMNote.Volume = GetByte();
-                    if (IsBitSet(b, 3)) XMNote.Effect = GetByte();
-                    if (IsBitSet(b, 4)) XMNote.EffectParam = GetByte();
-                }
-                else
-                {
-                    XMNote.Note = b;
-                    XMNote.Instrument = GetByte();
-                    XMNote.Volume = GetByte();
-                    XMNote.Effect = GetByte();
-                    XMNote.EffectParam = GetByte();
-                }
-                if (channel == 0) Console.Write(row.ToString("D2") + "|");
                 Console.Write(XMNote.ToString());
                 channel++;
                 if (channel == xmreader.Header.NumberOfChannels)
