@@ -28,5 +28,6 @@ namespace TrackConv
         public int NumberOfRows { get { return filedata.ReadAsWord(offset + Consts.NumberOfRows); } }
         public int SizeOfPatternData { get { return filedata.ReadAsWord(offset + Consts.SizeOfPatternData); } }
 
+        public byte[] PatternData { get { return filedata.CopyOutByteArray(offset + LenghtOfPatternHeader, SizeOfPatternData); } }
     }
 }
