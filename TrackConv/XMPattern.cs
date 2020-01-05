@@ -28,6 +28,41 @@ namespace TrackConv
         public int NumberOfRows { get { return filedata.ReadAsWord(offset + Consts.NumberOfRows); } }
         public int SizeOfPatternData { get { return filedata.ReadAsWord(offset + Consts.SizeOfPatternData); } }
 
-        public byte[] PatternData { get { return filedata.CopyOutByteArray(offset + LenghtOfPatternHeader, SizeOfPatternData); } }
+        private byte[] patterndata;
+        public byte[] PatternData
+        {
+            get
+            {
+                if (patterndata == null) patterndata = filedata.CopyOutByteArray(offset + LenghtOfPatternHeader, SizeOfPatternData);
+                return patterndata;
+            }
+        }
+
+        public void PatternToConsole(XMHeader header)
+        {
+            int offset = 0;
+            int channel = 0;
+            byte row = 0;
+
+            while (offset < PatternData.Length)
+            {
+                XMNote.TryParseNextNoteFrom(ref offset, PatternData);
+                if (channel == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write(row.ToString("D2"));
+                    Console.ResetColor();
+                    Console.Write("|");
+                }
+                XMNote.ToConsole();
+                channel++;
+                if (channel == header.NumberOfChannels)
+                {
+                    channel = 0;
+                    row++;
+                    Console.WriteLine();
+                }
+            }
+        }
     }
 }

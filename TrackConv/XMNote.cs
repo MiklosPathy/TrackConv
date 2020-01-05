@@ -48,31 +48,14 @@ namespace TrackConv
             Console.Write("|");
         }
 
+        private static readonly string[] notes = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-" };
+
         private static string ToNote()
         {
             if (Note == 0) return "---";
             int octave = (Note - 1) / 12;
             int note = (Note - 1) % 12;
-            string ns = "--";
-            switch (note)
-            {
-                case 0: ns = "C-"; break;
-                case 1: ns = "C#"; break;
-                case 2: ns = "D-"; break;
-                case 3: ns = "D#"; break;
-                case 4: ns = "E-"; break;
-                case 5: ns = "F-"; break;
-                case 6: ns = "F#"; break;
-                case 7: ns = "G-"; break;
-                case 8: ns = "G#"; break;
-                case 9: ns = "A-"; break;
-                case 10: ns = "A#"; break;
-                case 11: ns = "B-"; break;
-
-                default:
-                    break;
-            }
-            return ns + octave;
+            return notes[note] + octave;
         }
 
         public static void TryParseNextNoteFrom(ref int offset, byte[] data)

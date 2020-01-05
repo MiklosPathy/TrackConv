@@ -15,21 +15,7 @@ namespace TrackConv
             Console.WindowWidth = 200;
             Console.WindowHeight = 60;
 
-            Console.WriteLine(xmreader.Header.IDString);
-            Console.WriteLine(xmreader.Header.Modulename);
-            Console.WriteLine(xmreader.Header.OneCharID);
-            Console.WriteLine(xmreader.Header.TrackerName);
-            Console.WriteLine("TrackerRevision: " + xmreader.Header.TrackerRevisionMajor + "." + xmreader.Header.TrackerRevisionMinor);
-            Console.WriteLine("HeaderSize: " + xmreader.Header.HeaderSize);
-            Console.WriteLine("SongLengthInPatterns: " + xmreader.Header.SongLengthInPatterns);
-            Console.WriteLine("RestartPosition: " + xmreader.Header.RestartPosition);
-            Console.WriteLine("NumberOfChannels: " + xmreader.Header.NumberOfChannels);
-            Console.WriteLine("NumberOfPatterns: " + xmreader.Header.NumberOfPatterns);
-            Console.WriteLine("NumberOfInstruments: " + xmreader.Header.NumberOfInstruments);
-            Console.WriteLine("Flags: " + xmreader.Header.Flags);
-            Console.WriteLine("DefaultTempo: " + xmreader.Header.DefaultTempo);
-            Console.WriteLine("DefaultBPM: " + xmreader.Header.DefaultBPM);
-            Console.WriteLine("PatternOrderTable: " + string.Join(' ', xmreader.Header.PatternOrderTable));
+            xmreader.Header.ToConsole();
 
             Console.WriteLine("Patterns:");
             for (int i = 0; i < xmreader.Patterns.Length; i++)
@@ -45,32 +31,17 @@ namespace TrackConv
                 Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
             }
 
-            var a = xmreader.Patterns[0].PatternData;
-
-            int j = 0;
-            int channel = 0;
-            byte row = 0;
-
-            while (j < a.Length)
+            foreach (var item in xmreader.Header.PatternOrderTable)
             {
-                XMNote.TryParseNextNoteFrom(ref j, a);
-                if (channel == 0)
-                {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.Write(row.ToString("D2"));
-                    Console.ResetColor();
-                    Console.Write("|");
-                }
-                XMNote.ToConsole();
-                channel++;
-                if (channel == xmreader.Header.NumberOfChannels)
-                {
-                    channel = 0;
-                    row++;
-                    Console.WriteLine();
-                }
+                xmreader.Patterns[item].PatternToConsole(xmreader.Header);
             }
 
+            
+
+
+
         }
+
+
     }
 }

@@ -49,5 +49,24 @@ namespace TrackConv
         public int DefaultTempo { get { return filedata.ReadAsWord(Consts.DefaultTempo); } }
         public int DefaultBPM { get { return filedata.ReadAsWord(Consts.DefaultBPM); } }
         public byte[] PatternOrderTable { get { return filedata.CopyOutByteArray(Consts.PatternOrderTable, SongLengthInPatterns); } }
+
+        public void ToConsole()
+        {
+            Console.WriteLine(IDString);
+            Console.WriteLine(Modulename);
+            Console.WriteLine(OneCharID);
+            Console.WriteLine(TrackerName);
+            Console.WriteLine("TrackerRevision: " + TrackerRevisionMajor + "." + TrackerRevisionMinor);
+            Console.WriteLine("HeaderSize: " + HeaderSize);
+            Console.WriteLine("SongLengthInPatterns: " + SongLengthInPatterns);
+            Console.WriteLine("RestartPosition: " + RestartPosition);
+            Console.WriteLine("NumberOfChannels: " + NumberOfChannels);
+            Console.WriteLine("NumberOfPatterns: " + NumberOfPatterns);
+            Console.WriteLine("NumberOfInstruments: " + NumberOfInstruments);
+            Console.WriteLine("Flags: " + Flags);
+            Console.WriteLine("DefaultTempo: " + DefaultTempo);
+            Console.WriteLine("DefaultBPM: " + DefaultBPM);
+            Console.WriteLine("PatternOrderTable: " + string.Join(' ', PatternOrderTable));
+        }
     }
 }
