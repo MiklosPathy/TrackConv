@@ -61,7 +61,7 @@ namespace TrackConv
                     Console.ResetColor();
                     Console.Write("|");
                 }
-                Console.Write(XMNote.ToString());
+                XMNote.ToConsole();
                 channel++;
                 if (channel == xmreader.Header.NumberOfChannels)
                 {

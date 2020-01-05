@@ -20,14 +20,32 @@ namespace TrackConv
             Effect = 0;
             EffectParam = 0;
         }
+
+        private static string FormatByte(byte b, string format)
+        {
+            if (b == 0) return "--";
+            return b.ToString(format);
+        }
+
         public static new string ToString()
         {
-            string FormatByte(byte b, string format)
-            {
-                if (b == 0) return "--";
-                return b.ToString(format);
-            }
             return ToNote() + " " + FormatByte(Instrument, "D2") + " " + FormatByte(Volume, "X2") + " " + FormatByte(Effect, "X2") + FormatByte(EffectParam, "X2") + "|";
+        }
+
+        public static void ToConsole()
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(ToNote() + " ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(FormatByte(Instrument, "D2") + " ");
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
+            Console.Write(FormatByte(Volume, "X2") + " ");
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.Write(FormatByte(Effect, "X2"));
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.Write(FormatByte(EffectParam, "X2"));
+            Console.ResetColor();
+            Console.Write("|");
         }
 
         private static string ToNote()
