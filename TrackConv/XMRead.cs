@@ -35,7 +35,8 @@ namespace TrackConv
             patterns = new XMPattern[header.NumberOfPatterns];
             instruments = new XMInstrument[header.NumberOfInstruments];
 
-            int offset = PatternStartAt;
+            //int offset = XMHeader.Consts.PatternOrderTable + header.SongLengthInPatterns;//   PatternStartAt;
+            int offset = XMHeader.Consts.HeaderSize + header.HeaderSize;//   PatternStartAt;
             for (int patternnumber = 0; patternnumber < header.NumberOfPatterns; patternnumber++)
             {
                 XMPattern pattern = new XMPattern(filedata, offset);

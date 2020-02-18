@@ -9,7 +9,10 @@ namespace TrackConv
     {
         static void Main(string[] args)
         {
-            XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\modz\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
+            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\modz\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
+            XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\satell.xm");
+            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
+            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\bach_tocatta_fugue_d_minor.xm");
             xmreader.Open();
 
             Console.WindowWidth = 200;

@@ -6,7 +6,7 @@ namespace TrackConv
 {
     public class XMHeader
     {
-        private static class Consts
+        public static class Consts
         {
             public const int IDString = 0x0000;// h                  17 char ID = "Extended module: "
             public const int Modulename = 0x0011;// h                  20 char Module name, padded with zeroes
