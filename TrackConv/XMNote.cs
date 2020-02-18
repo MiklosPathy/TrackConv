@@ -4,15 +4,15 @@ using System.Text;
 
 namespace TrackConv
 {
-    public static class XMNote
+    public class XMNote
     {
-        public static byte Note;
-        public static byte Instrument;
-        public static byte Volume;
-        public static byte Effect;
-        public static byte EffectParam;
+        public byte Note = 0;
+        public byte Instrument = 0;
+        public byte Volume = 0;
+        public byte Effect = 0;
+        public byte EffectParam = 0;
 
-        public static void Reset()
+        public void Reset()
         {
             Note = 0;
             Instrument = 0;
@@ -21,18 +21,18 @@ namespace TrackConv
             EffectParam = 0;
         }
 
-        private static string FormatByte(byte b, string format)
+        private string FormatByte(byte b, string format)
         {
             if (b == 0) return "--";
             return b.ToString(format);
         }
 
-        public static new string ToString()
+        public new string ToString()
         {
             return ToNote() + " " + FormatByte(Instrument, "D2") + " " + FormatByte(Volume, "X2") + " " + FormatByte(Effect, "X2") + FormatByte(EffectParam, "X2") + "|";
         }
 
-        public static void ToConsole()
+        public void ToConsole()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write(ToNote() + " ");
@@ -50,7 +50,7 @@ namespace TrackConv
 
         private static readonly string[] notes = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-" };
 
-        private static string ToNote()
+        private string ToNote()
         {
             if (Note == 0) return "---";
             int octave = (Note - 1) / 12;
@@ -58,7 +58,7 @@ namespace TrackConv
             return notes[note] + octave;
         }
 
-        public static void TryParseNextNoteFrom(ref int offset, byte[] data)
+        public void TryParseNextNoteFrom(ref int offset, byte[] data)
         {
             bool IsBitSet(byte b, int pos)
             {
@@ -77,19 +77,19 @@ namespace TrackConv
             byte b = GetByte(ref offset);
             if (IsBitSet(b, 7))
             {
-                if (IsBitSet(b, 0)) XMNote.Note = GetByte(ref offset);
-                if (IsBitSet(b, 1)) XMNote.Instrument = GetByte(ref offset);
-                if (IsBitSet(b, 2)) XMNote.Volume = GetByte(ref offset);
-                if (IsBitSet(b, 3)) XMNote.Effect = GetByte(ref offset);
-                if (IsBitSet(b, 4)) XMNote.EffectParam = GetByte(ref offset);
+                if (IsBitSet(b, 0)) Note = GetByte(ref offset);
+                if (IsBitSet(b, 1)) Instrument = GetByte(ref offset);
+                if (IsBitSet(b, 2)) Volume = GetByte(ref offset);
+                if (IsBitSet(b, 3)) Effect = GetByte(ref offset);
+                if (IsBitSet(b, 4)) EffectParam = GetByte(ref offset);
             }
             else
             {
-                XMNote.Note = b;
-                XMNote.Instrument = GetByte(ref offset);
-                XMNote.Volume = GetByte(ref offset);
-                XMNote.Effect = GetByte(ref offset);
-                XMNote.EffectParam = GetByte(ref offset);
+                Note = b;
+                Instrument = GetByte(ref offset);
+                Volume = GetByte(ref offset);
+                Effect = GetByte(ref offset);
+                EffectParam = GetByte(ref offset);
             }
         }
     }

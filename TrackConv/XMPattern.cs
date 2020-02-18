@@ -43,10 +43,11 @@ namespace TrackConv
             int offset = 0;
             int channel = 0;
             byte row = 0;
+            XMNote xmnote = new XMNote();
 
             while (offset < PatternData.Length)
             {
-                XMNote.TryParseNextNoteFrom(ref offset, PatternData);
+                xmnote.TryParseNextNoteFrom(ref offset, PatternData);
                 if (channel == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
@@ -54,13 +55,37 @@ namespace TrackConv
                     Console.ResetColor();
                     Console.Write("|");
                 }
-                XMNote.ToConsole();
+                xmnote.ToConsole();
                 channel++;
                 if (channel == header.NumberOfChannels)
                 {
                     channel = 0;
                     row++;
                     Console.WriteLine();
+                }
+            }
+        }
+
+        public XMNote[,] PatArr;
+
+        public void PatternToArray(XMHeader header)
+        {
+            PatArr = new XMNote[NumberOfRows, header.NumberOfChannels];
+            int offset = 0;
+            int channel = 0;
+            byte row = 0;
+
+
+            while (offset < PatternData.Length)
+            {
+                XMNote xmnote = new XMNote();
+                PatArr[row, channel] = xmnote;
+                xmnote.TryParseNextNoteFrom(ref offset, PatternData);
+                channel++;
+                if (channel == header.NumberOfChannels)
+                {
+                    channel = 0;
+                    row++;
                 }
             }
         }
