@@ -45,12 +45,28 @@ namespace DMP2ControlBytes
         /// </summary>
         public byte D1L;
 
-        public byte AM;
-        public byte RS;
         /// <summary>
-        /// Detune?
+        /// AM Enabled for operator
+        /// 1 bit
+        /// </summary>
+        public byte AM;
+        /// <summary>
+        /// Key scale? Probably KS in registers.
+        /// 2 bits
+        /// </summary>
+        public byte KS;
+        /// <summary>
+        /// Detune
+        /// 3 bits
         /// </summary>
         public byte DT;
+        /// <summary>
+        /// Detune 2
+        /// Useless Idiotic Detune Function
+        /// 2 bits
+        /// </summary>
+        public byte DT2;
+
 
         public byte SSGEG_Enabled;
     }
@@ -123,17 +139,135 @@ namespace DMP2ControlBytes
                 OPS[i].RR = data[position]; position++;
                 //1 Byte: AM
                 OPS[i].AM = data[position]; position++;
-                //1 Byte: RS
-                OPS[i].RS = data[position]; position++;
+                //1 Byte: RS  //Probably Key Scale
+                OPS[i].KS = data[position]; position++;
                 //1 Byte: DT(DT2 << 4 | DT on YM2151)
                 OPS[i].DT = data[position]; position++;
+                OPS[i].DT2 = (byte)(OPS[i].DT >> 4);
                 //1 Byte: D2R
                 OPS[i].D2R = data[position]; position++;
                 //1 Byte: SSGEG_Enabled << 3 | SSGEG
                 OPS[i].SSGEG_Enabled = data[position]; position++;
+
             }
 
+            //For some reason Operator 1 and 2 are swapped in the DMP file...
+            YM2151operator op = OPS[1];
+            OPS[1] = OPS[2];
+            OPS[2] = op;
+
             //END OF DMP FORMAT
+        }
+
+        public void ToConsole()
+        {
+            Console.WriteLine("File version (11):" + FILE_VERSION + "\t System (8):" + SYSTEM_YM2151 + "\t Instrument Mode (1):" + INSTRUMENT_MODE);
+            Console.WriteLine("PMS:" + PMS + "\t FB:" + FB + "\t CON:" + CON + "\t AMS:" + AMS);
+            Console.WriteLine("--------------------------------------------");
+            Console.Write("OPS:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + i); }; Console.WriteLine();
+            Console.WriteLine("--------------------------------------------");
+            Console.Write("MULT:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].MULT); }; Console.WriteLine();
+            Console.Write("TL:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].TL); }; Console.WriteLine();
+            Console.Write("AR:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].AR); }; Console.WriteLine();
+            Console.Write("D1R:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].D1R); }; Console.WriteLine();
+            Console.Write("D2R:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].D2R); }; Console.WriteLine();
+            Console.Write("RR:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].RR); }; Console.WriteLine();
+            Console.Write("D1L:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].D1L); }; Console.WriteLine();
+            Console.Write("AM:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].AM); }; Console.WriteLine();
+            Console.Write("RS:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].KS); }; Console.WriteLine();
+            Console.Write("DT:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].DT); }; Console.WriteLine();
+            Console.Write("SS:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].SSGEG_Enabled); }; Console.WriteLine();
+        }
+
+        public Dictionary<byte, byte> ToControlBytes(int channel, bool left = true, bool right = true)
+        {
+            byte register, value = 0;
+            Dictionary<byte, byte> bytes = new Dictionary<byte, byte>();
+
+            channel = (byte)channel & 0b00000111;
+
+            //$20-$27   L​R​F​F​F​C​C​C​    Channel 0-7     L = Left, R = Right, F = Feedback, C = Connection​
+            FB = (byte)(FB & 0b00000111);
+            CON = (byte)(CON & 0b00000111);
+            register = (byte)(0x20 + channel);
+            value = 0;
+            value += (byte)(left ? 0b10000000 : 0);
+            value += (byte)(right ? 0b01000000 : 0);
+            value += (byte)(FB << 3);
+            value += CON;
+            bytes[register] = value;
+
+            //$38-$3F	-P​P​P​--​A​A​    Channel 0-7     PMS / AMS​  P = PMS , A = AMS​
+            AMS = (byte)(FB & 0b00000011);
+            PMS = (byte)(FB & 0b00000111);
+            register = (byte)(0x38 + channel);
+            value = 0;
+            value += (byte)(PMS << 4);
+            value += AMS;
+            bytes[register] = value;
+
+            for (int i = 0; i < 4; i++)
+            {
+                int slot = i * 8 + channel;
+                YM2151operator op = OPS[i];
+
+                //$40-$5F	-​D​D​D​M​M​M​M​    Slot1 - 32.     Detune / Mult​  D = Detune D1T, M = Mult​
+                register = (byte)(0x40 + slot);
+                value = 0;
+                op.DT = (byte)(op.DT & 0b00000111);
+                op.MULT = (byte)(op.DT & 0b00001111);
+                value += (byte)(op.DT << 4);
+                value += op.MULT;
+                bytes[register] = value;
+
+                //$60 -$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
+                register = (byte)(0x60 + slot);
+                value = 0;
+                op.TL = (byte)(op.TL & 0b01111111);
+                value += op.TL;
+                bytes[register] = value;
+
+                //$80 -$9F  K​K​-​A​AA​A​A​     Slot1 - 32.     Keyscale / Attack​  K = Keycale, A = attack​
+                register = (byte)(0x80 + slot);
+                value = 0;
+                op.KS = (byte)(op.KS & 0b00000011);
+                op.AR = (byte)(op.AR & 0b00011111);
+                value += (byte)(op.KS << 5);
+                value += op.AR;
+                bytes[register] = value;
+
+                //$A0-$BF	A​-​-​D​D​D​D​D​    Slot1 - 32.      AMS Enable / Decay​   A = AMS - EN, D = Decay D1R​
+                register = (byte)(0xA0 + slot);
+                value = 0;
+                op.AM = (byte)(op.AM & 0b00000001);
+                op.D1R = (byte)(op.D1R & 0b00011111);
+                value += (byte)(op.AM << 7);
+                value += op.D1R;
+                bytes[register] = value;
+
+                //$C0-$DF	T​T​-​D​D​D​D​D​    Slot1 - 32.     DeTune2 / Decay​2         T = Detune DT2, D = Decay D2R​
+                register = (byte)(0xC0 + slot);
+                value = 0;
+                op.DT2 = (byte)(op.DT2 & 0b00000011);
+                op.D2R = (byte)(op.D2R & 0b00011111);
+                value += (byte)(op.DT2 << 6);
+                value += op.D2R;
+                bytes[register] = value;
+
+                //$E0 -$FF  D​D​D​D​R​R​R​R​    Slot1 - 32.     Decay Level/ Release​        D = Decay D1L, R = Release Rate​
+                register = (byte)(0xE0 + slot);
+                value = 0;
+                op.D1L = (byte)(op.D1L & 0b00001111);
+                op.RR = (byte)(op.RR & 0b00001111);
+                value += (byte)(op.D1L << 6);
+                value += op.RR;
+                bytes[register] = value;
+            }
+
+
+
+
+            return bytes;
         }
     }
 }

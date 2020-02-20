@@ -89,5 +89,55 @@ namespace TrackConv
                 }
             }
         }
+
+        public List<byte> PatternToBytes(XMHeader header)
+        {
+            List<byte> bytes = new List<byte>();
+            byte register, value = 0;
+
+            for (int i = 0; i < NumberOfRows; i++)
+            {
+                for (int j = 0; j < header.NumberOfChannels; j++)
+                {
+                    XMNote cn = PatArr[i, j];
+                    if (cn.Note != 0)
+                    {
+                        //$28 -$2F -​O​O​O​N​N​N​N​     Chn0 - 7    KeyCode​  O = Octive, N = Note​
+                        register = (byte)(0x28 + j);
+                        value = 0;
+                        value += (byte)((cn.octave & 0b00000111) << 4);
+                        value += (byte)(cn.note & 0b00001111);
+                        bytes.Add(register);
+                        bytes.Add(value);
+
+                        //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
+                        //Most minden operátor szóljon.
+                        register = (byte)(0x08);
+                        value = 0b01111000;
+                        value += (byte)(j & 0b00000111);
+                        bytes.Add(register);
+                        bytes.Add(value);
+                    }
+                    if (cn.noteoff)
+                    {
+                        //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
+                        //Minden operátor kuss.
+                        register = (byte)(0x08);
+                        value = 0b00000000;
+                        value += (byte)(j & 0b00000111);
+                        bytes.Add(register);
+                        bytes.Add(value);
+                    }
+                }
+
+                //Timing
+                register = 0;
+                value = 100;
+                bytes.Add(register);
+                bytes.Add(value);
+
+            }
+            return bytes;
+        }
     }
 }
