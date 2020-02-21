@@ -198,8 +198,8 @@ namespace DMP2ControlBytes
             bytes[register] = value;
 
             //$38-$3F	-P​P​P​--​A​A​    Channel 0-7     PMS / AMS​  P = PMS , A = AMS​
-            AMS = (byte)(FB & 0b00000011);
-            PMS = (byte)(FB & 0b00000111);
+            AMS = (byte)(AMS & 0b00000011);
+            PMS = (byte)(PMS & 0b00000111);
             register = (byte)(0x38 + channel);
             value = 0;
             value += (byte)(PMS << 4);
@@ -215,7 +215,7 @@ namespace DMP2ControlBytes
                 register = (byte)(0x40 + slot);
                 value = 0;
                 op.DT = (byte)(op.DT & 0b00000111);
-                op.MULT = (byte)(op.DT & 0b00001111);
+                op.MULT = (byte)(op.MULT & 0b00001111);
                 value += (byte)(op.DT << 4);
                 value += op.MULT;
                 bytes[register] = value;

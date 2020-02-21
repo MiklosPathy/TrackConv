@@ -39,7 +39,7 @@ namespace TrackConv
             int offset = XMHeader.Consts.HeaderSize + header.HeaderSize;//   PatternStartAt;
             for (int patternnumber = 0; patternnumber < header.NumberOfPatterns; patternnumber++)
             {
-                XMPattern pattern = new XMPattern(filedata, offset);
+                XMPattern pattern = new XMPattern(filedata, offset, header);
                 patterns[patternnumber] = pattern;
                 offset += (pattern.SizeOfPatternData + pattern.LenghtOfPatternHeader);
             }

@@ -19,6 +19,7 @@ namespace DMP2ControlBytes
             List<byte> bytes = new List<byte>();
 
             for (int i = 0; i < 8; i++)
+            //int i = 0;
             {
                 var e = instr.ToControlBytes(i);
                 foreach (var item in e)
@@ -29,7 +30,7 @@ namespace DMP2ControlBytes
             }
 
 
-            int linenumber = 30000;
+            int linenumber = 1000;
             const int maxiteminline = 16;
             List<string> lines = new List<string>();
 
@@ -54,9 +55,9 @@ namespace DMP2ControlBytes
                 else curritem++;
                 remainingitems--;
             }
-            lines.Add(linenumber + " DATA 0,0");
+            //lines.Add(linenumber + " DATA 0,0");
 
-            File.WriteAllLines(@"data.txt", lines.ToArray());
+            File.WriteAllLines(@"instruments.txt", lines.ToArray());
 
 
 
