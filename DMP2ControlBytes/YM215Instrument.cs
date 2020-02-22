@@ -7,65 +7,74 @@ namespace DMP2ControlBytes
     public class YM2151operator
     {
         /// <summary>
-        /// Phase Multiply
-        /// Octave detune upwards
+        /// Phase Multiply - Octave detune 
         /// 4 bits;
         /// </summary>
-        public byte MULT;
+        public byte MULT { get { return mult; } set { mult = (byte)(value & 0b00001111); } }
+        private byte mult;
         /// <summary>
-        /// Total Level
-        /// Simply: Volume
+        /// Total Level. Simply: Volume
         /// 7 bits
         /// </summary>
-        public byte TL;
+        public byte TL { get { return tl; } set { tl = (byte)(value & 0b01111111); } }
+        private byte tl;
         /// <summary>
         /// Attack Rate
         /// 5 bits
         /// </summary>
-        public byte AR;
+        public byte AR { get { return ar; } set { ar = (byte)(value & 0b00011111); } }
+        private byte ar;
         /// <summary>
         /// First Decay Rate
         /// 5 bits
         /// </summary>
-        public byte D1R;
+        public byte D1R { get { return d1r; } set { d1r = (byte)(value & 0b00011111); } }
+        private byte d1r;
         /// <summary>
         /// Second Decay Rate
         /// 5 bits
         /// </summary>
-        public byte D2R;
+        public byte D2R { get { return d2r; } set { d2r = (byte)(value & 0b00011111); } }
+        private byte d2r;
         /// <summary>
         /// Release Rate
         /// 4 bits;
         /// </summary>
-        public byte RR;
+        public byte RR { get { return rr; } set { rr = (byte)(value & 0b00001111); } }
+        private byte rr;
         /// <summary>
         /// First Decay Level.
         /// AKA: Sustain Level
         /// 4 bits
         /// </summary>
-        public byte D1L;
+        public byte D1L { get { return d1l; } set { d1l = (byte)(value & 0b00001111); } }
+        private byte d1l;
 
         /// <summary>
         /// AM Enabled for operator
         /// 1 bit
         /// </summary>
-        public byte AM;
+        public byte AM { get { return am; } set { am = (byte)(value & 0b00000001); } }
+        private byte am;
         /// <summary>
         /// Key scale? Probably KS in registers.
         /// 2 bits
         /// </summary>
-        public byte KS;
+        public byte KS { get { return ks; } set { ks = (byte)(value & 0b00000011); } }
+        private byte ks;
         /// <summary>
         /// Detune
         /// 3 bits
         /// </summary>
-        public byte DT;
+        public byte DT { get { return dt; } set { dt = (byte)(value & 0b00000111); } }
+        private byte dt;
         /// <summary>
         /// Detune 2
         /// Useless Idiotic Detune Function
         /// 2 bits
         /// </summary>
-        public byte DT2;
+        public byte DT2 { get { return dt2; } set { dt2 = (byte)(value & 0b00000011); } }
+        private byte dt2;
 
 
         public byte SSGEG_Enabled;
@@ -80,27 +89,35 @@ namespace DMP2ControlBytes
         /// LFO -> Freq (Vibrato)
         /// 3 bits
         /// </summary>
-        public byte PMS;
+        public byte PMS { get { return pms; } set { pms = (byte)(value & 0b00000111); } }
+        private byte pms;
         /// <summary>
         /// Self Feedback level
         /// 3 bit
         /// </summary>
-        public byte FB;
+        public byte FB { get { return fb; } set { fb = (byte)(value & 0b00000111); } }
+        private byte fb;
         /// <summary>
         /// Algorithm
         /// 3 bit
         /// </summary>
-        public byte CON;
+        public byte CON { get { return con; } set { con = (byte)(value & 0b00000111); } }
+        private byte con;
         /// <summary>
         /// Amplitude Modulation Sensitivity
         /// LFO -> Amplitude
         /// 2 bits
         /// </summary>
-        public byte AMS;
+        public byte AMS { get { return ams; } set { ams = (byte)(value & 0b00000011); } }
+        private byte ams;
         /// <summary>
         /// Operators
         /// </summary>
         public YM2151operator[] OPS = new YM2151operator[4] { new YM2151operator(), new YM2151operator(), new YM2151operator(), new YM2151operator() };
+
+        /// <summary>
+        /// http://www.deflemask.com/DMP_SPECS.txt
+        /// </summary>
         public void ReadFromDMP(byte[] data)
         {
             int position = 0;
@@ -187,8 +204,6 @@ namespace DMP2ControlBytes
             channel = (byte)channel & 0b00000111;
 
             //$20-$27   L​R​F​F​F​C​C​C​    Channel 0-7     L = Left, R = Right, F = Feedback, C = Connection​
-            FB = (byte)(FB & 0b00000111);
-            CON = (byte)(CON & 0b00000111);
             register = (byte)(0x20 + channel);
             value = 0;
             value += (byte)(left ? 0b10000000 : 0);
@@ -198,8 +213,6 @@ namespace DMP2ControlBytes
             bytes[register] = value;
 
             //$38-$3F	-P​P​P​--​A​A​    Channel 0-7     PMS / AMS​  P = PMS , A = AMS​
-            AMS = (byte)(AMS & 0b00000011);
-            PMS = (byte)(PMS & 0b00000111);
             register = (byte)(0x38 + channel);
             value = 0;
             value += (byte)(PMS << 4);
@@ -214,33 +227,26 @@ namespace DMP2ControlBytes
                 //$40-$5F	-​D​D​D​M​M​M​M​    Slot1 - 32.     Detune / Mult​  D = Detune D1T, M = Mult​
                 register = (byte)(0x40 + slot);
                 value = 0;
-                op.DT = (byte)(op.DT & 0b00000111);
-                op.MULT = (byte)(op.MULT & 0b00001111);
                 value += (byte)(op.DT << 4);
                 value += op.MULT;
                 bytes[register] = value;
 
-                //$60 -$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
+                //$60-$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
                 register = (byte)(0x60 + slot);
                 value = 0;
-                op.TL = (byte)(op.TL & 0b01111111);
                 value += op.TL;
                 bytes[register] = value;
 
-                //$80 -$9F  K​K​-​A​AA​A​A​     Slot1 - 32.     Keyscale / Attack​  K = Keycale, A = attack​
+                //$80-$9F  K​K​-​A​AA​A​A​     Slot1 - 32.     Keyscale / Attack​  K = Keycale, A = attack​
                 register = (byte)(0x80 + slot);
                 value = 0;
-                op.KS = (byte)(op.KS & 0b00000011);
-                op.AR = (byte)(op.AR & 0b00011111);
-                value += (byte)(op.KS << 5);
+                value += (byte)(op.KS << 6);
                 value += op.AR;
                 bytes[register] = value;
 
                 //$A0-$BF	A​-​-​D​D​D​D​D​    Slot1 - 32.      AMS Enable / Decay​   A = AMS - EN, D = Decay D1R​
                 register = (byte)(0xA0 + slot);
                 value = 0;
-                op.AM = (byte)(op.AM & 0b00000001);
-                op.D1R = (byte)(op.D1R & 0b00011111);
                 value += (byte)(op.AM << 7);
                 value += op.D1R;
                 bytes[register] = value;
@@ -248,18 +254,14 @@ namespace DMP2ControlBytes
                 //$C0-$DF	T​T​-​D​D​D​D​D​    Slot1 - 32.     DeTune2 / Decay​2         T = Detune DT2, D = Decay D2R​
                 register = (byte)(0xC0 + slot);
                 value = 0;
-                op.DT2 = (byte)(op.DT2 & 0b00000011);
-                op.D2R = (byte)(op.D2R & 0b00011111);
                 value += (byte)(op.DT2 << 6);
                 value += op.D2R;
                 bytes[register] = value;
 
-                //$E0 -$FF  D​D​D​D​R​R​R​R​    Slot1 - 32.     Decay Level/ Release​        D = Decay D1L, R = Release Rate​
+                //$E0-$FF  D​D​D​D​R​R​R​R​    Slot1 - 32.     Decay Level/ Release​        D = Decay D1L, R = Release Rate​
                 register = (byte)(0xE0 + slot);
                 value = 0;
-                op.D1L = (byte)(op.D1L & 0b00001111);
-                op.RR = (byte)(op.RR & 0b00001111);
-                value += (byte)(op.D1L << 6);
+                value += (byte)(op.D1L << 4);
                 value += op.RR;
                 bytes[register] = value;
             }

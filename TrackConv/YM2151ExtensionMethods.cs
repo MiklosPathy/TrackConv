@@ -63,13 +63,13 @@ namespace TrackConv
             return millisecpertick;
         }
 
-        private static byte bpmtocommodoretick(int bpm)
+        private static byte bpmtox16tick(int bpm)
         {
             double desiredcommodoreticks = bpmtotickmillisec(bpm) / ((double)1 / (double)60 * (double)1000);
             double result = Math.Max(1, desiredcommodoreticks);
             return (byte)result;
         }
-        private static byte bpmtocommodoretickrow(int bpm)
+        private static byte bpmtox16tickrow(int bpm)
         {
             double desiredcommodoreticks = bpmtotickmillisec(bpm) / ((double)1 / (double)60 * (double)1000) * (double)6;
             double result = Math.Max(1, desiredcommodoreticks);
@@ -165,10 +165,8 @@ namespace TrackConv
                             if (cn != null) Noteintobytes(cn, bytes, channel);
                         }
                         //Timing
-
-
                         register = 0;
-                        value = (byte)bpmtocommodoretick(currentbpm);
+                        value = (byte)bpmtox16tick(currentbpm);
                         addtobytes(bytes, register, value);
                     }
                 }
@@ -181,7 +179,7 @@ namespace TrackConv
                     }
                     //Timing
                     register = 0;
-                    value = (byte)bpmtocommodoretickrow(currentbpm);
+                    value = (byte)bpmtox16tickrow(currentbpm);
                     addtobytes(bytes, register, value);
                 }
             }
