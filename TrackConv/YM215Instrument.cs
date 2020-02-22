@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DMP2ControlBytes
+namespace TrackConv
 {
     public enum SlotByOperator { M1, M2, O1, O2 };
     public enum KeyEnableByOperator { M1 = 0b00001000, C1 = 0b00010000, M2 = 0b00100000, C2 = 0b01000000 };

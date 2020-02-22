@@ -65,8 +65,29 @@ namespace TrackConv
             ////}
 
 
+            byte[] filedata;
+            //filedata = File.ReadAllBytes("Organ_Additive.dmp");
+            filedata = File.ReadAllBytes("OscillatorTest.dmp");
+            //Console.WriteLine(filedata.Length);
+            YM215Instrument instr = new YM215Instrument();
+            instr.ReadFromDMP(filedata);
+
+            instr.ToConsole();
+
             List<byte> bytes = new List<byte>();
 
+            //for (int i = 0; i < 8; i++)
+            int i = 0;
+            {
+                var e = instr.ToControlBytes(i);
+                foreach (var item in e)
+                {
+                    bytes.Add(item.Key);
+                    bytes.Add(item.Value);
+                }
+            }
+
+ 
             XMNote note = new XMNote() { octave = 3, note = 0 };
             note.NoteIntoBytes(bytes, 0, 0b01100000);
             note.note = 4;
