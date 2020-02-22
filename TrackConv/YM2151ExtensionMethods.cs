@@ -17,7 +17,7 @@ namespace TrackConv
             return xmnote.octave;
         }
 
-        private static void Noteintobytes(XMNote cn, List<byte> bytes, int channel)
+        public static void NoteIntoBytes(this XMNote cn, List<byte> bytes, int channel, byte operatormask=0b01111000)
         {
             byte register, value = 0;
 
@@ -44,7 +44,7 @@ namespace TrackConv
                     //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
                     //Most minden operátor szóljon.
                     register = (byte)(0x08);
-                    value = 0b01111000;
+                    value = operatormask;
                     value += (byte)(channel & 0b00000111);
                     addtobytes(bytes, register, value);
                 }
@@ -162,7 +162,7 @@ namespace TrackConv
                         for (int channel = 0; channel < xmpattern.xmheader.NumberOfChannels; channel++)
                         {
                             XMNote cn = tickarr[ticks, channel];
-                            if (cn != null) Noteintobytes(cn, bytes, channel);
+                            if (cn != null) NoteIntoBytes(cn, bytes, channel);
                         }
                         //Timing
                         register = 0;
@@ -175,7 +175,7 @@ namespace TrackConv
                     for (int channel = 0; channel < xmpattern.xmheader.NumberOfChannels; channel++)
                     {
                         XMNote cn = xmpattern.PatArr[rows, channel];
-                        Noteintobytes(cn, bytes, channel);
+                        NoteIntoBytes(cn, bytes, channel);
                     }
                     //Timing
                     register = 0;

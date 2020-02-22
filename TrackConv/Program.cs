@@ -12,67 +12,94 @@ namespace TrackConv
             //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\modz\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
             //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\satell.xm");
             //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
-            XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\toccata&fugue.xm");
+            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\toccata&fugue.xm");
             //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\scale.xm");
-            xmreader.Open();
 
-            Console.WindowWidth = 200;
-            Console.WindowHeight = 60;
+            //xmreader.Open();
 
-            xmreader.Header.ToConsole();
+            //Console.WindowWidth = 200;
+            //Console.WindowHeight = 60;
 
-            Console.WriteLine("Patterns:");
-            for (int i = 0; i < xmreader.Patterns.Length; i++)
-            {
-                XMPattern pattern = xmreader.Patterns[i];
-                Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
-            }
+            //xmreader.Header.ToConsole();
 
-            Console.WriteLine("Instruments:");
-            for (int i = 0; i < xmreader.Instruments.Length; i++)
-            {
-                XMInstrument instrument = xmreader.Instruments[i];
-                Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
-            }
+            //Console.WriteLine("Patterns:");
+            //for (int i = 0; i < xmreader.Patterns.Length; i++)
+            //{
+            //    XMPattern pattern = xmreader.Patterns[i];
+            //    Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
+            //}
 
-            List<XMNote> allnotes = new List<XMNote>();
-            foreach (var item in xmreader.Header.PatternOrderTable)
-            {
-                XMPattern pattern = xmreader.Patterns[item];
-                if (pattern.PatArr != null)
-                    foreach (var arre in pattern.PatArr)
-                    {
-                        if (arre == null)
-                            Console.WriteLine("NULL");
-                        allnotes.Add(arre);
-                    }
-            }
+            //Console.WriteLine("Instruments:");
+            //for (int i = 0; i < xmreader.Instruments.Length; i++)
+            //{
+            //    XMInstrument instrument = xmreader.Instruments[i];
+            //    Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
+            //}
+
+            //List<XMNote> allnotes = new List<XMNote>();
+            //foreach (var item in xmreader.Header.PatternOrderTable)
+            //{
+            //    XMPattern pattern = xmreader.Patterns[item];
+            //    if (pattern.PatArr != null)
+            //        foreach (var arre in pattern.PatArr)
+            //        {
+            //            if (arre == null)
+            //                Console.WriteLine("NULL");
+            //            allnotes.Add(arre);
+            //        }
+            //}
 
 
-            Console.WriteLine("Used effects:");
-            var effects = allnotes.Select(x => x.Effect).Distinct().OrderBy(x => x).ToList();
-            foreach (var item in effects)
-            {
-                Console.WriteLine(item.ToString("X2"));
-            }
+            //Console.WriteLine("Used effects:");
+            //var effects = allnotes.Select(x => x.Effect).Distinct().OrderBy(x => x).ToList();
+            //foreach (var item in effects)
+            //{
+            //    Console.WriteLine(item.ToString("X2"));
+            //}
+
+
+            ////foreach (var item in xmreader.Header.PatternOrderTable)
+            ////{
+            ////    xmreader.Patterns[item].PatternToConsole();
+            ////    break;
+            ////}
+
+
+            List<byte> bytes = new List<byte>();
+
+            XMNote note = new XMNote() { octave = 3, note = 0 };
+            note.NoteIntoBytes(bytes, 0, 0b01100000);
+            note.note = 4;
+            note.NoteIntoBytes(bytes, 0, 0b00011000);
 
 
             //foreach (var item in xmreader.Header.PatternOrderTable)
             //{
-            //    xmreader.Patterns[item].PatternToConsole();
-            //    break;
+            //    bytes.AddRange(xmreader.Patterns[item].PatternToBytes());
             //}
-
-
-            List<byte> bytes = new List<byte>();
-            foreach (var item in xmreader.Header.PatternOrderTable)
-            {
-                bytes.AddRange(xmreader.Patterns[item].PatternToBytes());
-            }
 
             int linenumber = 10000;
             const int maxiteminline = 16;
+
+            string cx16basicplayer = @"100 GOSUB 500
+110 TT=TI
+120 READ R,D
+130 POKE $9FE0,R:POKE $9FE1,D
+140 IF(R>0)THEN GOTO 120
+150 IF(D=0)THEN GOTO 200
+160 TT=TT+D
+170 FOR I=0 TO 1 STEP 0
+180 IF(TI>=TT)THEN GOTO 110
+190 NEXT I
+200 GOSUB 500
+210 END
+500 REM RESET SOUND CHIP
+510 FOR I = 0 TO 255 : POKE $9FE0, I : POKE $9FE1, 0 : NEXT
+520 RETURN";
+
+
             List<string> lines = new List<string>();
+            lines.Add(cx16basicplayer);
 
             string currentline = "";
             int curritem = 1;
@@ -103,56 +130,5 @@ namespace TrackConv
 
 
         }
-
-        public static Dictionary<string, string> xmEffects = new Dictionary<string, string>()
-        {
-            ["0xy"] = "Arpeggio",
-            ["1xx"] = "Portamento Up",
-            ["2xx"] = "Portamento Down",
-            ["3xx"] = "Tone Portamento",
-            ["4xy"] = "Vibrato",
-            ["5xy"] = "Volume Slide + Tone Portamento",
-            ["6xy"] = "Volume Slide + Vibrato",
-            ["7xy"] = "Tremolo",
-            ["8xx"] = "Set Panning",
-            ["9xx"] = "Sample Offset",
-            ["Axy"] = "Volume Slide",
-            ["Bxx"] = "Position Jump",
-            ["Cxx"] = "Set Volume",
-            ["Dxx"] = "Pattern Break",
-            ["E1x"] = "Fine Portamento Up",
-            ["E2x"] = "Fine Portamento Down",
-            ["E3x"] = "Glissando Control",
-            ["E4x"] = "Set Vibrato Waveform",
-            ["E5x"] = "Set Finetune",
-            ["E60"] = "Pattern Loop Start",
-            ["E6x"] = "Pattern Loop",
-            ["E7x"] = "Set Tremolo Waveform",
-            ["E8x"] = "Set Panning",
-            ["E9x"] = "Retrigger",
-            ["EAx"] = "Fine Volume Slide Up",
-            ["EBx"] = "Fine Volume Slide Down",
-            ["ECx"] = "Note Cut",
-            ["EDx"] = "Note Delay",
-            ["EEx"] = "Pattern Delay",
-            ["EFx"] = "Set Active Macro",
-            ["Fxx"] = "Set Speed / Tempo",
-            ["Gxx"] = "Set Global Volume",
-            ["Hxy"] = "Global Volume Slide",
-            ["Kxx"] = "Key Off",
-            ["Lxx"] = "Set Envelope Position",
-            ["Pxy"] = "Panning Slide",
-            ["Rxy"] = "Retrigger",
-            ["Txy"] = "Tremor",
-            ["X1x"] = "Extra Fine Portamento Up",
-            ["X2x"] = "Extra Fine Portamento Down",
-            ["X5x"] = "Set Panbrello Waveform",
-            ["X6x"] = "Fine Pattern Delay",
-            ["X9x"] = "Sound Control",
-            ["XAx"] = "High Offset",
-            ["Yxy"] = "Panbrello",
-            ["Zxx"] = "MIDI Macro",
-            ["\\xx"] = "Smooth MIDI Macro",
-        };
     }
 }

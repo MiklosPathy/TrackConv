@@ -9,7 +9,8 @@ namespace DMP2ControlBytes
         static void Main(string[] args)
         {
             byte[] filedata;
-            filedata = File.ReadAllBytes("Organ_Additive.dmp");
+            //filedata = File.ReadAllBytes("Organ_Additive.dmp");
+            filedata = File.ReadAllBytes("OscillatorTest.dmp");
             //Console.WriteLine(filedata.Length);
             YM215Instrument instr = new YM215Instrument();
             instr.ReadFromDMP(filedata);
@@ -18,8 +19,8 @@ namespace DMP2ControlBytes
 
             List<byte> bytes = new List<byte>();
 
-            for (int i = 0; i < 8; i++)
-            //int i = 0;
+            //for (int i = 0; i < 8; i++)
+            int i = 0;
             {
                 var e = instr.ToControlBytes(i);
                 foreach (var item in e)
