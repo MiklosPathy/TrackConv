@@ -19,6 +19,7 @@ namespace TrackConv
 
         public static void NoteIntoBytes(this XMNote cn, List<byte> bytes, int channel, byte operatormask=0b01111000)
         {
+            if (channel > 7) return;
             byte register, value = 0;
 
             if (cn.noteoff)

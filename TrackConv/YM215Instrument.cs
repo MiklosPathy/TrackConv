@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace TrackConv
@@ -84,6 +85,7 @@ namespace TrackConv
     }
     public class YM215Instrument
     {
+        public string NAME;
         public byte FILE_VERSION;
         public byte SYSTEM_YM2151;
         public byte INSTRUMENT_MODE;
@@ -179,8 +181,19 @@ namespace TrackConv
             //END OF DMP FORMAT
         }
 
+        public void ReadFromDMP(string filename)
+        {
+            byte[] filedata;
+            NAME = Path.GetFileName(filename);
+            filedata = File.ReadAllBytes(filename);
+            //Console.WriteLine(filedata.Length);
+
+            ReadFromDMP(filedata);
+        }
+
         public void ToConsole()
         {
+            Console.WriteLine("Name:" + NAME);
             Console.WriteLine("File version (11):" + FILE_VERSION + "\t System (8):" + SYSTEM_YM2151 + "\t Instrument Mode (1):" + INSTRUMENT_MODE);
             Console.WriteLine("PMS:" + PMS + "\t FB:" + FB + "\t CON:" + CON + "\t AMS:" + AMS);
             Console.WriteLine("--------------------------------------------");

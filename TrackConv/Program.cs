@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace TrackConv
 {
@@ -9,53 +10,79 @@ namespace TrackConv
     {
         static void Main(string[] args)
         {
-            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\modz\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
-            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\satell.xm");
-            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\DAY 24 - 4mat-(Day24)-Blank_Page.xm");
-            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\toccata&fugue.xm");
-            //XMRead xmreader = new XMRead(@"C:\Users\mpathy\Desktop\scale.xm");
+            string projectfilename = "TCProject.json";
+            if (args.Count() > 0) projectfilename = args[0];
 
-            //xmreader.Open();
+            TCProject project;
+            string jsonString;
+            var jsonserializeroptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+            };
+            if (!File.Exists(projectfilename))
+            {
+                project = new TCProject();
+                jsonString = JsonSerializer.Serialize(project, jsonserializeroptions);
+                File.WriteAllText(projectfilename, jsonString);
+            }
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(projectfilename));
 
-            //Console.WindowWidth = 200;
-            //Console.WindowHeight = 60;
+            jsonString = File.ReadAllText(projectfilename);
+            project = JsonSerializer.Deserialize<TCProject>(jsonString, jsonserializeroptions);
 
-            //xmreader.Header.ToConsole();
+            XMRead xmreader = new XMRead(project.TrackFile);
+            xmreader.Open();
 
-            //Console.WriteLine("Patterns:");
-            //for (int i = 0; i < xmreader.Patterns.Length; i++)
-            //{
-            //    XMPattern pattern = xmreader.Patterns[i];
-            //    Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
-            //}
+            Console.WindowWidth = 200;
+            Console.WindowHeight = 60;
 
-            //Console.WriteLine("Instruments:");
-            //for (int i = 0; i < xmreader.Instruments.Length; i++)
-            //{
-            //    XMInstrument instrument = xmreader.Instruments[i];
-            //    Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
-            //}
+            xmreader.Header.ToConsole();
 
-            //List<XMNote> allnotes = new List<XMNote>();
-            //foreach (var item in xmreader.Header.PatternOrderTable)
-            //{
-            //    XMPattern pattern = xmreader.Patterns[item];
-            //    if (pattern.PatArr != null)
-            //        foreach (var arre in pattern.PatArr)
-            //        {
-            //            if (arre == null)
-            //                Console.WriteLine("NULL");
-            //            allnotes.Add(arre);
-            //        }
-            //}
+            List<YM215Instrument> yM215Instruments = new List<YM215Instrument>();
+            foreach (string instrumentfilename in project.YM2151Instruments)
+            {
+                YM215Instrument instr = new YM215Instrument();
+                instr.ReadFromDMP(instrumentfilename);
+                yM215Instruments.Add(instr);
+                instr.ToConsole();
+            }
+
+            Console.WriteLine("Patterns:");
+            for (int i = 0; i < xmreader.Patterns.Length; i++)
+            {
+                XMPattern pattern = xmreader.Patterns[i];
+                Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
+            }
+
+            Console.WriteLine("Instruments:");
+            for (int i = 0; i < xmreader.Instruments.Length; i++)
+            {
+                XMInstrument instrument = xmreader.Instruments[i];
+                Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
+            }
+
+            List<XMNote> allnotes = new List<XMNote>();
+            foreach (var item in xmreader.Header.PatternOrderTable)
+            {
+                XMPattern pattern = xmreader.Patterns[item];
+                if (pattern.PatArr != null)
+                    foreach (var arre in pattern.PatArr)
+                    {
+                        if (arre == null)
+                            Console.WriteLine("NULL");
+                        allnotes.Add(arre);
+                    }
+            }
 
 
-            //Console.WriteLine("Used effects:");
-            //var effects = allnotes.Select(x => x.Effect).Distinct().OrderBy(x => x).ToList();
-            //foreach (var item in effects)
-            //{
-            //    Console.WriteLine(item.ToString("X2"));
-            //}
+            Console.WriteLine("Used effects:");
+            var effects = allnotes.Select(x => x.Effect).Distinct().OrderBy(x => x).ToList();
+            foreach (var item in effects)
+            {
+                Console.WriteLine(item.ToString("X2"));
+            }
 
 
             ////foreach (var item in xmreader.Header.PatternOrderTable)
@@ -65,87 +92,33 @@ namespace TrackConv
             ////}
 
 
-            byte[] filedata;
-            //filedata = File.ReadAllBytes("Organ_Additive.dmp");
-            filedata = File.ReadAllBytes("OscillatorTest.dmp");
-            //Console.WriteLine(filedata.Length);
-            YM215Instrument instr = new YM215Instrument();
-            instr.ReadFromDMP(filedata);
-
-            instr.ToConsole();
-
             List<byte> bytes = new List<byte>();
 
-            //for (int i = 0; i < 8; i++)
-            int i = 0;
-            {
-                var e = instr.ToControlBytes(i);
-                foreach (var item in e)
-                {
-                    bytes.Add(item.Key);
-                    bytes.Add(item.Value);
-                }
-            }
-
- 
-            XMNote note = new XMNote() { octave = 3, note = 0 };
-            note.NoteIntoBytes(bytes, 0, 0b01100000);
-            note.note = 4;
-            note.NoteIntoBytes(bytes, 0, 0b00011000);
-
-
-            //foreach (var item in xmreader.Header.PatternOrderTable)
+            ////for (int i = 0; i < 8; i++)
+            //int i = 0;
             //{
-            //    bytes.AddRange(xmreader.Patterns[item].PatternToBytes());
+            //    var e = instr.ToControlBytes(i);
+            //    foreach (var item in e)
+            //    {
+            //        bytes.Add(item.Key);
+            //        bytes.Add(item.Value);
+            //    }
             //}
 
-            int linenumber = 10000;
-            const int maxiteminline = 16;
 
-            string cx16basicplayer = @"100 GOSUB 500
-110 TT=TI
-120 READ R,D
-130 POKE $9FE0,R:POKE $9FE1,D
-140 IF(R>0)THEN GOTO 120
-150 IF(D=0)THEN GOTO 200
-160 TT=TT+D
-170 FOR I=0 TO 1 STEP 0
-180 IF(TI>=TT)THEN GOTO 110
-190 NEXT I
-200 GOSUB 500
-210 END
-500 REM RESET SOUND CHIP
-510 FOR I = 0 TO 255 : POKE $9FE0, I : POKE $9FE1, 0 : NEXT
-520 RETURN";
+            //XMNote note = new XMNote() { octave = 3, note = 0 };
+            //note.NoteIntoBytes(bytes, 0, 0b01100000);
+            //note.note = 4;
+            //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
 
-            List<string> lines = new List<string>();
-            lines.Add(cx16basicplayer);
-
-            string currentline = "";
-            int curritem = 1;
-
-            int remainingitems = bytes.Count;
-
-            foreach (var item in bytes)
+            foreach (var item in xmreader.Header.PatternOrderTable)
             {
-                if (curritem == 1)
-                    currentline = linenumber + " DATA ";
-                if (curritem <= maxiteminline)
-                    currentline += "$" + item.ToString("X2");
-                if (curritem < maxiteminline && remainingitems != 1) currentline += ",";
-                if (curritem == maxiteminline || remainingitems == 1)
-                {
-                    curritem = 1;
-                    lines.Add(currentline);
-                    linenumber += 10;
-                }
-                else curritem++;
-                remainingitems--;
+                bytes.AddRange(xmreader.Patterns[item].PatternToBytes());
+                break;
             }
-            lines.Add(linenumber + " DATA 0,0");
 
-            File.WriteAllLines(@"notes.txt", lines.ToArray());
+            CX16BasicWriter.ToFile(bytes);
 
 
 
