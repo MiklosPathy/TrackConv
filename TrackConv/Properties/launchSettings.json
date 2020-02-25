@@ -2,7 +2,7 @@
   "profiles": {
     "TrackConv": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\mpathy\\Desktop\\TCProjects\\Satell.tcp.json"
+      "commandLineArgs": "C:\\Users\\mpathy\\Desktop\\TCProjects\\pmchip.tcp.json"
     }
   }
 }

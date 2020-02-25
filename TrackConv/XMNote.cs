@@ -13,7 +13,7 @@ namespace TrackConv
         public byte EffectParam = 0;
         public bool noteoff { get { return octave >= 8; } set { Note = value ? (byte)(8 * 12) : (byte)0; } }
         public int octave { get { return Note / 12; } set { Note = (byte)(Note % 12 + value * 12); } }
-        public int note { get { return Note % 12; } set { Note = (byte)(octave * 12 + value); } }
+        public int actualnote { get { return Note % 12; } set { Note = (byte)(octave * 12 + value); } }
 
         public void Reset()
         {
@@ -57,7 +57,7 @@ namespace TrackConv
         {
             if (Note == 0) return "---";
             if (noteoff) return "===";
-            return notes[note] + octave;
+            return notes[actualnote] + octave;
         }
 
         public void TryParseNextNoteFrom(ref int offset, byte[] data)

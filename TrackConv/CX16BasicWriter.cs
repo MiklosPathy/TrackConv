@@ -25,8 +25,10 @@ namespace TrackConv
 200 GOSUB 500
 210 END
 500 REM RESET SOUND CHIP
-510 FOR I = 0 TO 255 : POKE $9FE0, I : POKE $9FE1, 0 : NEXT
-520 RETURN";
+510 FOR I = 0 TO $5F : POKE $9FE0, I : POKE $9FE1, 0 : NEXT
+520 FOR I = $60 TO $7F : POKE $9FE0, I : POKE $9FE1, 127 : NEXT
+530 FOR I = $80 TO $FF : POKE $9FE0, I : POKE $9FE1, 0 : NEXT
+540 RETURN";
 
 
             List<string> lines = new List<string>();
@@ -53,7 +55,7 @@ namespace TrackConv
                 else curritem++;
                 remainingitems--;
             }
-            lines.Add(linenumber + " DATA 0,0");
+            lines.Add(linenumber + " DATA 0,60,0,0");
 
             File.WriteAllLines(@"notes.txt", lines.ToArray());
         }

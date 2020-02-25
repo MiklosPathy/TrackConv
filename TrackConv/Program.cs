@@ -40,12 +40,18 @@ namespace TrackConv
 
             xmreader.Header.ToConsole();
 
-            List<YM215Instrument> yM215Instruments = new List<YM215Instrument>();
+
+
+            YM2151State cs = new YM2151State();
+
+            int instrnr = 1;
             foreach (string instrumentfilename in project.YM2151Instruments)
             {
                 YM215Instrument instr = new YM215Instrument();
                 instr.ReadFromDMP(instrumentfilename);
-                yM215Instruments.Add(instr);
+                cs.DefinedInstruments[instrnr] = instr;
+                instrnr++;
+                Console.WriteLine("Instrument " + instrnr);
                 instr.ToConsole();
             }
 
@@ -112,10 +118,14 @@ namespace TrackConv
             //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
 
+            int maxpatterns = 10;
+            bool[] channelson = { true, true, true, true, false, false, false, false };
             foreach (var item in xmreader.Header.PatternOrderTable)
             {
-                bytes.AddRange(xmreader.Patterns[item].PatternToBytes());
-                break;
+                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(cs, channelson));
+                xmreader.Patterns[item].PatternToConsole();
+                maxpatterns--;
+                if (maxpatterns == 0) break;
             }
 
             CX16BasicWriter.ToFile(bytes);

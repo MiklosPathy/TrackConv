@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TrackConv
 {
-    public enum SlotByOperator { M1, M2, O1, O2 };
+    public enum SlotByOperator { M1, M2, C1, C2 };
     public enum KeyEnableByOperator { M1 = 0b00001000, C1 = 0b00010000, M2 = 0b00100000, C2 = 0b01000000 };
 
     public class YM2151operator
@@ -212,7 +212,36 @@ namespace TrackConv
             Console.Write("SS:"); for (int i = 0; i < 4; i++) { Console.Write("\t" + OPS[i].SSGEG_Enabled); }; Console.WriteLine();
         }
 
-        public Dictionary<byte, byte> ToControlBytes(int channel, bool left = true, bool right = true)
+        private void SetVolumeToBytes(Dictionary<byte, byte> bytes, int slot, YM2151operator op, byte volume)
+        {
+            byte register, value = 0;
+
+            //Liner volume - forget it. Little Japanese designer can't do it simply.
+            //byte desiredvolume = (byte)(127 - ((127 - op.TL) * volume) / 64);
+            //Nonlinear volume
+            byte desiredvolume = op.TL > 64 ? op.TL : (byte)(127 - (63 + ((63 - op.TL) * volume / 64)));
+
+            //$60-$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
+            register = (byte)(0x60 + slot);
+            value = 0;
+            value += desiredvolume;
+            bytes[register] = value;
+        }
+
+        public void SetVolumeToBytes(Dictionary<byte, byte> bytes, int channel, byte volume)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                //if (i == (int)SlotByOperator.C1 || i == (int)SlotByOperator.M2 || i == (int)SlotByOperator.C2)
+                {
+                    int slot = i * 8 + channel;
+                    YM2151operator op = OPS[i];
+                    SetVolumeToBytes(bytes, slot, op, volume);
+                }
+            }
+        }
+
+        public Dictionary<byte, byte> ToControlBytes(int channel, byte volume = 64, bool left = true, bool right = true)
         {
             byte register, value = 0;
             Dictionary<byte, byte> bytes = new Dictionary<byte, byte>();
@@ -247,11 +276,7 @@ namespace TrackConv
                 value += op.MULT;
                 bytes[register] = value;
 
-                //$60-$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
-                register = (byte)(0x60 + slot);
-                value = 0;
-                value += op.TL;
-                bytes[register] = value;
+                SetVolumeToBytes(bytes, slot, op, volume);
 
                 //$80-$9F  K​K​-​A​AA​A​A​     Slot1 - 32.     Keyscale / Attack​  K = Keycale, A = attack​
                 register = (byte)(0x80 + slot);
