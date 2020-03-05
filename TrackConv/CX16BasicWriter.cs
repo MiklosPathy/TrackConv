@@ -57,7 +57,7 @@ namespace TrackConv
             }
             lines.Add(linenumber + " DATA 0,60,0,0");
 
-            File.WriteAllLines(@"notes.txt", lines.ToArray());
+            File.WriteAllLines(@"music.bas", lines.ToArray());
         }
     }
 }

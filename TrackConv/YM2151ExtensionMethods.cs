@@ -166,9 +166,11 @@ namespace TrackConv
             }
         }
         public static int tickperrow = 6;
-        public static List<byte> PatternToBytes(this XMPattern xmpattern, YM2151State cs, bool[] channelson = null)
+        public static List<byte> PatternToBytes(this XMPattern xmpattern, YM2151State cs, bool[] channelson = null, int? FromRow = null, int? ToRow = null)
         {
             int currentbpm = xmpattern.xmheader.DefaultBPM;
+            int usedchannels = Math.Min(xmpattern.xmheader.NumberOfChannels, 8);
+
             if (channelson == null)
             {
                 channelson = new bool[xmpattern.xmheader.NumberOfChannels];
@@ -183,11 +185,19 @@ namespace TrackConv
 
             for (int rows = 0; rows < xmpattern.NumberOfRows; rows++)
             {
+                if (FromRow.HasValue && FromRow.Value > rows) continue;
+                if (ToRow.HasValue && ToRow.Value < rows) continue;
+
                 //Is there any effects needs ticking here?
                 bool tickingneeded = false;
                 for (int channels = 0; channels < xmpattern.xmheader.NumberOfChannels; channels++)
                 {
                     XMNote cn = xmpattern.PatArr[rows, channels];
+                    //Tempo determination. This can come from all available channels.
+                    if (cn.Effect == 0xF) currentbpm = cn.EffectParam;
+
+                    //Ticking will apply only for the phisycally converted channels.
+                    if (channels > usedchannels) continue;
                     int epu = (cn.EffectParam >> 4) & 0xF;
                     int epd = cn.EffectParam & 0xF;
                     tickingneeded =
@@ -195,15 +205,13 @@ namespace TrackConv
                         (cn.Effect == 0xE && epu == 0xD) ||
                         (cn.Effect == 0xE && epu == 0xC) ||
                         (cn.Effect == 0xA && cn.EffectParam != 0);
-
-                    if (cn.Effect == 0xF) currentbpm = cn.EffectParam;
                 }
 
                 if (tickingneeded)
                 {
-                    XMNote[,] tickarr = new XMNote[tickperrow, xmpattern.xmheader.NumberOfChannels];
+                    XMNote[,] tickarr = new XMNote[tickperrow, usedchannels];
 
-                    for (int channel = 0; channel < xmpattern.xmheader.NumberOfChannels; channel++)
+                    for (int channel = 0; channel < usedchannels; channel++)
                     {
                         if (!channelson[channel]) continue;
 
@@ -245,7 +253,7 @@ namespace TrackConv
 
                     for (int ticks = 0; ticks < tickperrow; ticks++)
                     {
-                        for (int channel = 0; channel < xmpattern.xmheader.NumberOfChannels; channel++)
+                        for (int channel = 0; channel < usedchannels; channel++)
                         {
                             if (!channelson[channel]) continue;
                             XMNote cn = tickarr[ticks, channel];
@@ -259,7 +267,7 @@ namespace TrackConv
                 }
                 else
                 {
-                    for (int channel = 0; channel < xmpattern.xmheader.NumberOfChannels; channel++)
+                    for (int channel = 0; channel < usedchannels; channel++)
                     {
                         if (!channelson[channel]) continue;
                         XMNote cn = xmpattern.PatArr[rows, channel];

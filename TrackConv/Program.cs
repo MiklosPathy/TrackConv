@@ -26,6 +26,8 @@ namespace TrackConv
                 project = new TCProject();
                 jsonString = JsonSerializer.Serialize(project, jsonserializeroptions);
                 File.WriteAllText(projectfilename, jsonString);
+                Console.WriteLine("Default config file written. It will be good for you." + projectfilename);
+                Environment.Exit(0);
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(projectfilename));
 
@@ -118,18 +120,44 @@ namespace TrackConv
             //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
 
-            int maxpatterns = 10;
-            bool[] channelson = { true, true, true, true, false, false, false, false };
+
+            int patterncounter = 0;
+            bool[] channelson = { true, true, true, true, true, true, true, true };
             foreach (var item in xmreader.Header.PatternOrderTable)
             {
-                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(cs, channelson));
+                int? FromRow = null;
+                int? ToRow = null;
+
+                if (project.ConvertFrom != null && project.ConvertFrom.Track.HasValue)
+                {
+                    if (project.ConvertFrom.Track.Value == patterncounter)
+                        FromRow = project.ConvertFrom.Row;
+                    if (project.ConvertFrom.Track.Value > patterncounter)
+                    {
+                        patterncounter++;
+                        continue;
+                    }
+                }
+
+                if (project.ConvertTo != null && project.ConvertTo.Track.HasValue)
+                {
+                    if (project.ConvertTo.Track.Value == patterncounter)
+                        ToRow = project.ConvertTo.Row;
+                    if (project.ConvertTo.Track.Value < patterncounter)
+                    {
+                        patterncounter++;
+                        continue;
+                    }
+                }
+
+                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(cs, channelson, FromRow, ToRow));
                 xmreader.Patterns[item].PatternToConsole();
-                maxpatterns--;
-                if (maxpatterns == 0) break;
+                patterncounter++;
+
             }
 
             CX16BasicWriter.ToFile(bytes);
-
+            BinaryWriter.ToFile(bytes);
 
 
 
