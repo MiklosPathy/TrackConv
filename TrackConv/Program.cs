@@ -10,10 +10,13 @@ namespace TrackConv
     {
         static void Main(string[] args)
         {
-            string projectfilename = "TCProject.json";
+            Conversion conv = new Conversion();
+
+            string projectfilename = "Default.tcproject";
             if (args.Count() > 0) projectfilename = args[0];
 
-            TCProject project;
+            projectfilename = Path.GetFullPath(projectfilename);
+
             string jsonString;
             var jsonserializeroptions = new JsonSerializerOptions
             {
@@ -23,18 +26,18 @@ namespace TrackConv
             };
             if (!File.Exists(projectfilename))
             {
-                project = new TCProject();
-                jsonString = JsonSerializer.Serialize(project, jsonserializeroptions);
+                conv.Project = new TCProject();
+                jsonString = JsonSerializer.Serialize(conv.Project, jsonserializeroptions);
                 File.WriteAllText(projectfilename, jsonString);
-                Console.WriteLine("Default config file written. It will be good for you." + projectfilename);
+                Console.WriteLine("Default project file written. It will be good for you. " + projectfilename);
                 Environment.Exit(0);
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(projectfilename));
 
             jsonString = File.ReadAllText(projectfilename);
-            project = JsonSerializer.Deserialize<TCProject>(jsonString, jsonserializeroptions);
+            conv.Project = JsonSerializer.Deserialize<TCProject>(jsonString, jsonserializeroptions);
 
-            XMRead xmreader = new XMRead(project.TrackFile);
+            XMRead xmreader = new XMRead(conv.Project.TrackFile);
             xmreader.Open();
 
             Console.WindowWidth = 200;
@@ -43,15 +46,12 @@ namespace TrackConv
             xmreader.Header.ToConsole();
 
 
-
-            YM2151State cs = new YM2151State();
-
             int instrnr = 1;
-            foreach (string instrumentfilename in project.YM2151Instruments)
+            foreach (string instrumentfilename in conv.Project.YM2151Instruments)
             {
                 YM215Instrument instr = new YM215Instrument();
                 instr.ReadFromDMP(instrumentfilename);
-                cs.DefinedInstruments[instrnr] = instr;
+                conv.CYMS.DefinedInstruments[instrnr] = instr;
                 instrnr++;
                 Console.WriteLine("Instrument " + instrnr);
                 instr.ToConsole();
@@ -119,7 +119,8 @@ namespace TrackConv
             //note.note = 4;
             //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
-
+            conv.CurrentBPM = xmreader.Header.DefaultBPM;
+            conv.CurrentTickPerRow = xmreader.Header.DefaultTempo;
 
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
@@ -128,29 +129,29 @@ namespace TrackConv
                 int? FromRow = null;
                 int? ToRow = null;
 
-                if (project.ConvertFrom != null && project.ConvertFrom.Track.HasValue)
+                if (conv.Project.ConvertFrom != null && conv.Project.ConvertFrom.Track.HasValue)
                 {
-                    if (project.ConvertFrom.Track.Value == patterncounter)
-                        FromRow = project.ConvertFrom.Row;
-                    if (project.ConvertFrom.Track.Value > patterncounter)
+                    if (conv.Project.ConvertFrom.Track.Value == patterncounter)
+                        FromRow = conv.Project.ConvertFrom.Row;
+                    if (conv.Project.ConvertFrom.Track.Value > patterncounter)
                     {
                         patterncounter++;
                         continue;
                     }
                 }
 
-                if (project.ConvertTo != null && project.ConvertTo.Track.HasValue)
+                if (conv.Project.ConvertTo != null && conv.Project.ConvertTo.Track.HasValue)
                 {
-                    if (project.ConvertTo.Track.Value == patterncounter)
-                        ToRow = project.ConvertTo.Row;
-                    if (project.ConvertTo.Track.Value < patterncounter)
+                    if (conv.Project.ConvertTo.Track.Value == patterncounter)
+                        ToRow = conv.Project.ConvertTo.Row;
+                    if (conv.Project.ConvertTo.Track.Value < patterncounter)
                     {
                         patterncounter++;
                         continue;
                     }
                 }
 
-                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(cs, channelson, FromRow, ToRow));
+                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(conv, channelson, FromRow, ToRow));
                 xmreader.Patterns[item].PatternToConsole();
                 patterncounter++;
 

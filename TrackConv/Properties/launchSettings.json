@@ -2,7 +2,7 @@
   "profiles": {
     "TrackConv": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\mpathy\\Desktop\\TCProjects\\Toccata.tcp.json"
+      "commandLineArgs": "C:\\Users\\mpathy\\Source\\Repos\\TrackConv\\ExampleProjects\\Agony.tcproject"
     }
   }
 }

@@ -5,7 +5,7 @@ namespace TrackConv
 {
     public static class YM2151ExtensionMethods
     {
-        //Linear note table.... Forget is. Little Japanase engineer will do it overcomplicated.
+        //Linear note table.... Forget it. Little Japanase engineer will do it overcomplicated. Banzaii!!!
         private static readonly int[] Normal2YMNote = { 14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13 };
 
         public static int ym2151note(this XMNote xmnote)
@@ -128,9 +128,9 @@ namespace TrackConv
             double result = Math.Max(1, desiredplayerticks);
             return (byte)result;
         }
-        private static byte bpmtoplayertickrow(int bpm)
+        private static byte bpmtoplayertickrow(int bpm, int currenttickperrow)
         {
-            double desiredplayerticks = bpmtotickmillisec(bpm) / ((double)1 / (double)playertickpersec * (double)1000) * (double)tickperrow;
+            double desiredplayerticks = bpmtotickmillisec(bpm) / ((double)1 / (double)playertickpersec * (double)1000) * (double)currenttickperrow;
             double result = Math.Max(1, desiredplayerticks);
             return (byte)result;
         }
@@ -165,10 +165,10 @@ namespace TrackConv
                 bytes.Add(register); bytes.Add(value);
             }
         }
-        public static int tickperrow = 6;
-        public static List<byte> PatternToBytes(this XMPattern xmpattern, YM2151State cs, bool[] channelson = null, int? FromRow = null, int? ToRow = null)
+
+        public static List<byte> PatternToBytes(this XMPattern xmpattern, Conversion conv, bool[] channelson = null, int? FromRow = null, int? ToRow = null)
         {
-            int currentbpm = xmpattern.xmheader.DefaultBPM;
+
             int usedchannels = Math.Min(xmpattern.xmheader.NumberOfChannels, 8);
 
             if (channelson == null)
@@ -194,7 +194,11 @@ namespace TrackConv
                 {
                     XMNote cn = xmpattern.PatArr[rows, channels];
                     //Tempo determination. This can come from all available channels.
-                    if (cn.Effect == 0xF) currentbpm = cn.EffectParam;
+                    if (cn.Effect == 0xF)
+                    {
+                        if (cn.EffectParam < 32) conv.CurrentTickPerRow = cn.EffectParam;
+                        else conv.CurrentBPM = cn.EffectParam;
+                    }
 
                     //Ticking will apply only for the phisycally converted channels.
                     if (channels > usedchannels) continue;
@@ -209,7 +213,7 @@ namespace TrackConv
 
                 if (tickingneeded)
                 {
-                    XMNote[,] tickarr = new XMNote[tickperrow, usedchannels];
+                    XMNote[,] tickarr = new XMNote[conv.CurrentTickPerRow, usedchannels];
 
                     for (int channel = 0; channel < usedchannels; channel++)
                     {
@@ -226,7 +230,7 @@ namespace TrackConv
                             int diff = -epd;
                             if (epu != 0) diff = epu;
 
-                            for (int i = 1; i < tickperrow; i++)
+                            for (int i = 1; i < conv.CurrentTickPerRow; i++)
                             {
                                 volume += diff;
                                 if (volume < 0) volume = 0;
@@ -251,18 +255,18 @@ namespace TrackConv
                         }
                     }
 
-                    for (int ticks = 0; ticks < tickperrow; ticks++)
+                    for (int ticks = 0; ticks < conv.CurrentTickPerRow; ticks++)
                     {
                         for (int channel = 0; channel < usedchannels; channel++)
                         {
                             if (!channelson[channel]) continue;
                             XMNote cn = tickarr[ticks, channel];
-                            if (cn != null) NoteIntoBytes(cn, bytes, channel, cs);
+                            if (cn != null) NoteIntoBytes(cn, bytes, channel, conv.CYMS);
                         }
                         //Timing
                         register = 0;
-                        value = (byte)bpmtoplayertick(currentbpm);
-                        addtobytes(bytes, register, value, cs);
+                        value = (byte)bpmtoplayertick(conv.CurrentBPM);
+                        addtobytes(bytes, register, value, conv.CYMS);
                     }
                 }
                 else
@@ -271,12 +275,12 @@ namespace TrackConv
                     {
                         if (!channelson[channel]) continue;
                         XMNote cn = xmpattern.PatArr[rows, channel];
-                        NoteIntoBytes(cn, bytes, channel, cs);
+                        NoteIntoBytes(cn, bytes, channel, conv.CYMS);
                     }
                     //Timing
                     register = 0;
-                    value = (byte)bpmtoplayertickrow(currentbpm);
-                    addtobytes(bytes, register, value, cs);
+                    value = (byte)bpmtoplayertickrow(conv.CurrentBPM, conv.CurrentTickPerRow);
+                    addtobytes(bytes, register, value, conv.CYMS);
                 }
             }
             return bytes;
