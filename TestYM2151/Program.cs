@@ -1,6 +1,7 @@
 ﻿using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -70,6 +71,10 @@ namespace CallLibOpenMPT
             for (int i = 0; i < 256; i++)
             {
                 ym2161c.ym2151_write_reg(chip, (byte)i, 0);
+            }
+            for (int i = 0x60; i < 0x80; i++)
+            {
+                ym2161c.ym2151_write_reg(chip, (byte)i, 127);
             }
         }
 
@@ -167,22 +172,41 @@ new Rec(8,0,0,0,0),
         {
             YMshell sh = new YMshell();
             sh.RESET_SOUND_CHIP();
-            for (int i = 0; i <= 7; i++)
-            {
-                sh.SETUP_TIMBRE_FOR_CHANNEL(i);
-            }
 
-            foreach (Rec rec in data)
+            var bytes = File.ReadAllBytes(args[0]);
+
+            string output = "";
+            for (int i = 0; i < bytes.Count(); i += 2)
             {
-                Console.WriteLine(rec);
-                if (rec.CH != 8)
+                byte r = bytes[i];
+                byte v = bytes[i + 1];
+                sh.setregister(r, v);
+                output += r.ToString("X2") + " " + v.ToString("X2") + " ";
+                if (r == 0)
                 {
-                    sh.SETUP_NOTE_FREQUENCY_FOR_CHANNEL(rec.NO, rec.OC, rec.CH);
-                    if (rec.KO == 1) sh.NOTE_ON_FOR_CHANNEL(rec.CH);
-                    if (rec.KO == 0) sh.NOTE_OFF_FOR_CHANNEL(rec.CH);
-                    Thread.Sleep(rec.WA);
+                    Console.WriteLine(output);
+                    output = "";
+                    Thread.Sleep((int)(v * 16.6666));
                 }
             }
+
+
+            //for (int i = 0; i <= 7; i++)
+            //{
+            //    sh.SETUP_TIMBRE_FOR_CHANNEL(i);
+            //}
+
+            //foreach (Rec rec in data)
+            //{
+            //    Console.WriteLine(rec);
+            //    if (rec.CH != 8)
+            //    {
+            //        sh.SETUP_NOTE_FREQUENCY_FOR_CHANNEL(rec.NO, rec.OC, rec.CH);
+            //        if (rec.KO == 1) sh.NOTE_ON_FOR_CHANNEL(rec.CH);
+            //        if (rec.KO == 0) sh.NOTE_OFF_FOR_CHANNEL(rec.CH);
+            //        Thread.Sleep(rec.WA);
+            //    }
+            //}
 
             //Console.In.Read();
         }
