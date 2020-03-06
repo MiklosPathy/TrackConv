@@ -1,0 +1,14 @@
+{
+  "TrackFile": "toccata&fugue.xm",
+  "YM2151Instruments": [
+    "Organ_Additive.dmp",
+  ],
+  "ConvertFrom": {
+    "Track": 0,
+    "Row": 0,
+  },
+  "ConvertTo":  {
+    "Track": 3,
+    "Row": 20,
+  },
+}
