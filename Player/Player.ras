@@ -1,0 +1,95 @@
+program Player;
+
+var
+   YMReg : byte absolute $9FE0;
+   YMData : byte absolute $9FE1;
+   		ti0 : byte absolute $00A0;
+		ti1 : byte absolute $00A1;
+		ti2 : byte absolute $00A2;
+		ti : integer absolute $00A0;		
+   dp : pointer;
+   lastti : integer;
+   myReg,myData : byte ;
+   @define datastart $1130
+   musicdata : incbin("music.bin", @datastart);
+  
+procedure ResetYM(); 
+	var 
+		i : byte;
+	begin
+
+    fori i := 0 to $5F do
+    	begin
+	    YMReg:=i;
+	    YMData:=0;
+	    end;
+
+    fori i := $60 to $7F do
+	    begin
+	    YMReg:=i;
+	    YMData:=127;
+	    end;
+
+    for i := $80 to $FF do
+	    begin
+	    YMReg:=i;
+	    YMData:=0;
+	    end;
+    YMReg:=i;
+    YMData:=0;
+
+	end;
+
+procedure GetNextRegPair();
+	begin
+	//And store to the YM immediatelly
+	myReg:=dp[0];
+	YMReg:=myReg;
+	myData:=dp[1];
+	YMData:=myData;
+	dp:=dp+2;
+	end;
+
+procedure GetTI();
+	begin
+	asm("
+		jsr $FFDE
+		sta ti0
+		stx ti1
+		sty ti2
+	");
+	end;
+
+procedure WaitTicks(ticks:byte);
+	var 
+		targetticks : integer;
+	begin
+	targetticks:=lastti+ticks;
+	GetTI();
+	while (targetticks>ti) do 
+		begin
+		GetTI();
+		end;
+	lastti:=ti;
+	end;
+
+//MAIN START
+begin
+ResetYM();
+
+dp:=@datastart;
+GetTI();
+lastti:=ti;
+
+GetNextRegPair();
+
+while (myReg>0 or myData>0) do
+	begin
+	if (myReg=0) then WaitTicks(myData);
+	GetNextRegPair();
+	end;
+
+ResetYM();
+return();
+end.
+
