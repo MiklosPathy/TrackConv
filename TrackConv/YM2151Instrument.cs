@@ -83,7 +83,7 @@ namespace TrackConv
 
         public byte SSGEG_Enabled;
     }
-    public class YM215Instrument
+    public class YM2151Instrument
     {
         private readonly SlotByOperator[][] OutSlotByAlg = new SlotByOperator[][]
 {

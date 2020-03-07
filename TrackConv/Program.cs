@@ -47,11 +47,11 @@ namespace TrackConv
 
 
             int instrnr = 1;
-            foreach (string instrumentfilename in conv.Project.YM2151Instruments)
+            foreach (Instrument instrument in conv.Project.YM2151Instruments)
             {
-                YM215Instrument instr = new YM215Instrument();
-                instr.ReadFromDMP(instrumentfilename);
-                conv.CYMS.DefinedInstruments[instrnr] = instr;
+                YM2151Instrument instr = new YM2151Instrument();
+                instr.ReadFromDMP(instrument.DMPFile);
+                conv.DefinedInstruments[instrnr] = instr;
                 instrnr++;
                 Console.WriteLine("Instrument " + instrnr);
                 instr.ToConsole();
@@ -121,6 +121,7 @@ namespace TrackConv
 
             conv.CurrentBPM = xmreader.Header.DefaultBPM;
             conv.CurrentTickPerRow = xmreader.Header.DefaultTempo;
+            if (conv.Project.OverrideRowPerBeat.HasValue) conv.CurrentRowPerBeat = conv.Project.OverrideRowPerBeat.Value;
 
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
@@ -152,10 +153,12 @@ namespace TrackConv
                 }
 
                 bytes.AddRange(xmreader.Patterns[item].PatternToBytes(conv, channelson, FromRow, ToRow));
-                xmreader.Patterns[item].PatternToConsole();
+                //xmreader.Patterns[item].PatternToConsole();
                 patterncounter++;
 
             }
+
+            if (conv.Project.OutputDirectory != null) Directory.SetCurrentDirectory(conv.Project.OutputDirectory);
 
             CX16BasicWriter.ToFile(bytes);
             BinaryWriter.ToFile(bytes);

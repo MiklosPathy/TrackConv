@@ -37,23 +37,23 @@ namespace TrackConv
             }
         }
 
-        public static void NoteIntoBytes(this XMNote cn, List<byte> bytes, int channel, YM2151State cs, byte operatormask = 0b01111000)
+        public static void NoteIntoBytes(this XMNote cn, List<byte> bytes, int channel, Conversion conv, byte operatormask = 0b01111000)
         {
             if (channel > 7) return;
             byte register, value = 0;
 
             //Instrument setup for channel
             if (cn.Instrument != 0)
-                if (cs.LastInstrumentsPerChannel[channel] != cn.Instrument)
+                if (conv.CYMS.LastInstrumentPerChannel[channel] != cn.Instrument)
                 {
-                    ResetChannel(bytes, channel, cs);
-                    YM215Instrument ci = cs.DefinedInstruments[cn.Instrument];
+                    ResetChannel(bytes, channel, conv.CYMS);
+                    YM2151Instrument ci = conv.DefinedInstruments[cn.Instrument];
                     var cbs = ci.ToControlBytes(channel);
                     foreach (var item in cbs)
                     {
-                        addtobytes(bytes, item.Key, item.Value, cs);
+                        addtobytes(bytes, item.Key, item.Value, conv.CYMS);
                     }
-                    cs.LastInstrumentsPerChannel[channel] = cn.Instrument;
+                    conv.CYMS.LastInstrumentPerChannel[channel] = cn.Instrument;
                 }
 
             //Volume control
@@ -61,9 +61,9 @@ namespace TrackConv
             if (cn.Effect == 0xC) cn.Volume = cn.EffectParam;
             if (cn.Volume != 0)
             {
-                if (cs.LastInstrumentsPerChannel[channel] != 0)
+                if (conv.CYMS.LastInstrumentPerChannel[channel] != 0)
                 {
-                    YM215Instrument ci = cs.DefinedInstruments[cs.LastInstrumentsPerChannel[channel]];
+                    YM2151Instrument ci = conv.DefinedInstruments[conv.CYMS.LastInstrumentPerChannel[channel]];
                     //Csak a hallható operátor hangerejét kéne módosítani. Elvileg.
                     //De most még nem.
 
@@ -71,49 +71,55 @@ namespace TrackConv
                     ci.SetVolumeToBytes(tempd, channel, cn.Volume);
                     foreach (var item in tempd)
                     {
-                        addtobytes(bytes, item.Key, item.Value, cs);
+                        addtobytes(bytes, item.Key, item.Value, conv.CYMS);
                     }
                 }
             }
 
-            if (cn.noteoff)
+            if (cn.noteoff || cn.Effect == 0x14)
             {
                 //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
                 //Minden operátor kuss.
                 register = (byte)(0x08);
                 value = 0b00000000;
                 value += (byte)(channel & 0b00000111);
-                addtobytes(bytes, register, value, cs);
+                addtobytes(bytes, register, value, conv.CYMS);
             }
             else
             {
                 if (cn.Note != 0)
                 {
+                    if (conv.Project.YM2151Instruments[cn.Instrument-1].Detune.HasValue)
+                    {
+                        int newnote = cn.Note + conv.Project.YM2151Instruments[cn.Instrument-1].Detune.Value;
+                        if (newnote <= 0) throw new Exception("Detune error. Out of range downwards.");
+                        cn.Note = (byte)(newnote);
+                        if (cn.noteoff) throw new Exception("Detune error. Out of range upwards.");
+                    }
+
                     //$28 -$2F -​O​O​O​N​N​N​N​     Chn0 - 7    KeyCode​  O = Octive, N = Note​
                     register = (byte)(0x28 + channel);
                     value = 0;
                     value += (byte)((cn.ym2151octave() & 0b00000111) << 4);
                     value += (byte)(cn.ym2151note() & 0b00001111);
-                    addtobytes(bytes, register, value, cs);
+                    addtobytes(bytes, register, value, conv.CYMS);
 
                     //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
                     //Most minden operátor szóljon.
                     register = (byte)(0x08);
                     value = operatormask;
                     value += (byte)(channel & 0b00000111);
-                    addtobytes(bytes, register, value, cs);
+                    addtobytes(bytes, register, value, conv.CYMS);
                 }
             }
 
 
         }
 
-        private static double bpmtotickmillisec(int bpm)
+        private static double bpmtotickmillisec(Conversion conv)
         {
-            const int tickperrow = 6;
-            const int beat = 4;//1 beat 4 row
-            int rowperminute = bpm * beat;
-            int tickperminute = rowperminute * tickperrow;
+            int rowperminute = conv.CurrentBPM * conv.CurrentRowPerBeat;
+            int tickperminute = rowperminute * conv.CurrentTickPerRow;
             double tickpersec = tickperminute / 60;
             double secpertick = 1 / tickpersec;
             double millisecpertick = secpertick * 1000;
@@ -122,15 +128,15 @@ namespace TrackConv
 
         public static int playertickpersec = 60;
 
-        private static byte bpmtoplayertick(int bpm)
+        private static byte bpmtoplayertick(Conversion conv)
         {
-            double desiredplayerticks = bpmtotickmillisec(bpm) / ((double)1 / (double)playertickpersec * (double)1000);
+            double desiredplayerticks = bpmtotickmillisec(conv) / ((double)1 / (double)playertickpersec * (double)1000);
             double result = Math.Max(1, desiredplayerticks);
             return (byte)result;
         }
-        private static byte bpmtoplayertickrow(int bpm, int currenttickperrow)
+        private static byte bpmtoplayertickrow(Conversion conv)
         {
-            double desiredplayerticks = bpmtotickmillisec(bpm) / ((double)1 / (double)playertickpersec * (double)1000) * (double)currenttickperrow;
+            double desiredplayerticks = bpmtotickmillisec(conv) / ((double)1 / (double)playertickpersec * (double)1000) * (double)conv.CurrentTickPerRow;
             double result = Math.Max(1, desiredplayerticks);
             return (byte)result;
         }
@@ -261,11 +267,11 @@ namespace TrackConv
                         {
                             if (!channelson[channel]) continue;
                             XMNote cn = tickarr[ticks, channel];
-                            if (cn != null) NoteIntoBytes(cn, bytes, channel, conv.CYMS);
+                            if (cn != null) NoteIntoBytes(cn, bytes, channel, conv);
                         }
                         //Timing
                         register = 0;
-                        value = (byte)bpmtoplayertick(conv.CurrentBPM);
+                        value = (byte)bpmtoplayertick(conv);
                         addtobytes(bytes, register, value, conv.CYMS);
                     }
                 }
@@ -275,11 +281,11 @@ namespace TrackConv
                     {
                         if (!channelson[channel]) continue;
                         XMNote cn = xmpattern.PatArr[rows, channel];
-                        NoteIntoBytes(cn, bytes, channel, conv.CYMS);
+                        NoteIntoBytes(cn, bytes, channel, conv);
                     }
                     //Timing
                     register = 0;
-                    value = (byte)bpmtoplayertickrow(conv.CurrentBPM, conv.CurrentTickPerRow);
+                    value = (byte)bpmtoplayertickrow(conv);
                     addtobytes(bytes, register, value, conv.CYMS);
                 }
             }
