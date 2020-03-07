@@ -1,7 +1,7 @@
 ﻿#define SAMPLE_BITS_16
 using System;
 
-namespace YM2151ns
+namespace YM2151Emu
 {
     /// <summary>
     /// Mock class for simulating an Int16 ptr, because the original code structure depends on it.
@@ -141,7 +141,7 @@ namespace YM2151ns
 
 
 
-    public static class ym2161c
+    public static class YM2151code
     {
         /*****************************************************************************
         *

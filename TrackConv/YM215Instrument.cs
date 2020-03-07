@@ -85,6 +85,19 @@ namespace TrackConv
     }
     public class YM215Instrument
     {
+        private readonly SlotByOperator[][] OutSlotByAlg = new SlotByOperator[][]
+{
+    new SlotByOperator[] {SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C1,SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C1,SlotByOperator.M2,SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.C1,SlotByOperator.M2,SlotByOperator.C2},
+    new SlotByOperator[] {SlotByOperator.M1,SlotByOperator.C1,SlotByOperator.M2,SlotByOperator.C2},
+};
+
+
         public string NAME;
         public byte FILE_VERSION;
         public byte SYSTEM_YM2151;
@@ -230,15 +243,20 @@ namespace TrackConv
 
         public void SetVolumeToBytes(Dictionary<byte, byte> bytes, int channel, byte volume)
         {
-            for (int i = 0; i < 4; i++)
+            foreach (SlotByOperator sbo in OutSlotByAlg[CON])
             {
-                //if (i == (int)SlotByOperator.C1 || i == (int)SlotByOperator.M2 || i == (int)SlotByOperator.C2)
-                {
-                    int slot = i * 8 + channel;
-                    YM2151operator op = OPS[i];
-                    SetVolumeToBytes(bytes, slot, op, volume);
-                }
+                int slot = (int)sbo * 8 + channel;
+                YM2151operator op = OPS[(int)sbo];
+                SetVolumeToBytes(bytes, slot, op, volume);
             }
+
+            //Set volume for all operators - less good
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    int slot = i * 8 + channel;
+            //    YM2151operator op = OPS[i];
+            //    SetVolumeToBytes(bytes, slot, op, volume);
+            //}
         }
 
         public Dictionary<byte, byte> ToControlBytes(int channel, byte volume = 64, bool left = true, bool right = true)

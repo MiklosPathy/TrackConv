@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YM2151ns;
+using YM2151Emu;
 
 namespace CallLibOpenMPT
 {
@@ -18,11 +18,11 @@ namespace CallLibOpenMPT
         {
             SetWaveFormat(44100, 2);
 
-            ym2161c.init_tables();
-            chip = ym2161c.ym2151_init(1000000, 44100);
-            ym2161c.init_chip_tables(chip);
-            ym2161c.ym2151_reset_chip(chip);
-            ym2161c.ym2151_set_mask(chip, 0);
+            YM2151.init_tables();
+            chip = YM2151.ym2151_init(1000000, 44100);
+            YM2151.init_chip_tables(chip);
+            YM2151.ym2151_reset_chip(chip);
+            YM2151.ym2151_set_mask(chip, 0);
 
 
             playthread = new Thread(new ThreadStart(SynthThread));
@@ -32,13 +32,13 @@ namespace CallLibOpenMPT
 
         public override int Read(short[] buffer, int offset, int sampleCount)
         {
-            ym2161c.ym2151_update_one(chip, buffer, sampleCount);
+            YM2151.ym2151_update_one(chip, buffer, sampleCount);
             return sampleCount;
         }
 
         public void setregister(byte r, byte v)
         {
-            ym2161c.ym2151_write_reg(chip, r, v);
+            YM2151.ym2151_write_reg(chip, r, v);
         }
 
         private int DesiredLatency = 50;
@@ -70,22 +70,22 @@ namespace CallLibOpenMPT
         {
             for (int i = 0; i < 256; i++)
             {
-                ym2161c.ym2151_write_reg(chip, (byte)i, 0);
+                YM2151.ym2151_write_reg(chip, (byte)i, 0);
             }
             for (int i = 0x60; i < 0x80; i++)
             {
-                ym2161c.ym2151_write_reg(chip, (byte)i, 127);
+                YM2151.ym2151_write_reg(chip, (byte)i, 127);
             }
         }
 
         public void NOTE_ON_FOR_CHANNEL(int CH)
         {
-            ym2161c.ym2151_write_reg(chip, 0x08, (byte)(0x78 + CH));
+            YM2151.ym2151_write_reg(chip, 0x08, (byte)(0x78 + CH));
         }
 
         public void NOTE_OFF_FOR_CHANNEL(int CH)
         {
-            ym2161c.ym2151_write_reg(chip, 0x08, (byte)(CH));
+            YM2151.ym2151_write_reg(chip, 0x08, (byte)(CH));
         }
         public void NOTE_OFF_FOR_ALL_CHANNELS()
         {
@@ -97,32 +97,32 @@ namespace CallLibOpenMPT
         public void SETUP_TIMBRE_FOR_CHANNEL(int CH)
         {
             //ENABLE L / R, SET CONNECTION 7, FEEDBACK 2
-            ym2161c.ym2151_write_reg(chip, (byte)(0x20 + CH), (byte)(0xE0 + 7));
+            YM2151.ym2151_write_reg(chip, (byte)(0x20 + CH), (byte)(0xE0 + 7));
 
             //SOME DETUNE FOR EACH OPERATOR
-            ym2161c.ym2151_write_reg(chip, (byte)(0x40 + CH), 0x00);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x48 + CH), 0x20);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x50 + CH), 0x40);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x58 + CH), 0x60);
+            YM2151.ym2151_write_reg(chip, (byte)(0x40 + CH), 0x00);
+            YM2151.ym2151_write_reg(chip, (byte)(0x48 + CH), 0x20);
+            YM2151.ym2151_write_reg(chip, (byte)(0x50 + CH), 0x40);
+            YM2151.ym2151_write_reg(chip, (byte)(0x58 + CH), 0x60);
             //VOLUME
-            ym2161c.ym2151_write_reg(chip, (byte)(0x60 + CH), 0x00);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x68 + CH), 0x00);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x70 + CH), 0x00);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x78 + CH), 0x00);
+            YM2151.ym2151_write_reg(chip, (byte)(0x60 + CH), 0x00);
+            YM2151.ym2151_write_reg(chip, (byte)(0x68 + CH), 0x00);
+            YM2151.ym2151_write_reg(chip, (byte)(0x70 + CH), 0x00);
+            YM2151.ym2151_write_reg(chip, (byte)(0x78 + CH), 0x00);
             //ATTACK
-            ym2161c.ym2151_write_reg(chip, (byte)(0x80 + CH), 0x18);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x88 + CH), 0x18);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x90 + CH), 0x18);
-            ym2161c.ym2151_write_reg(chip, (byte)(0x98 + CH), 0x18);
+            YM2151.ym2151_write_reg(chip, (byte)(0x80 + CH), 0x18);
+            YM2151.ym2151_write_reg(chip, (byte)(0x88 + CH), 0x18);
+            YM2151.ym2151_write_reg(chip, (byte)(0x90 + CH), 0x18);
+            YM2151.ym2151_write_reg(chip, (byte)(0x98 + CH), 0x18);
             //RELEASE
-            ym2161c.ym2151_write_reg(chip, (byte)(0xE0 + CH), 0x05);
-            ym2161c.ym2151_write_reg(chip, (byte)(0xE8 + CH), 0x05);
-            ym2161c.ym2151_write_reg(chip, (byte)(0xF0 + CH), 0x05);
-            ym2161c.ym2151_write_reg(chip, (byte)(0xF8 + CH), 0x05);
+            YM2151.ym2151_write_reg(chip, (byte)(0xE0 + CH), 0x05);
+            YM2151.ym2151_write_reg(chip, (byte)(0xE8 + CH), 0x05);
+            YM2151.ym2151_write_reg(chip, (byte)(0xF0 + CH), 0x05);
+            YM2151.ym2151_write_reg(chip, (byte)(0xF8 + CH), 0x05);
         }
         public void SETUP_NOTE_FREQUENCY_FOR_CHANNEL(int NO, int OC, int CH)
         {
-            ym2161c.ym2151_write_reg(chip, (byte)(0x28 + CH), (byte)(OC * 16 + NO));
+            YM2151.ym2151_write_reg(chip, (byte)(0x28 + CH), (byte)(OC * 16 + NO));
         }
 
     }
