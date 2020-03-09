@@ -37,13 +37,13 @@ namespace TrackConv
             jsonString = File.ReadAllText(projectfilename);
             conv.Project = JsonSerializer.Deserialize<TCProject>(jsonString, jsonserializeroptions);
 
-            XMRead xmreader = new XMRead(conv.Project.TrackFile);
-            xmreader.Open();
+            conv.XM = new XMRead(conv.Project.TrackFile);
+            conv.XM.Open();
 
             Console.WindowWidth = 200;
             Console.WindowHeight = 60;
 
-            xmreader.Header.ToConsole();
+            conv.XM.Header.ToConsole();
 
 
             int instrnr = 1;
@@ -58,23 +58,23 @@ namespace TrackConv
             }
 
             Console.WriteLine("Patterns:");
-            for (int i = 0; i < xmreader.Patterns.Length; i++)
+            for (int i = 0; i < conv.XM.Patterns.Length; i++)
             {
-                XMPattern pattern = xmreader.Patterns[i];
+                XMPattern pattern = conv.XM.Patterns[i];
                 Console.WriteLine(i + ": " + pattern.LenghtOfPatternHeader + " " + pattern.PatternPackType + " " + pattern.NumberOfRows + " " + pattern.SizeOfPatternData);
             }
 
             Console.WriteLine("Instruments:");
-            for (int i = 0; i < xmreader.Instruments.Length; i++)
+            for (int i = 0; i < conv.XM.Instruments.Length; i++)
             {
-                XMInstrument instrument = xmreader.Instruments[i];
+                XMInstrument instrument = conv.XM.Instruments[i];
                 Console.WriteLine(i + ": " + instrument.NumberOfSamples + " " + instrument.InstrumentName + " " + instrument.Samples[0].NameOfSample + " " + instrument.nextinstrumentofset);
             }
 
             List<XMNote> allnotes = new List<XMNote>();
-            foreach (var item in xmreader.Header.PatternOrderTable)
+            foreach (var item in conv.XM.Header.PatternOrderTable)
             {
-                XMPattern pattern = xmreader.Patterns[item];
+                XMPattern pattern = conv.XM.Patterns[item];
                 if (pattern.PatArr != null)
                     foreach (var arre in pattern.PatArr)
                     {
@@ -93,14 +93,12 @@ namespace TrackConv
             }
 
 
-            ////foreach (var item in xmreader.Header.PatternOrderTable)
+            ////foreach (var item in conv.XM.Header.PatternOrderTable)
             ////{
-            ////    xmreader.Patterns[item].PatternToConsole();
+            ////    conv.XM.Patterns[item].PatternToConsole();
             ////    break;
             ////}
 
-
-            List<byte> bytes = new List<byte>();
 
             ////for (int i = 0; i < 8; i++)
             //int i = 0;
@@ -119,13 +117,13 @@ namespace TrackConv
             //note.note = 4;
             //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
-            conv.CurrentBPM = xmreader.Header.DefaultBPM;
-            conv.CurrentTickPerRow = xmreader.Header.DefaultTempo;
+            conv.CurrentBPM = conv.XM.Header.DefaultBPM;
+            conv.CurrentTickPerRow = conv.XM.Header.DefaultTempo;
             if (conv.Project.OverrideRowPerBeat.HasValue) conv.CurrentRowPerBeat = conv.Project.OverrideRowPerBeat.Value;
 
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
-            foreach (var item in xmreader.Header.PatternOrderTable)
+            foreach (var item in conv.XM.Header.PatternOrderTable)
             {
                 int? FromRow = null;
                 int? ToRow = null;
@@ -152,17 +150,17 @@ namespace TrackConv
                     }
                 }
 
-                bytes.AddRange(xmreader.Patterns[item].PatternToBytes(conv, channelson, FromRow, ToRow));
-                //xmreader.Patterns[item].PatternToConsole();
+                conv.OBs.AddRange(conv.XM.Patterns[item].PatternToBytes(conv, channelson, FromRow, ToRow));
+                //conv.XM.Patterns[item].PatternToConsole();
                 patterncounter++;
 
             }
 
             if (conv.Project.OutputDirectory != null) Directory.SetCurrentDirectory(conv.Project.OutputDirectory);
 
-            CX16BasicWriter.ToFile(bytes);
-            BinaryWriter.ToFile(bytes);
-
+            CX16BasicWriter.ToFile(conv.OBs);
+            BinaryWriter.ToFile(conv.OBs);
+            DMFWriter.ToDMF(conv);
 
 
         }
