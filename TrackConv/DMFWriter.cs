@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using ICSharpCode.SharpZipLib.Core;
 
 namespace TrackConv
 {
@@ -43,7 +45,7 @@ namespace TrackConv
             //N Bytes:  Song Author Chars
             outfile.AddRange(Encoding.ASCII.GetBytes("TrackConv"));
             //1 Byte:	  Highlight A in patterns
-            outfile.Add(0xFF);
+            outfile.Add(0x00);
             //1 Byte:   Highlight B in patterns
             outfile.Add(0x00);
 
@@ -247,14 +249,40 @@ namespace TrackConv
             ////END OF DMF FORMAT
             ///
 
-            MemoryStream stream = new MemoryStream(outfile.ToArray());
-            using (FileStream compressedFileStream = File.Create("music.dmf"))
-            {
-                using (DeflateStream compressionStream = new DeflateStream(compressedFileStream, CompressionMode.Compress))
-                {
-                    stream.CopyTo(compressionStream);
-                }
-            }
+            //MemoryStream stream = new MemoryStream(outfile.ToArray());
+            //using (FileStream compressedFileStream = File.Create("music.dmf"))
+            //{
+            //    using (DeflateStream compressionStream = new DeflateStream(compressedFileStream, CompressionMode.Compress))
+            //    {
+            //        stream.CopyTo(compressionStream);
+            //    }
+            //}
+
+            var output2 = CreateToMemoryStream(outfile.ToArray());
+            var arr2 = output2.ToArray();
+            File.WriteAllBytes("music.dmf", arr2);
+
+
         }
+
+        public static MemoryStream CreateToMemoryStream(byte[] data)
+        {
+            MemoryStream memStreamIn = new MemoryStream(data);
+
+
+            var outputMemStream = new MemoryStream();
+            using (var zipStream = new DeflaterOutputStream(outputMemStream))
+            {
+                StreamUtils.Copy(memStreamIn, zipStream, new byte[4096]);
+
+                // Stop ZipStream.Dispose() from also Closing the underlying stream.
+                zipStream.IsStreamOwner = false;
+            }
+
+            outputMemStream.Position = 0;
+            return outputMemStream;
+        }
+
     }
 }
+
