@@ -197,7 +197,11 @@ namespace TrackConv
                     {
                         XMNote note;
                         if (i >= conv.XM.Header.NumberOfChannels) note = new XMNote();
-                        else note = conv.XM.Patterns[conv.XM.Header.PatternOrderTable[j]].PatArr[k, i];
+                        else
+                        {
+                            if (k >= conv.XM.Patterns[conv.XM.Header.PatternOrderTable[j]].NumberOfRows) continue;
+                            note = conv.XM.Patterns[conv.XM.Header.PatternOrderTable[j]].PatArr[k, i];
+                        }
                         //			2 Bytes: Note for this index
                         outfile.AddRange(BitConverter.GetBytes((Int16)note.Note));
                         //			2 Bytes: Octave for this index
