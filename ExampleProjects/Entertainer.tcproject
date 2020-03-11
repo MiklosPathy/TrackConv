@@ -1,0 +1,13 @@
+{
+  "TrackFile": "the_entertainer.xm",
+  "YM2151Instruments": [
+    {
+      "DMPFile": "Piano.dmp",
+      "Detune": -12
+    },
+  ],
+  "ConvertFrom": null,
+  "ConvertTo": null,
+  "OverrideRowPerBeat":4,
+  "OutputDirectory": "..\\Player\\",
+}
