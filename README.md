@@ -31,8 +31,7 @@ Lots of them. Also lots of TODO.
 
 - Currently only non paged memory available for music data in the player, so music length is limited to around ~35k
 - Lots of mod effects are unimplemented (like arpeggio, pitch slides, etc...)
-- Pitch correction function is missing (correct the notes for FM instruments)
-- Instrument player for pitch correction by ear
+- Instrument player for pitch correction by ear (sort of YM2151 emulator, yes)
 - Player resolution is only 60 tick/sec, it is not accurate enough in all cases
 - Chord routing function is missing (chord instruments to multiple channel conversion)
 - Instrument autospread function is missing (spread the instruments between channels by different strategies)
