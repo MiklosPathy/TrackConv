@@ -35,7 +35,6 @@ Lots of them. Also lots of TODO.
 - Player resolution is only 60 tick/sec, it is not accurate enough in all cases
 - Chord routing function is missing (chord instruments to multiple channel conversion)
 - Instrument autospread function is missing (spread the instruments between channels by different strategies)
-- Algorithm based volume control (set only output operator's volume)
 - Better volume control (YM2151 has some weird, non linear volume setup)
 - Stereo control/strategies
 - GUI
