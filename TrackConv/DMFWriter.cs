@@ -88,92 +88,56 @@ namespace TrackConv
 
             ////INSTRUMENTS DATA (.DMP format is similar to this part, but there are some discrepancies, please read DMP_Specs.txt for more details)
             //	1 Byte: TOTAL_INSTRUMENTS
-            outfile.Add(0); //Not yet
+            outfile.Add((byte)conv.DefinedInstruments.Count);
             //Repeat this TOTAL_INSTRUMENTS times
-            //	1 Byte: Instrument Name Chars Count(0 - 255)
-            //	N Bytes:  Instrument Name Chars
-            //	1 Byte: Instrument Mode(0 = STANDARD INS, 1 = FM INS)
+            for (int i = 1; i <= conv.DefinedInstruments.Count; i++)
+            {
+                //	1 Byte: Instrument Name Chars Count(0 - 255)
+                outfile.Add((byte)conv.DefinedInstruments[i].NAME.Length);
+                //	N Bytes:  Instrument Name Chars
+                outfile.AddRange(Encoding.ASCII.GetBytes(conv.DefinedInstruments[i].NAME));
+                //	1 Byte: Instrument Mode(0 = STANDARD INS, 1 = FM INS)
+                outfile.Add(1);
+                //	//PER INSTRUMENT MODE DATA
 
-            //	//PER INSTRUMENT MODE DATA
-
-            //		//IF INSTRUMENT MODE IS FM ( = 1)
-            //			1 Byte: ALG
-            //			1 Byte: FB
-            //			1 Byte: LFO(FMS on YM2612, PMS on YM2151)
-            //			1 Byte: LFO2(AMS on YM2612, AMS on YM2151)
-            //			Repeat this TOTAL_OPERATORS times
-            //				1 Byte: AM
-            //				1 Byte: AR
-            //				1 Byte: DR
-            //				1 Byte: MULT
-            //				1 Byte: RR
-            //				1 Byte: SL
-            //				1 Byte: TL
-            //				1 Byte: DT2
-            //				1 Byte: RS
-            //				1 Byte: DT
-            //				1 Byte: D2R
-            //				1 Byte: SSGMODE(BIT 4 = 0 Disabled, 1 Enabled, BITS 0, 1, 2 SSG_MODE)
-
-            //		//IF INSTRUMENT MODE IS STANDARD ( = 0)
-            //		//IF NOT SYSTEM_GAMEBOY (Game Boy uses STD instruments but has internal ADSR Volume, do not read VOLUME MACRO for it)
-            //		//VOLUME MACRO
-            //			1 Byte: ENVELOPE_SIZE(0 - 127)
-            //				Repeat this ENVELOPE_SIZE times
-            //					4 Bytes: ENVELOPE_VALUE
-            //			//IF ENVELOPE_SIZE > 0
-            //			1 Byte: LOOP_POSITION(-1 = NO LOOP)
-
-            //			//ARPEGGIO MACRO
-            //			1 Byte: ENVELOPE_SIZE(0 - 127)
-            //			Repeat this ENVELOPE_SIZE times
-            //				4 Bytes: ENVELOPE_VALUE(signed int, offset = 12)
-            //			//IF ENVELOPE_SIZE > 0
-            //			1 Byte: LOOP_POSITION(-1 = NO LOOP)
-            //			1 Byte: ARPEGGIO MACRO MODE(0 = Normal, 1 = Fixed)
-
-            //			//DUTY/NOISE MACRO
-            //			1 Byte: ENVELOPE_SIZE(0 - 127)
-            //			Repeat this ENVELOPE_SIZE times
-            //				4 Bytes: ENVELOPE_VALUE
-            //			//IF ENVELOPE_SIZE > 0
-            //			1 Byte: LOOP_POSITION(-1 = NO LOOP)
-
-            //			//WAVETABLE MACRO
-            //			1 Byte: ENVELOPE_SIZE(0 - 127)
-            //			Repeat this ENVELOPE_SIZE times
-            //				4 Bytes: ENVELOPE_VALUE
-            //			//IF ENVELOPE_SIZE > 0
-            //			1 Byte: LOOP_POSITION(-1 = NO LOOP)
-
-            //			//PER SYSTEM DATA
-            //			//IF SYSTEM_C64
-            //			1 Byte: Triangle Wave Enabled
-            //					1 Byte: Saw Wave Enabled
-            //					1 Byte: Pulse Wave Enabled
-            //					1 Byte: Noise Wave Enabled
-            //					1 Byte: Attack
-            //					1 Byte: Decay
-            //					1 Byte: Sustain
-            //					1 Byte: Release
-            //					1 Byte: Pulse Width
-            //					1 Byte: Ring Modulation Enabled
-            //					1 Byte: Sync Modulation Enabled
-            //					1 Byte: To Filter
-            //					1 Byte: Volume Macro To Filter Cutoff Enabled
-            //					1 Byte: Use Filter Values From Instrument
-            //					//FILTER GLOBALS
-            //			1 Byte: Filter Resonance
-            //					1 Byte: Filter Cutoff
-            //					1 Byte: Filter High Pass
-            //					1 Byte: Filter Low Pass
-            //					1 Byte: Filter CH2 Off
-            //				//IF SYSTEM_GAMEBOY
-            //			1 Byte: Envelope Volume
-            //					1 Byte: Envelope Direction
-            //					1 Byte: Envelope Length
-            //					1 Byte: Sound Length
-
+                //		//IF INSTRUMENT MODE IS FM ( = 1)
+                //			1 Byte: ALG
+                outfile.Add(conv.DefinedInstruments[i].CON);
+                //			1 Byte: FB
+                outfile.Add(conv.DefinedInstruments[i].FB);
+                //			1 Byte: LFO(FMS on YM2612, PMS on YM2151)
+                outfile.Add(conv.DefinedInstruments[i].PMS);
+                //			1 Byte: LFO2(AMS on YM2612, AMS on YM2151)
+                outfile.Add(conv.DefinedInstruments[i].AMS);
+                //			Repeat this TOTAL_OPERATORS times
+                for (int o = 0; o < 4; o++)
+                {
+                    //				1 Byte: AM
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].AM);
+                    //				1 Byte: AR
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].AR);
+                    //				1 Byte: DR
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].D1R);
+                    //				1 Byte: MULT
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].MULT);
+                    //				1 Byte: RR
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].RR);
+                    //				1 Byte: SL
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].KS);
+                    //				1 Byte: TL
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].TL);
+                    //				1 Byte: DT2
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].DT2);
+                    //				1 Byte: RS
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].D1L);
+                    //				1 Byte: DT
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].DT);
+                    //				1 Byte: D2R
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].D2R);
+                    //				1 Byte: SSGMODE(BIT 4 = 0 Disabled, 1 Enabled, BITS 0, 1, 2 SSG_MODE)
+                    outfile.Add(conv.DefinedInstruments[i].OPS[o].SSGEG_Enabled);
+                }
+            }
             ////END OF INSTRUMENTS DATA
             ////WAVETABLES DATA
             //	1 Byte: TOTAL_WAVETABLES
