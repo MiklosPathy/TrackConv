@@ -4,8 +4,9 @@ using System.Text;
 
 namespace TrackConv.ITF
 {
-    public struct ITFNote
+    public class ITFNote
     {
+        public int? Instrument;
         public int? Note;
         public int? Volume;
         public bool NoteOff;

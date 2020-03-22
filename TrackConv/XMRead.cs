@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using TrackConv.ITF;
 
 namespace TrackConv
 {
@@ -51,6 +52,54 @@ namespace TrackConv
                 offset = instrument.nextinstrumentofset;
             }
 
+        }
+
+        public ITFHeader ToITF()
+        {
+            ITFHeader result = new ITFHeader();
+            result.BeatPerMinute = Header.DefaultBPM;
+            result.TickPerRow = Header.DefaultTempo;
+
+            foreach (var pat in Patterns)
+            {
+                ITFPattern itfp = new ITFPattern();
+                bool emptypattern = true;
+                for (int row = 0; row < pat.NumberOfRows; row++)
+                {
+                    ITFRow itfr = new ITFRow();
+                    bool emptyrow = true;
+                    for (int channel = 0; channel < Header.NumberOfChannels; channel++)
+                    {
+                        XMNote xmnote = pat.PatArr[row, channel];
+                        ITFNote itfn = null;
+
+                        if (xmnote != null)
+                        {
+                            emptyrow = false;
+                            emptypattern = false;
+                            itfn = new ITFNote();
+                            itfn.Instrument = xmnote.Instrument;
+                            itfn.Note = xmnote.Note;
+                            itfn.Volume = xmnote.Volume;
+                            itfn.NoteOff = xmnote.noteoff;
+                            itfn.Effect = xmnote.Effect;
+                            itfn.EffectParam = xmnote.EffectParam;
+                        }
+                        itfr.Channels.Add(itfn);
+                    }
+                    if (emptyrow) itfr = null;
+                    itfp.Rows.Add(itfr);
+                }
+                if (emptypattern) itfp = null;
+                result.Patterns.Add(itfp);
+            }
+
+            foreach (byte item in Header.PatternOrderTable)
+            {
+                result.PlayOrder.Add(result.Patterns[item]);
+            }
+
+            return result;
         }
 
     }

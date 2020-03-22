@@ -21,9 +21,9 @@ namespace TrackConv.ITF
         /// </summary>
         public int TickPerRow = 6;
 
-        public ITFPattern[] PlayOrder;
+        public List<ITFPattern> PlayOrder = new List<ITFPattern>();
 
-        public ITFPattern[] Patterns;
+        public List<ITFPattern> Patterns = new List<ITFPattern>();
 
 
     }

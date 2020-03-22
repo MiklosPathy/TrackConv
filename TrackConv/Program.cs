@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using TrackConv.ITF;
 
 namespace TrackConv
 {
@@ -39,6 +40,9 @@ namespace TrackConv
 
             conv.XM = new XMRead(conv.Project.TrackFile);
             conv.XM.Open();
+
+            ITFHeader ih = conv.XM.ToITF();
+
 
             Console.WindowWidth = 200;
             Console.WindowHeight = 60;
@@ -127,7 +131,7 @@ namespace TrackConv
 
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
-            foreach (var item in conv.XM.Header.PatternOrderTable)
+            foreach (byte item in conv.XM.Header.PatternOrderTable)
             {
                 int? FromRow = null;
                 int? ToRow = null;
