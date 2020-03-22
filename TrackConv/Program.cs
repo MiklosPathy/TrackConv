@@ -121,6 +121,10 @@ namespace TrackConv
             conv.CurrentTickPerRow = conv.XM.Header.DefaultTempo;
             if (conv.Project.OverrideRowPerBeat.HasValue) conv.CurrentRowPerBeat = conv.Project.OverrideRowPerBeat.Value;
 
+            //Start pause
+            conv.OBs.AddRange(new byte[] { 0, 60 });
+
+
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
             foreach (var item in conv.XM.Header.PatternOrderTable)
@@ -157,6 +161,9 @@ namespace TrackConv
             }
 
             if (conv.Project.OutputDirectory != null) Directory.SetCurrentDirectory(conv.Project.OutputDirectory);
+
+            //Trailing pause
+            conv.OBs.AddRange(new byte[] { 0, 60 });
 
             CX16BasicWriter.ToFile(conv.OBs);
             BinaryWriter.ToFile(conv.OBs);

@@ -55,7 +55,7 @@ namespace TrackConv
                 else curritem++;
                 remainingitems--;
             }
-            lines.Add(linenumber + " DATA 0,60,0,0");
+            lines.Add(linenumber + " DATA 0,0");
 
             File.WriteAllLines(@"music.bas", lines.ToArray());
         }

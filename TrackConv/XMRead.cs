@@ -7,7 +7,7 @@ namespace TrackConv
 {
     public class XMRead
     {
-        public const int PatternStartAt = 0x0150; // Theoretically patterns start here in the file
+        public const int PatternStartAt = 0x0150; // Theoretically patterns start here in the file. Except if not. 
 
 
 

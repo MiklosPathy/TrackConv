@@ -9,7 +9,7 @@ namespace TrackConv
     {
         public static void ToFile(List<byte> bytes)
         {
-            bytes.AddRange(new byte[] { 0, 60, 0, 0 });
+            bytes.AddRange(new byte[] { 0, 0 });
             File.WriteAllBytes(@"music.bin", bytes.ToArray());
         }
     }
