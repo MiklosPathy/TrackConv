@@ -12,5 +12,10 @@ namespace TrackConv.ITF
         public bool NoteOff;
         public int? Effect;
         public int? EffectParam;
+
+        public int? octave { get { return Note / 12; } set { Note = (byte)(Note % 12 + value * 12); } }
+        public int? actualnote { get { return Note % 12; } set { Note = (byte)(octave * 12 + value); } }
     }
+
+
 }

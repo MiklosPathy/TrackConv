@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using TrackConv.ITF;
+using TrackConv.XM;
 
 namespace TrackConv
 {
@@ -41,7 +42,7 @@ namespace TrackConv
             conv.XM = new XMRead(conv.Project.TrackFile);
             conv.XM.Open();
 
-            ITFHeader ih = conv.XM.ToITF();
+            conv.ITF = conv.XM.ToITF();
 
 
             Console.WindowWidth = 200;
@@ -121,8 +122,8 @@ namespace TrackConv
             //note.note = 4;
             //note.NoteIntoBytes(bytes, 0, 0b00011000);
 
-            conv.CurrentBPM = conv.XM.Header.DefaultBPM;
-            conv.CurrentTickPerRow = conv.XM.Header.DefaultTempo;
+            conv.CurrentBPM = conv.ITF.BeatPerMinute;
+            conv.CurrentTickPerRow = conv.ITF.TickPerRow;
             if (conv.Project.OverrideRowPerBeat.HasValue) conv.CurrentRowPerBeat = conv.Project.OverrideRowPerBeat.Value;
 
             //Start pause
@@ -131,7 +132,7 @@ namespace TrackConv
 
             int patterncounter = 0;
             bool[] channelson = { true, true, true, true, true, true, true, true };
-            foreach (byte item in conv.XM.Header.PatternOrderTable)
+            foreach (var item in conv.ITF.PlayOrder)
             {
                 int? FromRow = null;
                 int? ToRow = null;
@@ -158,7 +159,7 @@ namespace TrackConv
                     }
                 }
 
-                conv.OBs.AddRange(conv.XM.Patterns[item].PatternToBytes(conv, channelson, FromRow, ToRow));
+                conv.OBs.AddRange(item.PatternToBytes(conv, channelson, FromRow, ToRow));
                 //conv.XM.Patterns[item].PatternToConsole();
                 patterncounter++;
 

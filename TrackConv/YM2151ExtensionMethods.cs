@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using TrackConv.ITF;
 
 namespace TrackConv
 {
@@ -8,14 +10,14 @@ namespace TrackConv
         //Linear note table.... Forget it. Little Japanase engineer will do it overcomplicated. Banzaii!!!
         private static readonly int[] Normal2YMNote = { 14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13 };
 
-        public static int ym2151note(this XMNote xmnote)
+        public static int ym2151note(this ITFNote itfnote)
         {
-            return Normal2YMNote[xmnote.actualnote];
+            return Normal2YMNote[itfnote.actualnote.Value];
         }
-        public static int ym2151octave(this XMNote xmnote)
+        public static int ym2151octave(this ITFNote itfnote)
         {
-            if (xmnote.actualnote == 0) return Math.Max(xmnote.octave - 1, 0);
-            return xmnote.octave;
+            if (itfnote.actualnote == 0) return Math.Max(itfnote.octave.Value - 1, 0);
+            return itfnote.octave.Value;
         }
 
         private static void ResetChannel(List<byte> bytes, int channel, YM2151State cs)
@@ -37,27 +39,27 @@ namespace TrackConv
             }
         }
 
-        public static void NoteIntoBytes(this XMNote cn, List<byte> bytes, int channel, Conversion conv, byte operatormask = 0b01111000)
+        public static void NoteIntoBytes(this ITFNote cn, List<byte> bytes, int channel, Conversion conv, byte operatormask = 0b01111000)
         {
             if (channel > 7) return;
             byte register, value = 0;
 
             //Instrument setup for channel
-            if (cn.Instrument != 0)
+            if (cn.Instrument != null)
                 if (conv.CYMS.LastInstrumentPerChannel[channel] != cn.Instrument)
                 {
                     ResetChannel(bytes, channel, conv.CYMS);
-                    YM2151Instrument ci = conv.DefinedInstruments[cn.Instrument];
+                    YM2151Instrument ci = conv.DefinedInstruments[cn.Instrument.Value];
                     var cbs = ci.ToControlBytes(channel);
                     foreach (var item in cbs)
                     {
                         addtobytes(bytes, item.Key, item.Value, conv.CYMS);
                     }
-                    conv.CYMS.LastInstrumentPerChannel[channel] = cn.Instrument;
+                    conv.CYMS.LastInstrumentPerChannel[channel] = (byte)cn.Instrument.Value;
                 }
 
             //Volume control
-            if (!cn.noteoff && cn.Note != 0 && cn.Volume == 0) cn.Volume = 64;
+            if (!cn.NoteOff && cn.Note != 0 && cn.Volume == 0) cn.Volume = 64;
             if (cn.Effect == 0xC) cn.Volume = cn.EffectParam;
             if (cn.Volume != 0)
             {
@@ -68,7 +70,7 @@ namespace TrackConv
                     //De most még nem.
 
                     Dictionary<byte, byte> tempd = new Dictionary<byte, byte>();
-                    ci.SetVolumeToBytes(tempd, channel, cn.Volume);
+                    ci.SetVolumeToBytes(tempd, channel, (byte)cn.Volume.Value);
                     foreach (var item in tempd)
                     {
                         addtobytes(bytes, item.Key, item.Value, conv.CYMS);
@@ -76,7 +78,7 @@ namespace TrackConv
                 }
             }
 
-            if (cn.noteoff || cn.Effect == 0x14)
+            if (cn.NoteOff || cn.Effect == 0x14)
             {
                 //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
                 //Minden operátor kuss.
@@ -87,14 +89,14 @@ namespace TrackConv
             }
             else
             {
-                if (cn.Note != 0)
+                if (cn.Note.HasValue)
                 {
-                    if (conv.Project.YM2151Instruments[cn.Instrument-1].Detune.HasValue)
+                    if (conv.Project.YM2151Instruments[(byte)cn.Instrument - 1].Detune.HasValue)
                     {
-                        int newnote = cn.Note + conv.Project.YM2151Instruments[cn.Instrument-1].Detune.Value;
+                        int newnote = cn.Note.Value + conv.Project.YM2151Instruments[(byte)cn.Instrument - 1].Detune.Value;
                         if (newnote <= 0) throw new Exception("Detune error. Out of range downwards.");
                         cn.Note = (byte)(newnote);
-                        if (cn.noteoff) throw new Exception("Detune error. Out of range upwards.");
+                        if (cn.NoteOff) throw new Exception("Detune error. Out of range upwards.");
                     }
 
                     //$28 -$2F -​O​O​O​N​N​N​N​     Chn0 - 7    KeyCode​  O = Octive, N = Note​
@@ -172,14 +174,14 @@ namespace TrackConv
             }
         }
 
-        public static List<byte> PatternToBytes(this XMPattern xmpattern, Conversion conv, bool[] channelson = null, int? FromRow = null, int? ToRow = null)
+        public static List<byte> PatternToBytes(this ITFPattern itfpattern, Conversion conv, bool[] channelson = null, int? FromRow = null, int? ToRow = null)
         {
 
-            int usedchannels = Math.Min(xmpattern.xmheader.NumberOfChannels, 8);
+            int usedchannels = Math.Min(itfpattern.Rows.Max(x => x.Channels.Count), 8);
 
             if (channelson == null)
             {
-                channelson = new bool[xmpattern.xmheader.NumberOfChannels];
+                channelson = new bool[usedchannels];
                 for (int i = 0; i < channelson.Length; i++)
                 {
                     channelson[i] = true;
@@ -189,27 +191,27 @@ namespace TrackConv
             List<byte> bytes = new List<byte>();
             byte register, value = 0;
 
-            for (int rows = 0; rows < xmpattern.NumberOfRows; rows++)
+            for (int rows = 0; rows < itfpattern.Rows.Count; rows++)
             {
                 if (FromRow.HasValue && FromRow.Value > rows) continue;
                 if (ToRow.HasValue && ToRow.Value < rows) continue;
 
                 //Is there any effects needs ticking here?
                 bool tickingneeded = false;
-                for (int channels = 0; channels < xmpattern.xmheader.NumberOfChannels; channels++)
+                for (int channels = 0; channels < itfpattern.Rows[rows].Channels.Count; channels++)
                 {
-                    XMNote cn = xmpattern.PatArr[rows, channels];
+                    ITFNote cn = itfpattern.Rows[rows].Channels[channels];
                     //Tempo determination. This can come from all available channels.
                     if (cn.Effect == 0xF)
                     {
-                        if (cn.EffectParam < 32) conv.CurrentTickPerRow = cn.EffectParam;
-                        else conv.CurrentBPM = cn.EffectParam;
+                        if (cn.EffectParam < 32) conv.CurrentTickPerRow = cn.EffectParam.Value;
+                        else conv.CurrentBPM = cn.EffectParam.Value;
                     }
 
                     //Ticking will apply only for the phisycally converted channels.
                     if (channels > usedchannels) continue;
-                    int epu = (cn.EffectParam >> 4) & 0xF;
-                    int epd = cn.EffectParam & 0xF;
+                    int epu = ((byte)cn.EffectParam.Value >> 4) & 0xF;
+                    int epd = (byte)cn.EffectParam.Value & 0xF;
                     tickingneeded =
                         tickingneeded ||
                         (cn.Effect == 0xE && epu == 0xD) ||
@@ -219,20 +221,20 @@ namespace TrackConv
 
                 if (tickingneeded)
                 {
-                    XMNote[,] tickarr = new XMNote[conv.CurrentTickPerRow, usedchannels];
+                    ITFNote[,] tickarr = new ITFNote[conv.CurrentTickPerRow, usedchannels];
 
                     for (int channel = 0; channel < usedchannels; channel++)
                     {
                         if (!channelson[channel]) continue;
 
-                        XMNote cn = xmpattern.PatArr[rows, channel];
-                        int epu = (cn.EffectParam >> 4) & 0xF;
-                        int epd = cn.EffectParam & 0xF;
+                        ITFNote cn = itfpattern.Rows[rows].Channels[channel];
+                        int epu = ((byte)cn.EffectParam.Value >> 4) & 0xF;
+                        int epd = (byte)cn.EffectParam.Value & 0xF;
 
                         if (cn.Effect == 0xA && cn.EffectParam != 0) //Volume slide
                         {
                             tickarr[0, channel] = cn;
-                            int volume = cn.Volume;
+                            int volume = cn.Volume.Value;
                             int diff = -epd;
                             if (epu != 0) diff = epu;
 
@@ -241,7 +243,7 @@ namespace TrackConv
                                 volume += diff;
                                 if (volume < 0) volume = 0;
                                 if (volume > 64) volume = 64;
-                                tickarr[i, channel] = new XMNote() { Volume = (byte)volume };
+                                tickarr[i, channel] = new ITFNote() { Volume = (byte)volume };
                             }
                         }
                         else if (cn.Effect == 0xE && epu == 0xD)
@@ -253,7 +255,7 @@ namespace TrackConv
                         {
                             if (epd > 5) epd = 5;
                             tickarr[0, channel] = cn;
-                            tickarr[epd, channel] = new XMNote() { noteoff = true };
+                            tickarr[epd, channel] = new ITFNote() { NoteOff = true };
                         }
                         else
                         {
@@ -266,7 +268,7 @@ namespace TrackConv
                         for (int channel = 0; channel < usedchannels; channel++)
                         {
                             if (!channelson[channel]) continue;
-                            XMNote cn = tickarr[ticks, channel];
+                            ITFNote cn = tickarr[ticks, channel];
                             if (cn != null) NoteIntoBytes(cn, bytes, channel, conv);
                         }
                         //Timing
@@ -280,7 +282,7 @@ namespace TrackConv
                     for (int channel = 0; channel < usedchannels; channel++)
                     {
                         if (!channelson[channel]) continue;
-                        XMNote cn = xmpattern.PatArr[rows, channel];
+                        ITFNote cn = itfpattern.Rows[rows].Channels[channel];
                         NoteIntoBytes(cn, bytes, channel, conv);
                     }
                     //Timing

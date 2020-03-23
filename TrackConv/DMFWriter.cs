@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using ICSharpCode.SharpZipLib.Core;
+using TrackConv.ITF;
 
 namespace TrackConv
 {
@@ -67,7 +68,7 @@ namespace TrackConv
             //1 Byte:   Custom HZ value 3
             outfile.Add(0);
             //4 Bytes:  TOTAL_ROWS_PER_PATTERN
-            int totalrowsperpattern = conv.XM.Patterns.Max(x => x.NumberOfRows);
+            int totalrowsperpattern = conv.ITF.Patterns.Max(x => x == null ? 0 : x.Rows.Count);
             outfile.AddRange(BitConverter.GetBytes(totalrowsperpattern));
             //1 Byte:   TOTAL_ROWS_IN_PATTERN_MATRIX
             outfile.Add((byte)conv.XM.Header.SongLengthInPatterns);
@@ -154,22 +155,22 @@ namespace TrackConv
                 //	1 Byte: CHANNEL_EFFECTS_COLUMNS_COUNT
                 outfile.Add(1);
                 //	Repeat this TOTAL_ROWS_IN_PATTERN_MATRIX times
-                for (int j = 0; j < conv.XM.Header.SongLengthInPatterns; j++)
+                for (int j = 0; j < conv.ITF.PlayOrder.Count; j++)
                 {
                     //		Repeat this TOTAL_ROWS_PER_PATTERN times
                     for (int k = 0; k < totalrowsperpattern; k++)
                     {
-                        XMNote note;
-                        if (i >= conv.XM.Header.NumberOfChannels) note = new XMNote();
+                        ITFNote note;
+                        if (i >= conv.XM.Header.NumberOfChannels) note = new ITFNote();
                         else
                         {
-                            if (k >= conv.XM.Patterns[conv.XM.Header.PatternOrderTable[j]].NumberOfRows) continue;
-                            note = conv.XM.Patterns[conv.XM.Header.PatternOrderTable[j]].PatArr[k, i];
+                            if (k >= conv.ITF.PlayOrder[j].Rows.Count) continue;
+                            note = conv.ITF.PlayOrder[j].Rows[k].Channels[i];
                         }
                         //			2 Bytes: Note for this index
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.Note));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.actualnote.HasValue ? note.actualnote.Value : 0)));
                         //			2 Bytes: Octave for this index
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.octave));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.octave.HasValue ? note.octave.Value : 0)));
                         //			//Note values:
                         //			//01 C#
                         //			//02 D-
@@ -189,14 +190,14 @@ namespace TrackConv
                         //			//Note = 100 means NOTE OFF, no matter what is inside the octave value.
 
                         //			2 Bytes: Volume for this index(-1 = Empty)
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.Volume));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.Volume.HasValue ? note.Volume.Value : 0)));
                         //			Repeat this CHANNEL_EFFECTS_COLUMNS_COUNT times
                         //				2 Bytes: Effect Code for this index(-1 = Empty)
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.Effect));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.Effect.HasValue ? note.Effect.Value : 0)));
                         //				2 Bytes: Effect Value for this index(-1 = Empty)
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.EffectParam));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.EffectParam.HasValue ? note.EffectParam.Value : 0)));
                         //			2 Bytes: Instrument for this index(-1 = Empty)
-                        outfile.AddRange(BitConverter.GetBytes((Int16)note.Instrument));
+                        outfile.AddRange(BitConverter.GetBytes((Int16)(note.Instrument.HasValue ? note.Instrument.Value : 0)));
                     }
                 }
             }

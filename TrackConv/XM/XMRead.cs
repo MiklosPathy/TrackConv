@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using TrackConv.ITF;
 
-namespace TrackConv
+namespace TrackConv.XM
 {
     public class XMRead
     {
@@ -78,8 +78,8 @@ namespace TrackConv
                             emptyrow = false;
                             emptypattern = false;
                             itfn = new ITFNote();
-                            itfn.Instrument = xmnote.Instrument;
-                            itfn.Note = xmnote.Note;
+                            if (xmnote.Instrument != 0) itfn.Instrument = xmnote.Instrument;
+                            if (xmnote.Note != 0) itfn.Note = xmnote.Note;
                             itfn.Volume = xmnote.Volume;
                             itfn.NoteOff = xmnote.noteoff;
                             itfn.Effect = xmnote.Effect;
