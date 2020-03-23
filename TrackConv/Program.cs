@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using TrackConv.ITF;
+using TrackConv.Writer;
 using TrackConv.XM;
 
 namespace TrackConv
@@ -171,7 +172,7 @@ namespace TrackConv
             conv.OBs.AddRange(new byte[] { 0, 60 });
 
             CX16BasicWriter.ToFile(conv.OBs);
-            BinaryWriter.ToFile(conv.OBs);
+            DumbBinWriter.ToFile(conv.OBs);
             DMFWriter.ToDMF(conv);
 
 

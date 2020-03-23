@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace TrackConv
+namespace TrackConv.Writer
 {
-    public static class BinaryWriter
+    public static class DumbBinWriter
     {
         public static void ToFile(List<byte> bytes)
         {

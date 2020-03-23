@@ -8,7 +8,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using ICSharpCode.SharpZipLib.Core;
 using TrackConv.ITF;
 
-namespace TrackConv
+namespace TrackConv.Writer
 {
     public static class DMFWriter
     {
