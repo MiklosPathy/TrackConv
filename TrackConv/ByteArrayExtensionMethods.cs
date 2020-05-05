@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TrackConv.XM
+namespace TrackConv
 {
     public static class ByteArrayExtensionMethods
     {
@@ -22,7 +22,21 @@ namespace TrackConv.XM
             result += data[from];
             return result;
         }
+        public static int ReadAsLittleendianWord(this byte[] data, int from)
+        {
+            int result = data[from] * 256;
+            result += data[from + 1];
+            return result;
+        }
 
+        public static int ReadAsLittleendianDWord(this byte[] data, int from)
+        {
+            int result = (int)data[from] * 16777216;
+            result += (int)data[from + 1] * 65536;
+            result += (int)data[from + 2] * 256;
+            result += (int)data[from + 3];
+            return result;
+        }
         public static int ReadAsBigendianDWord(this byte[] data, int from)
         {
             int result = (int)data[from + 3] * 16777216;
