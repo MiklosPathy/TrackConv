@@ -13,7 +13,10 @@ namespace VGMRead
         public readonly string FileName;
         private byte[] filedata;
 
+        public Dictionary<byte, int> commandstat = new Dictionary<byte, int>();
+
         public VGMHeader Header { get; private set; }
+        public GD3 Gd3 { get; private set; }
 
         public VGMRead(string filename)
         {
@@ -24,8 +27,350 @@ namespace VGMRead
         {
             filedata = File.ReadAllBytes(FileName);
             Header = new VGMHeader(filedata);
+            Gd3 = new GD3(filedata, Header.GD3offset);
 
-            var a = Header.VGMdataoffset;
+            int offset = Header.VGMdataoffset;
+
+            while (Header.EoFoffset > offset)
+            {
+                CommandRead(ref offset, out byte command);
+                if (!commandstat.ContainsKey(command)) commandstat[command] = 0;
+                commandstat[command]++;
+                if (command == 0x66) break;
+            }
+
+        }
+
+
+        public void CommandRead(ref int offset, out byte command)
+        {
+            command = filedata[offset];
+            offset++;
+            int size;
+
+            switch (command)
+            {
+                //  0x4F dd: Game Gear PSG stereo, write dd to port 0x06
+                case 0x4F:
+                //  0x50 dd: PSG(SN76489 / SN76496) write value dd
+                case 0x50:
+                    offset++;
+                    return;
+                //  0x51 aa dd : YM2413, write value dd to register aa
+                case 0x51:
+                //  0x52 aa dd : YM2612 port 0, write value dd to register aa
+                case 0x52:
+                //  0x53 aa dd : YM2612 port 1, write value dd to register aa
+                case 0x53:
+                //  0x54 aa dd : YM2151, write value dd to register aa
+                case 0x54:
+                //  0x55 aa dd : YM2203, write value dd to register aa
+                case 0x55:
+                //  0x56 aa dd : YM2608 port 0, write value dd to register aa
+                case 0x56:
+                //  0x57 aa dd : YM2608 port 1, write value dd to register aa
+                case 0x57:
+                //  0x58 aa dd : YM2610 port 0, write value dd to register aa
+                case 0x58:
+                //  0x59 aa dd : YM2610 port 1, write value dd to register aa
+                case 0x59:
+                //  0x5A aa dd : YM3812, write value dd to register aa
+                case 0x5A:
+                //  0x5B aa dd : YM3526, write value dd to register aa
+                case 0x5B:
+                //  0x5C aa dd : Y8950, write value dd to register aa
+                case 0x5C:
+                //  0x5D aa dd : YMZ280B, write value dd to register aa
+                case 0x5D:
+                //  0x5E aa dd : YMF262 port 0, write value dd to register aa
+                case 0x5E:
+                //  0x5F aa dd : YMF262 port 1, write value dd to register aa
+                case 0x5F:
+                    offset++;
+                    offset++;
+                    return;
+
+                //  0x61 nn nn : Wait n samples, n can range from 0 to 65535(approx 1.49
+                //               seconds).Longer pauses than this are represented by multiple
+                //               wait commands.
+                case 0x61:
+                    offset++;
+                    offset++;
+                    return;
+                //  0x62       : wait 735 samples(60th of a second), a shortcut for
+                //              0x61 0xdf 0x02
+                case 0x62:
+                    return;
+
+                // 0x63       : wait 882 samples(50th of a second), a shortcut for
+                //             0x61 0x72 0x03
+                case 0x63:
+                    return;
+
+                //0x64 cc nn nn : override length of 0x62/0x63
+                //                  cc - command(0x62/0x63)
+                //                  nn - delay in samples
+                //                  [Note: Not yet implemented.Am I really sure about this ?]
+                case 0x64:
+                    offset++;
+                    offset++;
+                    offset++;
+                    return;
+                //  0x66       : end of sound data
+                case 0x66:
+                    return;
+                //  0x67 ...   : data block: see below
+                case 0x67:
+
+                    //    0x67 0x66 tt ss ss ss ss(data)
+                    //    where:
+                    //    0x67 = VGM command
+                    //    0x66 = compatibility command to make older players stop parsing the stream
+                    offset++;
+                    //    tt = data type
+                    offset++;
+                    //    ss ss ss ss(32 bits) = size of data, in bytes
+                    //(data) = data, of size previously specified
+                    size = filedata.ReadAsLittleendianDWord(offset);
+                    offset += 4;
+                    offset += size;
+                    return;
+                //  0x68 ...   : PCM RAM write: see below
+                case 0x68:
+                    //  0x68 0x66 cc oo oo oo dd dd dd ss ss ss
+                    //where:
+                    //  x68 = VGM command
+                    //  0x66 = compatibility command to make older players stop parsing the stream
+                    offset++;
+                    //  cc = chip type(see data block types 00..3F)
+                    offset++;
+                    //  oo oo oo(24 bits) = read offset in data block
+                    offset += 3;
+                    //  dd dd dd(24 bits) = write offset in chip's ram (affected by chip's
+                    //                       registers)
+                    offset += 3;
+                    //  ss ss ss(24 bits) = size of data, in bytes
+                    //   Since size can't be zero, a size of 0 bytes means 0x0100 0000 bytes.
+                    size = filedata.ReadAsLittleendian3Bytes(offset);
+                    offset += size;
+                    //All unknown types must be skipped by the player.
+                    return;
+
+                //  0x90-0x95  : DAC Stream Control Write: see below
+
+                //Setup Stream Control:
+                //                    0x90 ss tt pp cc
+                case 0x90:
+                    //      ss = Stream ID
+                    //      tt = Chip Type(see clock - order in header, e.g.YM2612 = 0x02)
+                    //            bit 7 is used to select the 2nd chip
+                    //      pp cc = write command / register cc at port pp
+                    //      Note: For chips that use Channel Select Registers(like the RF5C - family
+                    //            and the HuC6280), the format is pp cd where pp is the channel
+                    //            number, c is the channel register and d is the data register.
+                    //            If you set pp to FF, the channel select write is skipped.
+                    offset += 4;
+                    return;
+                //Set Stream Data:
+                case 0x91:
+                    //                    0x91 ss dd ll bb
+                    //      ss = Stream ID
+                    //      dd = Data Bank ID(see data block types 0x00..0x3f)
+                    //      ll = Step Size(how many data is skipped after every write, usually 1)
+                    //            Set to 2, if you're using an interleaved stream (e.g. for
+                    //             left / right channel).
+                    //      bb = Step Base(data offset added to the Start Offset when starting
+                    //            stream playback, usually 0)
+                    //            If you're using an interleaved stream, set it to 0 in one stream
+                    //            and to 1 in the other one.
+                    //      Note: Step Size/ Step Step are given in command - data - size
+                    //              (i.e. 1 for YM2612, 2 for PWM), not bytes
+                    offset += 4;
+                    return;
+                //Set Stream Frequency:
+                case 0x92:
+                    //                    0x92 ss ff ff ff ff
+                    //                        ss = Stream ID
+                    //                        ff = Frequency(or Sample Rate, in Hz) at which the writes are done
+                    offset += 4;
+                    return;
+                //Start Stream:
+                case 0x93:
+                    //  0x93 ss aa aa aa aa mm ll ll ll ll
+                    //      ss = Stream ID
+                    offset++;
+                    //      aa = Data Start offset in data bank(byte offset in data bank)
+                    //            Note: if set to - 1, the Data Start offset is ignored
+                    offset += 4;
+                    //       mm = Length Mode(how the Data Length is calculated)
+                    //            00 - ignore(just change current data position)
+                    //            01 - length = number of commands
+                    //            02 - length in msec
+                    //            03 - play until end of data
+                    //            1 ? -(bit 4) Reverse Mode
+                    //            8 ? -(bit 7) Loop(automatically restarts when finished)
+                    offset++;
+                    //      ll = Data Length
+                    size = filedata.ReadAsLittleendianDWord(offset);
+                    offset += 4;
+                    offset += size;
+                    return;
+                //Stop Stream:
+                case 0x94:
+                    //                    0x94 ss
+                    //                        ss = Stream ID
+                    //                              Note: 0xFF stops all streams
+                    offset++;
+                    return;
+                //Start Stream(fast call):
+                case 0x95:
+                    //  0x95 ss bb bb ff
+                    //      ss = Stream ID
+                    //      bb = Block ID(number of the data block that is part of the data bank set
+                    //            with command 0x91)
+                    //      ff = Flags
+                    //            bit 0 - Loop(see command 0x93, mm bit 7)
+                    //            bit 4 - Reverse Mode(see command 0x93)
+                    offset += 4;
+                    return;
+                //  0xA0 aa dd : AY8910, write value dd to register aa
+                case 0xA0:
+                //  0xB0 aa dd : RF5C68, write value dd to register aa
+                case 0xB0:
+                //  0xB1 aa dd : RF5C164, write value dd to register aa
+                case 0xB1:
+                //  0xB2 ad dd : PWM, write value ddd to register a(d is MSB, dd is LSB)
+                case 0xB2:
+                //  0xB3 aa dd : GameBoy DMG, write value dd to register aa
+                case 0xB3:
+                //  0xB4 aa dd : NES APU, write value dd to register aa
+                case 0xB4:
+                //  0xB5 aa dd : MultiPCM, write value dd to register aa
+                case 0xB5:
+                //  0xB6 aa dd : uPD7759, write value dd to register aa
+                case 0xB6:
+                //  0xB7 aa dd : OKIM6258, write value dd to register aa
+                case 0xB7:
+                //  0xB8 aa dd : OKIM6295, write value dd to register aa
+                case 0xB8:
+                //  0xB9 aa dd : HuC6280, write value dd to register aa
+                case 0xB9:
+                //  0xBA aa dd : K053260, write value dd to register aa
+                case 0xBA:
+                //  0xBB aa dd : Pokey, write value dd to register aa
+                case 0xBB:
+                    offset++;
+                    offset++;
+                    return;
+                //  0xC0 aaaa dd : Sega PCM, write value dd to memory offset aaaa
+                case 0xC0:
+                //  0xC1 aaaa dd : RF5C68, write value dd to memory offset aaaa
+                case 0xC1:
+                //  0xC2 aaaa dd : RF5C164, write value dd to memory offset aaaa
+                case 0xC2:
+                //  0xC3 cc aaaa : MultiPCM, write set bank offset aaaa to channel cc
+                case 0xC3:
+                //  0xC4 mmll rr : QSound, write value mmll to register rr
+                //                 (mm - data MSB, ll - data LSB)
+                case 0xC4:
+                //  0xD0 pp aa dd : YMF278B port pp, write value dd to register aa
+                case 0xD0:
+                //  0xD1 pp aa dd : YMF271 port pp, write value dd to register aa
+                case 0xD1:
+                //  0xD2 pp aa dd : SCC1 port pp, write value dd to register aa
+                case 0xD2:
+                //  0xD3 pp aa dd : K054539 write value dd to register ppaa
+                case 0xD3:
+                //  0xD4 pp aa dd : C140 write value dd to register ppaa
+                case 0xD4:
+                    offset++;
+                    offset++;
+                    offset++;
+                    return;
+                //  0xE0 dddddddd : seek to offset dddddddd(Intel byte order) in PCM data bank
+                case 0xE0:
+                    offset++;
+                    offset++;
+                    offset++;
+                    offset++;
+                    return;
+                default:
+                    break;
+            }
+
+            //  0x7n       : wait n+1 samples, n can range from 0 to 15.
+            if (command >= 0x70 && command <= 0x7F)
+            {
+                return;
+            }
+            //  0x8n       : YM2612 port 0 address 2A write from the data bank, then wait
+            //               n samples; n can range from 0 to 15. Note that the wait is n,
+            //               NOT n+1. (Note: Written to first chip instance only.)
+            if (command >= 0x80 && command <= 0x8F)
+            {
+                return;
+            }
+
+
+            //Some ranges are reserved for future use, with different numbers of operands:
+
+            //  0x30..0x3F dd          : one operand, reserved for future use
+            //                           Note: used for dual-chip support(see below)
+            if (command >= 0x30 && command <= 0x3F)
+            {
+                offset++;
+                return;
+            }
+            //  0x40..0x4E dd dd       : two operands, reserved for future use
+            //                           Note: was one operand only til v1.60
+            if (command >= 0x40 && command <= 0x4E)
+            {
+                offset++;
+                offset++;
+                return;
+            }
+            //  0xA1..0xAF dd dd       : two operands, reserved for future use
+            //                           Note: used for dual-chip support(see below)
+            if (command >= 0xA1 && command <= 0xAF)
+            {
+                offset++;
+                offset++;
+                return;
+            }
+            //  0xBC..0xBF dd dd       : two operands, reserved for future use
+            if (command >= 0xBC && command <= 0xBF)
+            {
+                offset++;
+                offset++;
+                return;
+            }
+            //  0xC5..0xCF dd dd dd    : three operands, reserved for future use
+            if (command >= 0xC5 && command <= 0xCF)
+            {
+                offset++;
+                offset++;
+                offset++;
+                return;
+            }
+            //  0xD5..0xDF dd dd dd    : three operands, reserved for future use
+            if (command >= 0xD5 && command <= 0xDF)
+            {
+                offset++;
+                offset++;
+                offset++;
+                return;
+            }
+            //  0xE1..0xFF dd dd dd dd : four operands, reserved for future use
+            if (command >= 0xE1 && command <= 0xFF)
+            {
+                offset++;
+                offset++;
+                offset++;
+                return;
+            }
+
+            throw new Exception("Non handled command:" + command.ToString("X"));
+
         }
 
 
@@ -36,13 +381,13 @@ namespace VGMRead
         /*
              00  01  02  03   04  05  06  07   08  09  0A  0B   0C  0D  0E  0F
         0x00 ["Vgm " ident]   [EoF offset]     [Version]        [SN76489 clock]
-        0x10 [YM2413 clock]   [GD3 offset]     [Total # samples][Loop offset    ]
-        0x20 [Loop # samples ][Rate           ][SN FB][SNW][SF] [YM2612 clock   ]
+        0x10 [YM2413 clock]   [GD3 offset]     [Total # samples][Loop offset  ]
+        0x20 [Loop # samples] [Rate           ][SN FB][SNW][SF] [YM2612 clock ]
         0x30 [YM2151 clock]   [VGM data offset][Sega PCM clock] [SPCM Interface]
         0x40 [RF5C68 clock]   [YM2203 clock]   [YM2608 clock]   [YM2610/B clock]
         0x50 [YM3812 clock]   [YM3526 clock]   [Y8950 clock]    [YMF262 clock]
         0x60 [YMF278B clock]  [YMF271 clock]   [YMZ280B clock]  [RF5C164 clock]
-        0x70 [PWM clock]      [AY8910 clock]   [AYT] [AY Flags] [VM] ***[LB][LM]
+        0x70 [PWM clock]      [AY8910 clock]   [AYT] [AY Flags] [VM]***[LB][LM]
         0x80 [GB DMG clock]   [NES APU clock]  [MultiPCM clock] [uPD7759 clock]
         0x90 [OKIM6258 clock] [OF][KF][CF]***  [OKIM6295 clock] [K051649 clock]
         0xA0 [K054539 clock]  [HuC6280 clock]  [C140 clock]     [K053260 clock]
@@ -98,7 +443,7 @@ namespace VGMRead
         public int VersionSubNum { get { return int.Parse(filedata[Consts.Version].ToString("X")); } }
         public int VersionCombined { get { return VersionNum * 100 + VersionSubNum; } }
         public string VersionString { get { return string.Format("{0}.{1}", VersionNum, VersionSubNum); } }
-        public int GD3offset { get { return filedata.ReadAsLittleendianDWord(Consts.GD3offset); } }
+        public int GD3offset { get { return filedata.ReadAsLittleendianDWord(Consts.GD3offset) + Consts.GD3offset; } }
         public int Totalsamples { get { return filedata.ReadAsLittleendianDWord(Consts.Totalsamples); } }
         public int Loopoffset { get { return filedata.ReadAsLittleendianDWord(Consts.Loopoffset); } }
         public int Loopsamples { get { return filedata.ReadAsLittleendianDWord(Consts.Loopsamples); } }
@@ -111,7 +456,71 @@ namespace VGMRead
                 return filedata.ReadAsLittleendianDWord(Consts.VGMdataoffset) + Consts.VGMdataoffset;
             }
         }
+    }
 
+    public class GD3
+    {
+        private readonly byte[] filedata;
+        private readonly int startoffset;
+        public GD3(byte[] filedata, int startoffset)
+        {
+            this.filedata = filedata;
+            this.startoffset = startoffset;
+            if (Gd3tag != "Gd3 ") throw new Exception("Bad Gd3 tag");
 
+            int offset = startoffset + 12;
+
+            //"Track name (in English characters)\0"
+            TracknameENG = ReadGd3String(ref offset);
+            //"Track name (in Japanese characters)\0"
+            TracknameJAP = ReadGd3String(ref offset);
+            //"Game name (in English characters)\0"
+            GamenameENG = ReadGd3String(ref offset);
+            //"Game name (in Japanese characters)\0"
+            GamenameJAP = ReadGd3String(ref offset);
+            //"System name (in English characters)\0"
+            SystemnameENG = ReadGd3String(ref offset);
+            //"System name (in Japanese characters)\0"
+            SystemnameJAP = ReadGd3String(ref offset);
+            //"Name of Original Track Author (in English characters)\0"
+            AuthorENG = ReadGd3String(ref offset);
+            //"Name of Original Track Author (in Japanese characters)\0"
+            AuthorJAP = ReadGd3String(ref offset);
+            //"Date of game's release written in the form yyyy/mm/dd, or just yyyy/mm or yyyy if month and day is not known\0"
+            Date = ReadGd3String(ref offset);
+            //"Name of person who converted it to a VGM file.\0"
+            ConvertedBy = ReadGd3String(ref offset);
+            //"Notes\0"
+            Notes = ReadGd3String(ref offset);
+
+        }
+
+        private string ReadGd3String(ref int offset)
+        {
+            int s = 0;
+            string result = "";
+            do
+            {
+                s = filedata.ReadAsLittleendianWord(offset);
+                offset += 2;
+                if (s != 0) result += Convert.ToChar(s);
+            } while (s != 0);
+            return result;
+        }
+
+        public string Gd3tag { get { return filedata.ReadAsString(startoffset, startoffset + 4); } }
+        public int EoFoffset { get { return filedata.ReadAsLittleendianDWord(startoffset + 8) + 8; } }
+        public string TracknameENG { get; private set; }
+
+        public string TracknameJAP { get; private set; }
+        public string GamenameENG { get; private set; }
+        public string GamenameJAP { get; private set; }
+        public string SystemnameENG { get; private set; }
+        public string SystemnameJAP { get; private set; }
+        public string AuthorENG { get; private set; }
+        public string AuthorJAP { get; private set; }
+        public string Date { get; private set; }
+        public string ConvertedBy { get; private set; }
+        public string Notes { get; private set; }
     }
 }

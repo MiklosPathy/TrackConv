@@ -29,6 +29,13 @@ namespace TrackConv
             result += (int)data[from];
             return result;
         }
+        public static int ReadAsLittleendian3Bytes(this byte[] data, int from)
+        {
+            int result = (int)data[from + 2] * 65536;
+            result += (int)data[from + 1] * 256;
+            result += (int)data[from];
+            return result;
+        }
         public static int ReadAsBigendianWord(this byte[] data, int from)
         {
             int result = data[from] * 256;
