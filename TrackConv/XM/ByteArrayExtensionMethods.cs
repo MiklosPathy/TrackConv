@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TrackConv.XM
 {
-    public static class XMExtensionMethods
+    public static class ByteArrayExtensionMethods
     {
         public static string ReadAsString(this byte[] data, int from, int until)
         {
@@ -16,14 +16,14 @@ namespace TrackConv.XM
             return result;
         }
 
-        public static int ReadAsWord(this byte[] data, int from)
+        public static int ReadAsBigendianWord(this byte[] data, int from)
         {
             int result = data[from + 1] * 256;
             result += data[from];
             return result;
         }
 
-        public static int ReadAsDWord(this byte[] data, int from)
+        public static int ReadAsBigendianDWord(this byte[] data, int from)
         {
             int result = (int)data[from + 3] * 16777216;
             result += (int)data[from + 2] * 65536;

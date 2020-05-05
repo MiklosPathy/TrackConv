@@ -65,11 +65,11 @@ namespace TrackConv.XM
             }
         }
 
-        public int InstrumentHeaderSize { get { return filedata.ReadAsDWord(offset + Consts.InstrumentHeaderSize); } }
+        public int InstrumentHeaderSize { get { return filedata.ReadAsBigendianDWord(offset + Consts.InstrumentHeaderSize); } }
         public string InstrumentName { get { return filedata.ReadAsString(offset + Consts.InstrumentName, offset + Consts.InstrumentType); } }
         public byte InstrumentType { get { return filedata[offset + Consts.InstrumentType]; } }
-        public int NumberOfSamples { get { return filedata.ReadAsWord(offset + Consts.NumberOfSamples); } }
-        public int SampleHeaderSize { get { return filedata.ReadAsDWord(offset + Consts.SampleHeaderSize); } }
+        public int NumberOfSamples { get { return filedata.ReadAsBigendianWord(offset + Consts.NumberOfSamples); } }
+        public int SampleHeaderSize { get { return filedata.ReadAsBigendianDWord(offset + Consts.SampleHeaderSize); } }
         public byte[] SampleNumbersForAllNotes { get { return filedata.CopyOutByteArray(offset + Consts.SampleNumbersForAllNotes, 96); } }
         public byte[] PointsOfVolumeEnvelope { get { return filedata.CopyOutByteArray(offset + Consts.PointsOfVolumeEnvelope, 48); } }
         public byte[] PointsOfPanningEnvelope { get { return filedata.CopyOutByteArray(offset + Consts.PointsOfPanningEnvelope, 48); } }

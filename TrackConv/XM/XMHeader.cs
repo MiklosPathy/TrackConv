@@ -39,15 +39,15 @@ namespace TrackConv.XM
         public string TrackerName { get { return filedata.ReadAsString(Consts.TrackerName, Consts.TrackerRevision); } }
         public byte TrackerRevisionMajor { get { return filedata[Consts.TrackerRevision + 1]; } }
         public byte TrackerRevisionMinor { get { return filedata[Consts.TrackerRevision]; } }
-        public int HeaderSize { get { return filedata.ReadAsDWord(Consts.HeaderSize); } }
-        public int SongLengthInPatterns { get { return Math.Min(filedata.ReadAsWord(Consts.SongLengthInPatterns), 256); } }
-        public int RestartPosition { get { return filedata.ReadAsWord(Consts.RestartPosition); } }
-        public int NumberOfChannels { get { return filedata.ReadAsWord(Consts.NumberOfChannels); } }
-        public int NumberOfPatterns { get { return filedata.ReadAsWord(Consts.NumberOfPatterns); } }
-        public int NumberOfInstruments { get { return Math.Min(filedata.ReadAsWord(Consts.NumberOfInstruments), 128); } }
-        public int Flags { get { return filedata.ReadAsWord(Consts.Flags); } }
-        public int DefaultTempo { get { return filedata.ReadAsWord(Consts.DefaultTempo); } }
-        public int DefaultBPM { get { return filedata.ReadAsWord(Consts.DefaultBPM); } }
+        public int HeaderSize { get { return filedata.ReadAsBigendianDWord(Consts.HeaderSize); } }
+        public int SongLengthInPatterns { get { return Math.Min(filedata.ReadAsBigendianWord(Consts.SongLengthInPatterns), 256); } }
+        public int RestartPosition { get { return filedata.ReadAsBigendianWord(Consts.RestartPosition); } }
+        public int NumberOfChannels { get { return filedata.ReadAsBigendianWord(Consts.NumberOfChannels); } }
+        public int NumberOfPatterns { get { return filedata.ReadAsBigendianWord(Consts.NumberOfPatterns); } }
+        public int NumberOfInstruments { get { return Math.Min(filedata.ReadAsBigendianWord(Consts.NumberOfInstruments), 128); } }
+        public int Flags { get { return filedata.ReadAsBigendianWord(Consts.Flags); } }
+        public int DefaultTempo { get { return filedata.ReadAsBigendianWord(Consts.DefaultTempo); } }
+        public int DefaultBPM { get { return filedata.ReadAsBigendianWord(Consts.DefaultBPM); } }
         public byte[] PatternOrderTable { get { return filedata.CopyOutByteArray(Consts.PatternOrderTable, SongLengthInPatterns); } }
 
         public void ToConsole()
