@@ -40,9 +40,9 @@ namespace TrackConv.XM
             this.offset = offset;
         }
 
-        public int SampleLength { get { return filedata.ReadAsBigendianDWord(offset + Consts.SampleLength); } }
-        public int SampleLoopStart { get { return filedata.ReadAsBigendianDWord(offset + Consts.SampleLoopStart); } }
-        public int SampleLoopLength { get { return filedata.ReadAsBigendianDWord(offset + Consts.SampleLoopLength); } }
+        public int SampleLength { get { return filedata.ReadAsLittleendianDWord(offset + Consts.SampleLength); } }
+        public int SampleLoopStart { get { return filedata.ReadAsLittleendianDWord(offset + Consts.SampleLoopStart); } }
+        public int SampleLoopLength { get { return filedata.ReadAsLittleendianDWord(offset + Consts.SampleLoopLength); } }
         public byte Volume { get { return filedata[offset + Consts.Volume]; } }
         public byte Finetune { get { return filedata[offset + Consts.Finetune]; } }
         public byte SampleType { get { return filedata[offset + Consts.SampleType]; } }

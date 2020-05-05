@@ -25,10 +25,10 @@ namespace TrackConv.XM
             this.xmheader = xmheader;
         }
 
-        public int LenghtOfPatternHeader { get { return filedata.ReadAsBigendianDWord(offset + Consts.LenghtOfPatternHeader); } }
+        public int LenghtOfPatternHeader { get { return filedata.ReadAsLittleendianDWord(offset + Consts.LenghtOfPatternHeader); } }
         public byte PatternPackType { get { return filedata[offset + Consts.PatternPackType]; } }
-        public int NumberOfRows { get { return filedata.ReadAsBigendianWord(offset + Consts.NumberOfRows); } }
-        public int SizeOfPatternData { get { return filedata.ReadAsBigendianWord(offset + Consts.SizeOfPatternData); } }
+        public int NumberOfRows { get { return filedata.ReadAsLittleendianWord(offset + Consts.NumberOfRows); } }
+        public int SizeOfPatternData { get { return filedata.ReadAsLittleendianWord(offset + Consts.SizeOfPatternData); } }
 
         private byte[] patterndata;
         public byte[] PatternData

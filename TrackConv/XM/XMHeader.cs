@@ -39,15 +39,15 @@ namespace TrackConv.XM
         public string TrackerName { get { return filedata.ReadAsString(Consts.TrackerName, Consts.TrackerRevision); } }
         public byte TrackerRevisionMajor { get { return filedata[Consts.TrackerRevision + 1]; } }
         public byte TrackerRevisionMinor { get { return filedata[Consts.TrackerRevision]; } }
-        public int HeaderSize { get { return filedata.ReadAsBigendianDWord(Consts.HeaderSize); } }
-        public int SongLengthInPatterns { get { return Math.Min(filedata.ReadAsBigendianWord(Consts.SongLengthInPatterns), 256); } }
-        public int RestartPosition { get { return filedata.ReadAsBigendianWord(Consts.RestartPosition); } }
-        public int NumberOfChannels { get { return filedata.ReadAsBigendianWord(Consts.NumberOfChannels); } }
-        public int NumberOfPatterns { get { return filedata.ReadAsBigendianWord(Consts.NumberOfPatterns); } }
-        public int NumberOfInstruments { get { return Math.Min(filedata.ReadAsBigendianWord(Consts.NumberOfInstruments), 128); } }
-        public int Flags { get { return filedata.ReadAsBigendianWord(Consts.Flags); } }
-        public int DefaultTempo { get { return filedata.ReadAsBigendianWord(Consts.DefaultTempo); } }
-        public int DefaultBPM { get { return filedata.ReadAsBigendianWord(Consts.DefaultBPM); } }
+        public int HeaderSize { get { return filedata.ReadAsLittleendianDWord(Consts.HeaderSize); } }
+        public int SongLengthInPatterns { get { return Math.Min(filedata.ReadAsLittleendianWord(Consts.SongLengthInPatterns), 256); } }
+        public int RestartPosition { get { return filedata.ReadAsLittleendianWord(Consts.RestartPosition); } }
+        public int NumberOfChannels { get { return filedata.ReadAsLittleendianWord(Consts.NumberOfChannels); } }
+        public int NumberOfPatterns { get { return filedata.ReadAsLittleendianWord(Consts.NumberOfPatterns); } }
+        public int NumberOfInstruments { get { return Math.Min(filedata.ReadAsLittleendianWord(Consts.NumberOfInstruments), 128); } }
+        public int Flags { get { return filedata.ReadAsLittleendianWord(Consts.Flags); } }
+        public int DefaultTempo { get { return filedata.ReadAsLittleendianWord(Consts.DefaultTempo); } }
+        public int DefaultBPM { get { return filedata.ReadAsLittleendianWord(Consts.DefaultBPM); } }
         public byte[] PatternOrderTable { get { return filedata.CopyOutByteArray(Consts.PatternOrderTable, SongLengthInPatterns); } }
 
         public void ToConsole()
