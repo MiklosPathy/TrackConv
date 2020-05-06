@@ -84,5 +84,28 @@ namespace VGMRead
                 Console.WriteLine(item.Wave.ToString("X") + " " + item.Count);
             }
         }
+
+        public static void YM3812Notes(VGMRead reader)
+        {
+            Console.WriteLine("YM3812 Notes");
+
+            YM3812 chip = new YM3812();
+            foreach (var command in reader.VGMCommands)
+            {
+                if (command is YM3812Command) chip.ConsumeCommand((YM3812Command)command);
+                if (command is VGMwait || command is VGMendofsounddata)
+                {
+                    string line = "| ";
+                    for (int i = 0; i < 8; i++)
+                    {
+                        line += (chip.KeyOn(i) ? "O" : " ") + " " + Tools.FrequencyToNote(chip.Freq(i)) + " " + ((int)Math.Round(chip.Freq(i))).ToString("D4") + " | ";
+                    }
+                    if (command is VGMwait) line += Statistics.VGMWait2mSec(((VGMwait)command).waitsamples).ToString("0000");
+
+                    Console.WriteLine(line);
+                }
+            }
+        }
+
     }
 }
