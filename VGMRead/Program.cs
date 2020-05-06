@@ -14,8 +14,6 @@ namespace VGMRead
             reader.Open();
 
 
-
-
             #region VGL Command statistics
             Console.WriteLine("VGL Command statistics");
             var commandstat = reader.VGMCommands.GroupBy(x => x.CommandByte).Select(group => new
@@ -56,9 +54,22 @@ namespace VGMRead
 
             foreach (var item in e2)
             {
-                Console.WriteLine(item.Waitsamples + " " + item.Count);
+                Console.WriteLine(item.Waitsamples + " " + VGMWait2mSec(item.Waitsamples).ToString("N3") + " " + item.Count);
             }
             #endregion
+
+            #region VGMWait total
+            Console.WriteLine("VGMWait total");
+            var waittotal = waits.Sum(x => x.waitsamples);
+            Console.WriteLine("Sum:" + waittotal);
+            Console.WriteLine("Header:" + reader.Header.Totalsamples);
+            Console.WriteLine("Sum in msec: " + VGMWait2mSec(waittotal).ToString("N3"));
+            #endregion
+        }
+
+        static double VGMWait2mSec(int waits)
+        {
+            return waits / 44.100;
         }
     }
 }

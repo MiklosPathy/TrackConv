@@ -29,7 +29,8 @@ namespace VGMRead
         {
             filedata = File.ReadAllBytes(FileName);
             Header = new VGMHeader(filedata);
-            Gd3 = new GD3(filedata, Header.GD3offset);
+            if (Header.GD3offset != 0)
+                Gd3 = new GD3(filedata, Header.GD3offset);
 
             int offset = Header.VGMdataoffset;
 
