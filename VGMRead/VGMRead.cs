@@ -10,10 +10,10 @@ namespace VGMRead
 {
     public class VGMRead
     {
+        //https://www.smspower.org/uploads/Music/vgmspec170.txt
+
         public readonly string FileName;
         private byte[] filedata;
-
-        public Dictionary<byte, int> commandstat = new Dictionary<byte, int>();
 
         public VGMHeader Header { get; private set; }
         public GD3 Gd3 { get; private set; }
@@ -22,6 +22,8 @@ namespace VGMRead
         {
             FileName = filename;
         }
+
+        public List<VGMCommand> VGMCommands { get; private set; } = new List<VGMCommand>();
 
         public void Open()
         {
@@ -33,20 +35,18 @@ namespace VGMRead
 
             while (Header.EoFoffset > offset)
             {
-                CommandRead(ref offset, out byte command);
-                if (!commandstat.ContainsKey(command)) commandstat[command] = 0;
-                commandstat[command]++;
-                if (command == 0x66) break;
+                VGMCommand cmd = CommandRead(ref offset);
+                VGMCommands.Add(cmd);
+                if (cmd is VGMendofsounddata) break;
             }
-
         }
 
-
-        public void CommandRead(ref int offset, out byte command)
+        public VGMCommand CommandRead(ref int offset)
         {
-            command = filedata[offset];
+            byte command = filedata[offset];
             offset++;
             int size;
+            int origofs;
 
             switch (command)
             {
@@ -54,8 +54,7 @@ namespace VGMRead
                 case 0x4F:
                 //  0x50 dd: PSG(SN76489 / SN76496) write value dd
                 case 0x50:
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 1);
                 //  0x51 aa dd : YM2413, write value dd to register aa
                 case 0x51:
                 //  0x52 aa dd : YM2612 port 0, write value dd to register aa
@@ -74,8 +73,10 @@ namespace VGMRead
                 case 0x58:
                 //  0x59 aa dd : YM2610 port 1, write value dd to register aa
                 case 0x59:
+                    return new VGMCommand(filedata, ref offset, command, 2);
                 //  0x5A aa dd : YM3812, write value dd to register aa
-                case 0x5A:
+                case OPL2Command.Byte_0x5A:
+                    return new OPL2Command(filedata, ref offset);
                 //  0x5B aa dd : YM3526, write value dd to register aa
                 case 0x5B:
                 //  0x5C aa dd : Y8950, write value dd to register aa
@@ -86,46 +87,38 @@ namespace VGMRead
                 case 0x5E:
                 //  0x5F aa dd : YMF262 port 1, write value dd to register aa
                 case 0x5F:
-                    offset++;
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 2);
 
                 //  0x61 nn nn : Wait n samples, n can range from 0 to 65535(approx 1.49
                 //               seconds).Longer pauses than this are represented by multiple
                 //               wait commands.
-                case 0x61:
-                    offset++;
-                    offset++;
-                    return;
+                case VGMwaitNsamples.Byte_0x61:
+                    return new VGMwaitNsamples(filedata, ref offset);
                 //  0x62       : wait 735 samples(60th of a second), a shortcut for
                 //              0x61 0xdf 0x02
-                case 0x62:
-                    return;
-
+                case VGMwait735samples.Byte_0x62:
+                    return new VGMwait735samples();
                 // 0x63       : wait 882 samples(50th of a second), a shortcut for
                 //             0x61 0x72 0x03
-                case 0x63:
-                    return;
+                case VGMwait882samples.Byte_0x63:
+                    return new VGMwait882samples();
 
                 //0x64 cc nn nn : override length of 0x62/0x63
                 //                  cc - command(0x62/0x63)
                 //                  nn - delay in samples
                 //                  [Note: Not yet implemented.Am I really sure about this ?]
                 case 0x64:
-                    offset++;
-                    offset++;
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 3);
                 //  0x66       : end of sound data
-                case 0x66:
-                    return;
+                case VGMendofsounddata.Byte_0x66:
+                    return new VGMendofsounddata();
                 //  0x67 ...   : data block: see below
                 case 0x67:
-
                     //    0x67 0x66 tt ss ss ss ss(data)
                     //    where:
                     //    0x67 = VGM command
                     //    0x66 = compatibility command to make older players stop parsing the stream
+                    origofs = offset;
                     offset++;
                     //    tt = data type
                     offset++;
@@ -134,13 +127,14 @@ namespace VGMRead
                     size = filedata.ReadAsLittleendianDWord(offset);
                     offset += 4;
                     offset += size;
-                    return;
+                    return new VGMCommand(filedata, ref origofs, command, 6 + size);
                 //  0x68 ...   : PCM RAM write: see below
                 case 0x68:
                     //  0x68 0x66 cc oo oo oo dd dd dd ss ss ss
                     //where:
                     //  x68 = VGM command
                     //  0x66 = compatibility command to make older players stop parsing the stream
+                    origofs = offset;
                     offset++;
                     //  cc = chip type(see data block types 00..3F)
                     offset++;
@@ -154,7 +148,7 @@ namespace VGMRead
                     size = filedata.ReadAsLittleendian3Bytes(offset);
                     offset += size;
                     //All unknown types must be skipped by the player.
-                    return;
+                    return new VGMCommand(filedata, ref origofs, command, 11 + size);
 
                 //  0x90-0x95  : DAC Stream Control Write: see below
 
@@ -169,8 +163,7 @@ namespace VGMRead
                     //            and the HuC6280), the format is pp cd where pp is the channel
                     //            number, c is the channel register and d is the data register.
                     //            If you set pp to FF, the channel select write is skipped.
-                    offset += 4;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 4);
                 //Set Stream Data:
                 case 0x91:
                     //                    0x91 ss dd ll bb
@@ -185,19 +178,18 @@ namespace VGMRead
                     //            and to 1 in the other one.
                     //      Note: Step Size/ Step Step are given in command - data - size
                     //              (i.e. 1 for YM2612, 2 for PWM), not bytes
-                    offset += 4;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 4);
                 //Set Stream Frequency:
                 case 0x92:
                     //                    0x92 ss ff ff ff ff
                     //                        ss = Stream ID
                     //                        ff = Frequency(or Sample Rate, in Hz) at which the writes are done
-                    offset += 4;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 4);
                 //Start Stream:
                 case 0x93:
                     //  0x93 ss aa aa aa aa mm ll ll ll ll
                     //      ss = Stream ID
+                    origofs = offset;
                     offset++;
                     //      aa = Data Start offset in data bank(byte offset in data bank)
                     //            Note: if set to - 1, the Data Start offset is ignored
@@ -214,14 +206,13 @@ namespace VGMRead
                     size = filedata.ReadAsLittleendianDWord(offset);
                     offset += 4;
                     offset += size;
-                    return;
+                    return new VGMCommand(filedata, ref origofs, command, 10 + size);
                 //Stop Stream:
                 case 0x94:
                     //                    0x94 ss
                     //                        ss = Stream ID
                     //                              Note: 0xFF stops all streams
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 1);
                 //Start Stream(fast call):
                 case 0x95:
                     //  0x95 ss bb bb ff
@@ -231,8 +222,7 @@ namespace VGMRead
                     //      ff = Flags
                     //            bit 0 - Loop(see command 0x93, mm bit 7)
                     //            bit 4 - Reverse Mode(see command 0x93)
-                    offset += 4;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 4);
                 //  0xA0 aa dd : AY8910, write value dd to register aa
                 case 0xA0:
                 //  0xB0 aa dd : RF5C68, write value dd to register aa
@@ -259,9 +249,7 @@ namespace VGMRead
                 case 0xBA:
                 //  0xBB aa dd : Pokey, write value dd to register aa
                 case 0xBB:
-                    offset++;
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 2);
                 //  0xC0 aaaa dd : Sega PCM, write value dd to memory offset aaaa
                 case 0xC0:
                 //  0xC1 aaaa dd : RF5C68, write value dd to memory offset aaaa
@@ -283,17 +271,10 @@ namespace VGMRead
                 case 0xD3:
                 //  0xD4 pp aa dd : C140 write value dd to register ppaa
                 case 0xD4:
-                    offset++;
-                    offset++;
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 3);
                 //  0xE0 dddddddd : seek to offset dddddddd(Intel byte order) in PCM data bank
                 case 0xE0:
-                    offset++;
-                    offset++;
-                    offset++;
-                    offset++;
-                    return;
+                    return new VGMCommand(filedata, ref offset, command, 4);
                 default:
                     break;
             }
@@ -301,14 +282,14 @@ namespace VGMRead
             //  0x7n       : wait n+1 samples, n can range from 0 to 15.
             if (command >= 0x70 && command <= 0x7F)
             {
-                return;
+                return new VGMwait(command);
             }
             //  0x8n       : YM2612 port 0 address 2A write from the data bank, then wait
             //               n samples; n can range from 0 to 15. Note that the wait is n,
             //               NOT n+1. (Note: Written to first chip instance only.)
             if (command >= 0x80 && command <= 0x8F)
             {
-                return;
+                return new VGMCommand(command);
             }
 
 
@@ -318,55 +299,39 @@ namespace VGMRead
             //                           Note: used for dual-chip support(see below)
             if (command >= 0x30 && command <= 0x3F)
             {
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 1);
             }
             //  0x40..0x4E dd dd       : two operands, reserved for future use
             //                           Note: was one operand only til v1.60
             if (command >= 0x40 && command <= 0x4E)
             {
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 2);
             }
             //  0xA1..0xAF dd dd       : two operands, reserved for future use
             //                           Note: used for dual-chip support(see below)
             if (command >= 0xA1 && command <= 0xAF)
             {
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 2);
             }
             //  0xBC..0xBF dd dd       : two operands, reserved for future use
             if (command >= 0xBC && command <= 0xBF)
             {
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 2);
             }
             //  0xC5..0xCF dd dd dd    : three operands, reserved for future use
             if (command >= 0xC5 && command <= 0xCF)
             {
-                offset++;
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 3);
             }
             //  0xD5..0xDF dd dd dd    : three operands, reserved for future use
             if (command >= 0xD5 && command <= 0xDF)
             {
-                offset++;
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 3);
             }
             //  0xE1..0xFF dd dd dd dd : four operands, reserved for future use
             if (command >= 0xE1 && command <= 0xFF)
             {
-                offset++;
-                offset++;
-                offset++;
-                return;
+                new VGMCommand(filedata, ref offset, command, 4);
             }
 
             throw new Exception("Non handled command:" + command.ToString("X"));
@@ -456,6 +421,78 @@ namespace VGMRead
                 return filedata.ReadAsLittleendianDWord(Consts.VGMdataoffset) + Consts.VGMdataoffset;
             }
         }
+    }
+
+    public class VGMCommand
+    {
+        public VGMCommand(byte CommandByte, int DataSize, byte[] Data)
+        {
+            this.CommandByte = CommandByte;
+            this.DataSize = DataSize;
+            this.Data = Data;
+        }
+        public VGMCommand(byte[] filedata, ref int offset, byte CommandByte, int DataSize)
+        {
+            this.CommandByte = CommandByte;
+            this.DataSize = DataSize;
+            this.Data = filedata.CopyOutByteArray(offset, DataSize);
+            offset += DataSize;
+        }
+        public VGMCommand(byte CommandByte)
+        {
+            this.CommandByte = CommandByte;
+            this.DataSize = 0;
+            this.Data = new byte[0];
+        }
+        public byte CommandByte { get; protected set; }
+        public int DataSize { get; protected set; }
+        public byte[] Data { get; protected set; }
+    }
+
+    public class OPL2Command : VGMCommand
+    {
+        public const byte Byte_0x5A = 0x5A;
+        public OPL2Command(byte[] filedata, ref int offset) : base(filedata, ref offset, Byte_0x5A, 2) { }
+        public byte Register { get { return Data[0]; } }
+        public byte Value { get { return Data[1]; } }
+    }
+
+    public class VGMwait : VGMCommand
+    {
+        public VGMwait(byte[] filedata, ref int offset, byte CommandByte, int DataSize) : base(filedata, ref offset, CommandByte, DataSize) { }
+        public VGMwait(byte CommandByte) : base(CommandByte)
+        {
+            if (CommandByte >= 0x70 && CommandByte <= 0x7F)
+                waitsamples = CommandByte - 0x70 + 1;
+        }
+        public int waitsamples { get; protected set; }
+    }
+
+    public class VGMwaitNsamples : VGMwait
+    {
+        public const byte Byte_0x61 = 0x61;
+        public VGMwaitNsamples(byte[] filedata, ref int offset) : base(filedata, ref offset, Byte_0x61, 2)
+        {
+            waitsamples = Data.ReadAsLittleendianWord(0);
+        }
+    }
+
+    public class VGMwait735samples : VGMwait
+    {
+        public const byte Byte_0x62 = 0x62;
+        public VGMwait735samples() : base(Byte_0x62) { waitsamples = 735; }
+    }
+
+    public class VGMwait882samples : VGMwait
+    {
+        public const byte Byte_0x63 = 0x63;
+        public VGMwait882samples() : base(Byte_0x63) { waitsamples = 882; }
+    }
+
+    public class VGMendofsounddata : VGMCommand
+    {
+        public const byte Byte_0x66 = 0x66;
+        public VGMendofsounddata() : base(Byte_0x66) { }
     }
 
     public class GD3
