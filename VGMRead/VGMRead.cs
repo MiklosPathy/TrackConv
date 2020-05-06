@@ -76,8 +76,8 @@ namespace VGMRead
                 case 0x59:
                     return new VGMCommand(filedata, ref offset, command, 2);
                 //  0x5A aa dd : YM3812, write value dd to register aa
-                case OPL2Command.Byte_0x5A:
-                    return new OPL2Command(filedata, ref offset);
+                case YM3812Command.Byte_0x5A:
+                    return new YM3812Command(filedata, ref offset);
                 //  0x5B aa dd : YM3526, write value dd to register aa
                 case 0x5B:
                 //  0x5C aa dd : Y8950, write value dd to register aa
@@ -450,10 +450,10 @@ namespace VGMRead
         public byte[] Data { get; protected set; }
     }
 
-    public class OPL2Command : VGMCommand
+    public class YM3812Command : VGMCommand
     {
         public const byte Byte_0x5A = 0x5A;
-        public OPL2Command(byte[] filedata, ref int offset) : base(filedata, ref offset, Byte_0x5A, 2) { }
+        public YM3812Command(byte[] filedata, ref int offset) : base(filedata, ref offset, Byte_0x5A, 2) { }
         public byte Register { get { return Data[0]; } }
         public byte Value { get { return Data[1]; } }
     }

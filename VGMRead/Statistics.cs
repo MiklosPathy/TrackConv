@@ -22,15 +22,15 @@ namespace VGMRead
             }
         }
 
-        public static void OPL2registerUsageStatistics(VGMRead reader)
+        public static void YM3812registerUsageStatistics(VGMRead reader)
         {
-            Console.WriteLine("OPL2 register usage statistics");
-            var oplregwrites = reader.VGMCommands.Where(x => x is OPL2Command).Cast<OPL2Command>().ToList();
+            Console.WriteLine("YM3812 register usage statistics");
+            var oplregwrites = reader.VGMCommands.Where(x => x is YM3812Command).Cast<YM3812Command>().ToList();
             var e = oplregwrites.GroupBy(x => x.Register).Select(group => new
             {
                 Register = group.Key,
                 Count = group.Count()
-            }).OrderBy(x => x.Register).ToList(); ;
+            }).OrderBy(x => x.Register).ToList();
 
             foreach (var item in e)
             {
@@ -67,6 +67,22 @@ namespace VGMRead
         public static double VGMWait2mSec(int waits)
         {
             return waits / 44.100;
+        }
+        public static void YM3812WaveformStatistics(VGMRead reader)
+        {
+            //E0-F5   Wave select
+            Console.WriteLine("YM3812 Waveform statistics");
+            var oplregwrites = reader.VGMCommands.Where(x => x is YM3812Command).Cast<YM3812Command>().ToList();
+            oplregwrites = oplregwrites.Where(x => x.Register >= 0xE0 && x.Register <= 0xF5).ToList();
+            var waves = oplregwrites.GroupBy(x => x.Value).Select(group => new
+            {
+                Wave = group.Key,
+                Count = group.Count()
+            }).OrderBy(x => x.Wave).ToList();
+            foreach (var item in waves)
+            {
+                Console.WriteLine(item.Wave.ToString("X") + " " + item.Count);
+            }
         }
     }
 }
