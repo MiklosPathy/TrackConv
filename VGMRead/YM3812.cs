@@ -18,12 +18,14 @@ namespace VGMRead
         public int Decay;
         public int Sustain;
         public int Release;
+        public int Waveform;
     }
     public struct YM3812ChannelStats
     {
         public int ChannelID;
         public int FNumber;
         public int Block;
+        public bool KeyOn;
         public double Freq;
         public int Feedback;
         public int Connection;
@@ -73,6 +75,7 @@ namespace VGMRead
             result.Sustain = Sustain(opofs);
             result.TotalLevel = TotalLevel(opofs);
             result.Vibrato = Vibrato(opofs);
+            result.Waveform = Waveform(opofs);
             return result;
         }
         public YM3812ChannelStats GetChannelStats(int ChannelID)
@@ -80,6 +83,7 @@ namespace VGMRead
             ChanelLimiter(ref ChannelID);
             YM3812ChannelStats result = Channels[ChannelID];
             result.Block = Block(ChannelID);
+            result.KeyOn = KeyOn(ChannelID);
             result.Connection = Connection(ChannelID);
             result.Feedback = Feedback(ChannelID);
             result.FNumber = FNumber(ChannelID);
@@ -258,7 +262,7 @@ namespace VGMRead
                 case 17: return 0x14;
                 case 18: return 0x15;
                 default:
-                    throw new Exception("Operator not exists:" + oper);
+                    throw new Exception("Illegal OperatorID:" + oper);
             }
         }
         //The next two tables illustrates which operators together form a channel:
