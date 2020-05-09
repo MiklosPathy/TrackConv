@@ -4,6 +4,26 @@ using System.Text;
 
 namespace VGMRead
 {
+
+    public class MusicalNote
+    {
+        private static readonly string[] notes = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-" };
+
+        public double Freq;
+        public bool OutOfRange;
+        public int cent_index;
+        public int cent_sign;
+        public int cent;
+        public int octave;
+        public int note;
+        public string GSnote;
+        public override string ToString()
+        {
+            if (OutOfRange) return " -OOR- ";
+            return notes[note] + octave + (cent_sign == 1 ? "+" : "-") + cent_index.ToString("D2") + "C";
+        }
+
+    }
     public static class Tools
     {
         private static readonly string[] notes =  {
@@ -23,11 +43,16 @@ namespace VGMRead
         private const int MINUS = 0;
         private const int PLUS = 1;
 
-        public static string FrequencyToNote(double input)
+        public static MusicalNote FrequencyToNote(double input)
         {
+            MusicalNote result = new MusicalNote();
+            result.Freq = input;
 
             if ((input < 16) || (input > 14080))
-                return " -OOR- ";
+            {
+                result.OutOfRange = true;
+                return result;
+            }
 
             double frequency;
             var r = Math.Pow(2.0, 1.0 / 12.0);
@@ -94,12 +119,20 @@ namespace VGMRead
                 }
             }
 
-            var result = notes[A4_INDEX + r_index];
+            result.octave = (A4_INDEX + r_index) / 12;
+            result.note = (A4_INDEX + r_index) % 12;
+            result.cent_index = cent_index;
+            result.cent_sign = side == PLUS ? 1 : -1;
+            result.cent = result.cent_index * result.cent_sign;
+
+
+
+            result.GSnote = notes[A4_INDEX + r_index];
             if (side == PLUS)
-                result = result + "-";
+                result.GSnote += "+";
             else
-                result = result + "+";
-            result = result + cent_index.ToString("D2") + "C";
+                result.GSnote += "-";
+            result.GSnote += cent_index.ToString("D2") + "C";
             return result;
 
         }

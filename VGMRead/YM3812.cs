@@ -55,7 +55,47 @@ namespace VGMRead
             registers[command.Register] = command.Value;
         }
 
-        public byte[] registers = new byte[255];
+        public byte[] prevregisters = new byte[256];
+        public byte[] registers = new byte[256];
+
+        public void NextTick()
+        {
+            for (int i = 0; i < 256; i++)
+            {
+                prevregisters[i] = registers[i];
+            }
+        }
+        public List<byte> GetChangedRegisters()
+        {
+            List<byte> result = new List<byte>();
+            for (int i = 0; i < 256; i++)
+            {
+                if (prevregisters[i] != registers[i])
+                {
+                    result.Add((byte)i);
+                    result.Add(registers[i]);
+                }
+            }
+            return result;
+        }
+
+        public bool KeyOnHappened(int channel)
+        {
+            ChanelLimiter(ref channel);
+            int register = 0xB0 + channel;
+            bool prevon = (prevregisters[register] & 0b00100000) > 1;
+            bool curron = (registers[register] & 0b00100000) > 1;
+            return !prevon && curron;
+        }
+        public bool KeyOffHappened(int channel)
+        {
+            ChanelLimiter(ref channel);
+            int register = 0xB0 + channel;
+            bool prevon = (prevregisters[register] & 0b00100000) > 1;
+            bool curron = (registers[register] & 0b00100000) > 1;
+            return prevon && !curron;
+        }
+
         private YM3812OperatorStats[] Operators = new YM3812OperatorStats[19]; //Operator numbering starts with 1. 0. position unused.
         private YM3812ChannelStats[] Channels = new YM3812ChannelStats[9];
         public YM3812OperatorStats GetOperatorStats(int OperatorID)
