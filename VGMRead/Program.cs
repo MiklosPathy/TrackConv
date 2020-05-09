@@ -13,9 +13,14 @@ namespace VGMRead
 {
     class Program
     {
+
+        static public List<byte> volumestat = new List<byte>();
+
         static void Main(string[] args)
         {
+            //VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\03 Water.vgm");
             VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\06 Chani's Eyes.vgm");
+            //VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\07 Sign of the Worm.vgm");
             reader.Open();
 
             //Statistics.VGMWaitTotal(reader);
@@ -23,7 +28,6 @@ namespace VGMRead
             //Statistics.YM3812Notes(reader);
             //Visulaize.ChannelStats(reader);
 
-            //Convert.
             double waittickcorrection = 0;
             double x16tickinmillisec = 1000 / 60;
 
@@ -81,13 +85,15 @@ namespace VGMRead
             Directory.SetCurrentDirectory(@"C:\Users\mpathy\Source\Repos\TrackConv\Player");
             CX16BasicWriter.ToFile(outbytes);
             DumbBinWriter.ToFile(outbytes);
+            VGMWriter.ToFile(outbytes);
         }
 
         public static void ConvertYM3812stateToYM2151state(YM3812 ym3812, YM2151 ym2151)
         {
-            for (int channel = 0; channel < 9; channel++)
+            //for (int channel = 0; channel < 9; channel++)
             {
-                var chs = ym3812.GetChannelStats(channel);
+                int channel = 0;
+                var chs = ym3812.GetChannelStats(4);
 
                 if (channel <= 7)
                 {
@@ -182,12 +188,12 @@ namespace VGMRead
             {
                 if (channel <= 7)
                 {
+                    byte operatormask = 0b01111000;
                     if (ym3812.KeyOffHappened(channel))
                     {
                         //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
-                        //Minden operátor kuss.
                         byte register = (byte)(0x08);
-                        byte value = 0b00000000;
+                        byte value = operatormask;
                         value += (byte)(channel & 0b00000111);
                         result.Add(register);
                         result.Add(value);
@@ -195,8 +201,6 @@ namespace VGMRead
                     if (ym3812.KeyOnHappened(channel))
                     {
                         //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​
-                        //Most minden operátor szóljon.
-                        byte operatormask = 0b01111000;
                         byte register = (byte)(0x08);
                         byte value = operatormask;
                         value += (byte)(channel & 0b00000111);
@@ -219,6 +223,13 @@ namespace VGMRead
             value += (byte)(op.DT << 4);
             value += op.MULT;
             ym2151.registers[register] = value;
+
+            //$60-$7F  -​V​V​V​V​V​V​V​    Slot1 - 32.     Volume​     V = Volume(TL)(0 = max)​
+            register = (byte)(0x60 + slot);
+            value = 0;
+            value += op.TL;
+            ym2151.registers[register] = value;
+            volumestat.Add(value);
 
             //$80-$9F  K​K​-​A​AA​A​A​     Slot1 - 32.     Keyscale / Attack​  K = Keycale, A = attack​
             register = (byte)(0x80 + slot);

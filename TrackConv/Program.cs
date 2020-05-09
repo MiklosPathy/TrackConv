@@ -174,7 +174,7 @@ namespace TrackConv
             CX16BasicWriter.ToFile(conv.OBs);
             DumbBinWriter.ToFile(conv.OBs);
             DMFWriter.ToDMF(conv);
-
+            VGMWriter.ToFile(conv.OBs);
 
         }
     }
