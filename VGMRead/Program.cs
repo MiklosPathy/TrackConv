@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TrackConv;
 using TrackConv.Writer;
 
 namespace VGMRead
@@ -36,7 +37,7 @@ namespace VGMRead
 
             List<byte> outbytes = new List<byte>();
             //Start pause.
-            outbytes.AddRange(new byte[] { 0, 60 });
+            //outbytes.AddRange(new byte[] { 0, 60 });
 
             ym2151.Reset();
             ym2151.NextTick();
@@ -80,7 +81,7 @@ namespace VGMRead
             }
 
             //Trailing pause
-            outbytes.AddRange(new byte[] { 0, 60 });
+            //outbytes.AddRange(new byte[] { 0, 60 });
 
             Directory.SetCurrentDirectory(@"C:\Users\mpathy\Source\Repos\TrackConv\Player");
             CX16BasicWriter.ToFile(outbytes);
@@ -90,10 +91,11 @@ namespace VGMRead
 
         public static void ConvertYM3812stateToYM2151state(YM3812 ym3812, YM2151 ym2151)
         {
-            //for (int channel = 0; channel < 9; channel++)
+            for (int channel = 0; channel < 9; channel++)
             {
-                int channel = 0;
-                var chs = ym3812.GetChannelStats(4);
+                //int channel = 0;
+                //var chs = ym3812.GetChannelStats(4);
+                var chs = ym3812.GetChannelStats(channel);
 
                 if (channel <= 7)
                 {
@@ -188,7 +190,8 @@ namespace VGMRead
             {
                 if (channel <= 7)
                 {
-                    byte operatormask = 0b01111000;
+                    //C2 M2 C1 M1
+                    byte operatormask = (byte)KeyEnableByOperator.C1 + (byte)KeyEnableByOperator.M1;
                     if (ym3812.KeyOffHappened(channel))
                     {
                         //$08       -​S​S​S​S​C​C​C​    Key On(Play Sound)​ C = Channel S = Slot(C2 M2 C1 M1)​

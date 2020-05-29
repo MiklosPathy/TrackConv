@@ -1,0 +1,262 @@
+program Player;
+
+var
+    @define Space $A0
+    hex: string = (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 01, 02, 03, 04, 05, 06);
+    Normal2YMNote: array[12] of byte = (14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13);
+
+	ymoctavenote:byte;
+	YMReg : byte absolute $9FE0;
+	YMData : byte absolute $9FE1;
+	key : byte;
+	note : byte;
+	octave:byte;
+	transpose:byte=3;
+	change:byte=0;
+	mousebuttons: byte;
+	mouseX: integer;
+	mouseY: integer;
+
+	procedure DrawHexByte(X, Y, Number:byte, Col: byte);
+	begin
+		X := X * 2;
+		VERA_ADDR_MID := Y;
+		VERA_ADDR_LO := X;
+
+		VERA_DATA1 := @Space;
+		VERA_DATA1 := hex[Number >> 4];
+		VERA_DATA1 := hex[Number & $F];
+		VERA_DATA1 := @Space;
+
+		VERA_ADDR_LO := X+1;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+   end; 
+
+	procedure DrawHexInt(X, Y, Number:integer, Col: byte);
+	begin
+		X := X * 2;
+		VERA_ADDR_MID := Y;
+		VERA_ADDR_LO := X;
+
+		VERA_DATA1 := hex[Number >> 12];
+		VERA_DATA1 := hex[(Number >> 8)&$F];
+		VERA_DATA1 := hex[(Number >> 4)&$F];
+		VERA_DATA1 := hex[Number & $F];
+
+		VERA_ADDR_LO := X+1;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+		VERA_DATA1 := Col;
+   end; 
+
+procedure ResetYM(); 
+	var 
+		i : byte;
+	begin
+
+    fori i := 0 to $5F do
+    	begin
+	    YMReg:=i;
+	    YMData:=0;
+	    end;
+
+    fori i := $60 to $7F do
+	    begin
+	    YMReg:=i;
+	    YMData:=127;
+	    end;
+
+    for i := $80 to $FF do
+	    begin
+	    YMReg:=i;
+	    YMData:=0;
+	    end;
+    YMReg:=i;
+    YMData:=0;
+
+	end;
+
+procedure mouse_on();
+	begin
+	asm("
+		LDA #1
+		jsr $FF68
+	");
+	end;
+
+procedure mouse_off();
+	begin
+	asm("
+		LDA #0
+		jsr $FF68
+	");
+	end;
+	
+procedure mouse_get();
+	begin
+	asm("
+		jsr $FF6B
+		sta mousebuttons
+		LDA $00,X
+		STA mouseX
+		LDA $01,X
+		STA mouseX+1;
+		LDA $02,X
+		sta mouseY
+		LDA $03,X
+		sta mouseY+1;
+	");
+	end;
+
+
+procedure getin();
+	begin
+	asm("
+		jsr $FFE4
+		sta key
+	");
+	end;
+
+procedure key2note();
+begin
+	note:=$FF;
+    case key of
+	    $5A: begin octave:=0;note:=0; end;
+	    $53: begin octave:=0;note:=1; end;
+	    $58: begin octave:=0;note:=2; end;
+	    $44: begin octave:=0;note:=3; end; 
+	    $43: begin octave:=0;note:=4; end;
+	    $56: begin octave:=0;note:=5; end;
+	    $47: begin octave:=0;note:=6; end;
+	    $42: begin octave:=0;note:=7; end;
+		$48: begin octave:=0;note:=8; end;
+		$4E: begin octave:=0;note:=9; end;
+		$4A: begin octave:=0;note:=10; end;
+		$4D: begin octave:=0;note:=11; end;
+		$2C: begin octave:=1;note:=0; end;
+		$4C: begin octave:=1;note:=1; end;
+		$2E: begin octave:=1;note:=2; end;
+		$3B: begin octave:=1;note:=3; end;
+		$2F: begin octave:=1;note:=4; end;
+		$51: begin octave:=1;note:=0; end;
+		$32: begin octave:=1;note:=1; end;
+		$57: begin octave:=1;note:=2; end;
+		$33: begin octave:=1;note:=3; end;
+		$45: begin octave:=1;note:=4; end;
+		$52: begin octave:=1;note:=5; end;
+		$35: begin octave:=1;note:=6; end;
+		$54: begin octave:=1;note:=7; end;
+		$36: begin octave:=1;note:=8; end;
+		$59: begin octave:=1;note:=9; end;
+		$37: begin octave:=1;note:=10; end;
+		$55: begin octave:=1;note:=11; end;
+		$49: begin octave:=2;note:=0; end;
+		$39: begin octave:=2;note:=1; end;
+		$4F: begin octave:=2;note:=2; end;
+		$30: begin octave:=2;note:=3; end;
+		$50: begin octave:=2;note:=4; end;
+		$5B: begin octave:=2;note:=5; end;
+		$3D: begin octave:=2;note:=6; end;
+		$5D: begin octave:=2;note:=7; end;
+    end;
+end;
+
+procedure toYMoctavenote();
+
+begin
+octave:=octave+transpose;  //Transpose
+if (note=0 and octave>0) then dec(octave);  //YMidiotizm
+ymoctavenote:=(Normal2YMNote[note]&$F)|(octave<<4);
+end;
+
+procedure handlemouse();
+begin
+if (mousebuttons=1) then change:=1;
+if (mousebuttons=2) then change:=-1;
+if (mousebuttons=0) then 
+	begin
+	transpose:=transpose+change;
+	change:=0;
+	end;
+end;
+
+//MAIN START
+
+begin
+ResetYM();
+mouse_on();
+
+
+	VERA_CTRL := 0;
+	Vera_Addr_Hi  := $0F;
+	Vera_Addr_Mid := $20;
+	Vera_Addr_Lo  := $00;
+	Vera_Data1 := %00100001;
+
+	VERA_CTRL := 0;
+	VERA_ADDR_HI := $20;
+	
+
+YMReg:=$20;
+YMData:=%11000111;
+YMReg:=$60;//TL
+YMData:=21;
+YMReg:=$80;//AR
+YMData:=31;
+YMReg:=$80;//AR
+YMData:=31;
+YMReg:=$A0;//D1
+YMData:=0;
+YMReg:=$C0;//D2
+YMData:=0;
+YMReg:=$E0;//RR
+YMData:=5;
+
+	
+key:=$0;	
+while (key<>3) do
+	begin
+	getin();
+	if (key<>0) then 
+		begin	
+		if (key=$20) then
+			begin
+		    YMReg:=$08;
+			YMData:=%00000000;		
+			end
+		else
+			begin
+			DrawHexByte(75, 55,  key, 5);
+			key2note();
+			if(note<>$FF) then
+				begin
+				toYMoctavenote();
+				YMReg:=$28;
+				YMData:=ymoctavenote;
+				YMReg:=$08;
+				YMData:=%01111000;
+				end;
+			end;
+		end;
+
+	mouse_get();	
+	mouseX:=mouseX>>3;
+	mouseY:=mouseY>>3;
+	handlemouse();
+
+	DrawHexByte(75,56,mousebuttons,2);
+	DrawHexByte(75,57,mouseX,3);
+	DrawHexByte(75,58,mouseY,4);
+
+	DrawHexByte(2,59,transpose,7);
+	end;
+
+mouse_off();
+ResetYM();
+return();
+end.
+ 
