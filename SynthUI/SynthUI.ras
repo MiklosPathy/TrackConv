@@ -12,11 +12,31 @@ var
 	note : byte;
 	octave:byte;
 	transpose:byte=3;
-	change:byte=0;
 	mousebuttons: byte;
 	mouseX: integer;
 	mouseY: integer;
-
+	
+	mouseXposAtClick: byte;
+	mouseYposAtClick: byte;
+	mouseClicked:byte;
+	
+    @define ButtonCount 2
+	buttonposX:array[@ButtonCount] of byte = (10,15);
+	buttonposY:array[@ButtonCount] of byte = (10,10);
+	buttonWidth:array[@ButtonCount] of byte = (3,3);
+	buttonHeight:array[@ButtonCount] of byte = (3,3);
+	buttonColor:array[@ButtonCount] of byte = (8,9);
+	buttonLabel:array[@ButtonCount] of byte = (45,43);
+	
+	@define SliderCount 1
+	sliderposX:array[@SliderCount] of byte = (10);
+	sliderposY:array[@SliderCount] of byte = (20);
+	sliderHeight:array[@SliderCount] of byte = (10);
+	sliderColor:array[@SliderCount] of byte = (4);
+	sliderValue:array[@SliderCount] of byte = (0);
+	sliderMax:array[@SliderCount] of byte = (9);
+	clickedSlider:byte=$FF;
+	
 	procedure DrawHexByte(X, Y, Number:byte, Col: byte);
 	begin
 		X := X * 2;
@@ -173,16 +193,170 @@ if (note=0 and octave>0) then dec(octave);  //YMidiotizm
 ymoctavenote:=(Normal2YMNote[note]&$F)|(octave<<4);
 end;
 
-procedure handlemouse();
+procedure handlebuttonclick();
+var i,mx2,my2,clickedButton:byte;
 begin
-if (mousebuttons=1) then change:=1;
-if (mousebuttons=2) then change:=-1;
-if (mousebuttons=0) then 
+
+i:=0;
+clickedButton:=$FF;
+while (i<@ButtonCount and clickedButton=$FF) do
+	begin;
+	mx2:=buttonposX[i]+buttonWidth[i];
+	my2:=buttonposY[i]+buttonHeight[i];
+	if (mouseXposAtClick>=buttonposX[i] and mouseXposAtClick<=mx2) then  //Ouch... Only 2 parametern in and in if??? 
+		if (mouseYposAtClick>=buttonposY[i] and mouseYposAtClick<=my2) then clickedButton:=i;
+	inc(i);
+	end;
+
+case clickedButton of
+	0: dec(transpose);
+	1: inc(transpose);
+	end;
+
+end;
+
+procedure drawChar(X,Y,char,color:byte);
+begin
+		X := X * 2;
+		VERA_ADDR_MID := Y;
+		VERA_ADDR_LO := X;
+		VERA_DATA1 := char;
+		VERA_ADDR_LO := X+1;
+		VERA_DATA1 := color;
+end;
+
+procedure drawSlider(slid:byte);
+var i:byte;
+begin
+for i:=sliderposY[slid] to sliderposY[slid]+sliderHeight[slid] do
+	drawChar(sliderposX[slid],i,$5D,sliderColor[slid]);
+drawChar(sliderposX[slid],sliderposY[slid]+sliderValue[slid],$5B,sliderColor[slid]);
+end;
+
+procedure handlesliderclick();
+var i,mx,my,my2:byte;
+begin
+
+if (mouseClicked=1 and clickedSlider<>$FF) then
 	begin
-	transpose:=transpose+change;
-	change:=0;
+	my2:=sliderposY[clickedSlider]+sliderHeight[clickedSlider];
+	my:=mouseY;
+	if (my>=sliderposY[clickedSlider] and my<=my2) then 
+		begin
+		sliderValue[clickedSlider]:=my-sliderposY[clickedSlider];
+		drawSlider(clickedSlider);
+		end;
+	end
+else
+	begin
+	i:=0;
+	clickedSlider:=$FF;
+
+	while (i<@SliderCount and clickedSlider=$FF) do
+		begin;
+		my2:=sliderposY[i]+sliderHeight[i];
+		mx:=mouseX;
+		my:=mouseY;
+		if (mx=sliderposX[i]) then
+			begin
+			if (my>=sliderposY[i] and my<=my2) then 
+				begin
+				clickedSlider:=i;
+				sliderValue[i]:=my-sliderposY[i];
+				drawSlider(i);
+				end;
+			end;
+		inc(i);
+		end;
+	end;
+
+case clickedSlider of
+	0: DrawHexByte(40,30,sliderValue[0],1);
 	end;
 end;
+
+
+
+procedure handlemouse();
+begin
+	mouse_get();	
+	
+	DrawHexByte(75,56,mousebuttons,1);
+	DrawHexInt(70,57,mouseX,4);
+	DrawHexInt(70,58,mouseY,5);
+	mouseX:=mouseX>>3;
+	mouseY:=mouseY>>3;
+	DrawHexByte(75,57,mouseX,4);
+	DrawHexByte(75,58,mouseY,5);
+	
+
+if (mousebuttons=1) then 
+	begin
+	handlesliderclick();
+	if mouseClicked=0 then
+		begin
+		mouseXposAtClick:=mouseX;
+		mouseYposAtClick:=mouseY;
+		mouseClicked:=1;
+		end;
+	end;
+if (mousebuttons=0) then 
+	begin
+		if mouseClicked=1 then
+		begin
+		handlebuttonclick();
+		mouseClicked:=0;
+		end;
+	end;
+end;
+
+
+
+procedure drawLabel(X,Y:byte; caption:pointer; color:byte);
+var i,c:byte;
+begin
+i:=0;
+c:=caption[i];
+while (c<>0) do
+	begin
+	drawChar(X+i,Y,c-$40,color);
+	inc(i);
+	c:=caption[i];
+	end;
+end;
+
+procedure drawBox(posX,posY,Width,Height,color:byte);
+var x,y:byte;
+begin
+for x:=posX to posX+Width do
+	for y:=posY to posY+Height do
+		drawChar(x,y,@Space,color);
+end;
+
+procedure drawButton(butt:byte);
+var labelx,labely:byte;
+begin
+drawBox(buttonposX[butt],buttonposY[butt],buttonWidth[butt],buttonHeight[butt],buttonColor[butt]);
+labelx:=buttonposX[butt]+buttonWidth[butt]>>1;
+labely:=buttonposY[butt]+buttonHeight[butt]>>1;
+drawChar(labelx,labely,buttonLabel[butt],buttonColor[butt]);
+//for x:=buttonposX[butt] to buttonposX[butt]+buttonWidth[butt] do
+//	for y:=buttonposY[butt] to buttonposY[butt]+buttonHeight[butt] do
+//		drawChar(x,y,@Space,buttonColor[butt]);
+end;
+
+procedure drawButtons();
+var i:byte;
+begin
+for i:=0 to @ButtonCount do drawButton(i);
+end;
+
+procedure drawSliders();
+var i:byte;
+begin
+for i:=0 to @SliderCount do drawSlider(i);
+end;
+
 
 //MAIN START
 
@@ -190,16 +364,14 @@ begin
 ResetYM();
 mouse_on();
 
-
-	VERA_CTRL := 0;
-	Vera_Addr_Hi  := $0F;
-	Vera_Addr_Mid := $20;
-	Vera_Addr_Lo  := $00;
-	Vera_Data1 := %00100001;
-
 	VERA_CTRL := 0;
 	VERA_ADDR_HI := $20;
-	
+
+drawBox(0,0,80,60,0);
+drawButtons();
+drawSliders();
+drawLabel(5,5,"+",4);
+
 
 YMReg:=$20;
 YMData:=%11000111;
@@ -243,14 +415,7 @@ while (key<>3) do
 			end;
 		end;
 
-	mouse_get();	
-	mouseX:=mouseX>>3;
-	mouseY:=mouseY>>3;
 	handlemouse();
-
-	DrawHexByte(75,56,mousebuttons,2);
-	DrawHexByte(75,57,mouseX,3);
-	DrawHexByte(75,58,mouseY,4);
 
 	DrawHexByte(2,59,transpose,7);
 	end;
