@@ -1,0 +1,40 @@
+unit X16Mouse;
+
+var
+	Buttons: byte;
+	X: integer;
+	Y: integer;
+
+procedure CursorOn();
+	begin
+	asm("
+		LDA #1
+		jsr $FF68
+	");
+	end;
+
+procedure CursorOff();
+	begin
+	asm("
+		LDA #0
+		jsr $FF68
+	");
+	end;
+	
+procedure GetState();
+	begin
+	asm("
+		jsr $FF6B
+		sta X16Mouse_Buttons
+		LDA $00,X
+		STA X16Mouse_X
+		LDA $01,X
+		STA X16Mouse_X+1;
+		LDA $02,X
+		sta X16Mouse_Y
+		LDA $03,X
+		sta X16Mouse_Y+1;
+	");
+	end;
+
+end.

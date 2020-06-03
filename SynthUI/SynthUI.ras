@@ -1,22 +1,19 @@
 program SynthUI;
 
+@use "SimpleCharFunctions"
+@use "YM2151"
+@use "X16Mouse"
+
+
 var
-    @define Space $A0
-    hex: string = (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 01, 02, 03, 04, 05, 06);
-    Normal2YMNote: array[12] of byte = (14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13);
-    YMLastState: array[256] of byte;
     //WidgetMap: array[4800] of byte;
 
 	ymoctavenote:byte;
-	YMReg : byte absolute $9FE0;
-	YMData : byte absolute $9FE1;
 	key : byte;
 	note : byte;
 	octave:byte;
 	transpose:byte=3;
-	mousebuttons: byte;
-	mouseXint: integer;
-	mouseYint: integer;
+
 	mouseXchpos: byte;
 	mouseYchpos: byte;
 	
@@ -46,154 +43,6 @@ var
 	sliderMode:array[@SliderCount] of byte = (@Vertical,@Horizontal);
 	clickedSlider:byte=$FF;
 
-procedure DrawBinByte(X, Y, Number:byte, Col: byte);
-	begin
-	X := X * 2;
-	VERA_ADDR_MID := Y;
-	VERA_ADDR_LO := X;
-
-	VERA_DATA1 := hex[(Number >> 7)&$01];
-	VERA_DATA1 := hex[(Number >> 6)&$01];
-	VERA_DATA1 := hex[(Number >> 5)&$01];
-	VERA_DATA1 := hex[(Number >> 4)&$01];
-	VERA_DATA1 := hex[(Number >> 3)&$01];
-	VERA_DATA1 := hex[(Number >> 2)&$01];
-	VERA_DATA1 := hex[(Number >> 1)&$01];
-	VERA_DATA1 := hex[(Number >> 0)&$01];
-
-	VERA_ADDR_LO := X+1;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-    end; 
-	
-procedure DrawHexByte(X, Y, Number:byte, Col: byte);
-	begin
-	X := X * 2;
-	VERA_ADDR_MID := Y;
-	VERA_ADDR_LO := X;
-
-	VERA_DATA1 := hex[Number >> 4];
-	VERA_DATA1 := hex[Number & $F];
-
-	VERA_ADDR_LO := X+1;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-    end; 
-
-procedure DrawHexInt(X, Y, Number:integer, Col: byte);
-	begin
-	X := X * 2;
-	VERA_ADDR_MID := Y;
-	VERA_ADDR_LO := X;
-
-	VERA_DATA1 := hex[Number >> 12];
-	VERA_DATA1 := hex[(Number >> 8)&$F];
-	VERA_DATA1 := hex[(Number >> 4)&$F];
-	VERA_DATA1 := hex[Number & $F];
-
-	VERA_ADDR_LO := X+1;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-	VERA_DATA1 := Col;
-    end; 
-
-procedure DrawChar(X,Y,char,color:byte);
-	begin
-	X := X * 2;
-	VERA_ADDR_MID := Y;
-	VERA_ADDR_LO := X;
-	VERA_DATA1 := char;
-	VERA_ADDR_LO := X+1;
-	VERA_DATA1 := color;
-	end;
-
-//Only for uppercase alphabetical chars (compiler does not convert strings to PETSCII, so this one do something
-procedure DrawLabel(X,Y:byte; caption:pointer; color:byte);
-	var i,c:byte;
-	begin
-	i:=0;
-	c:=caption[i];
-	while (c<>0) do
-		begin
-		DrawChar(X+i,Y,c-$40,color);
-		inc(i);
-		c:=caption[i];
-		end;
-	end;
-
-procedure DrawBox(posX,posY,Width,Height,color:byte);
-	var x,y:byte;
-	begin
-	for x:=posX to posX+Width do
-		for y:=posY to posY+Height do
-			DrawChar(x,y,@Space,color);
-	end;
-
-procedure YMsetReg(reg,data:byte);
-	begin
-	YMReg:=reg;
-	YMData:=data;
-	YMLastState[reg]:=data;
-	end;
-
-procedure YMsetFB(reg,data:byte);
-	begin
-	data:=data & %00000111;
-	data:=data << 3;
-	data:=data | %11000111;
-	YMLastState[reg]:=YMLastState[reg]&%11000111;
-	data:=YMLastState[reg] | data;
-	YMsetReg(reg,data);
-	end;
-
-procedure YMreset(); 
-	var 
-		i : byte;
-	begin
-    fori i := 0 to $5F do YMsetReg(i,0);
-    fori i := $60 to $7F do YMsetReg(i,127);
-    for i := $80 to $FF do YMsetReg(i,0);
-	YMsetReg(i,0);
-	end;
-
-procedure mouse_on();
-	begin
-	asm("
-		LDA #1
-		jsr $FF68
-	");
-	end;
-
-procedure mouse_off();
-	begin
-	asm("
-		LDA #0
-		jsr $FF68
-	");
-	end;
-	
-procedure mouse_get();
-	begin
-	asm("
-		jsr $FF6B
-		sta mousebuttons
-		LDA $00,X
-		STA mouseXint
-		LDA $01,X
-		STA mouseXint+1;
-		LDA $02,X
-		sta mouseYint
-		LDA $03,X
-		sta mouseYint+1;
-	");
-	end;
 
 procedure getin();
 	begin
@@ -251,7 +100,7 @@ procedure toYMoctavenote();
 	begin
 	octave:=octave+transpose;  //Transpose
 	if (note=0 and octave>0) then dec(octave);  //YMidiotizm
-	ymoctavenote:=(Normal2YMNote[note]&$F)|(octave<<4);
+	ymoctavenote:=(YM2151::Normal2YMNote[note]&$F)|(octave<<4);
 	end;
 
 procedure handlebuttonclick();
@@ -289,16 +138,16 @@ procedure drawSlider(slid:byte);
 		@Vertical:
 			begin	
 			for i:=sliderposY[slid] to sliderposY[slid]+sliderLength[slid] do
-				DrawChar(sliderposX[slid],i,$5D,sliderColor[slid]);
-			DrawChar(sliderposX[slid],sliderposY[slid]+sliderValue[slid],$5B,sliderColor[slid]);
+				SCF::DrawChar(sliderposX[slid],i,$5D,sliderColor[slid]);
+			SCF::DrawChar(sliderposX[slid],sliderposY[slid]+sliderValue[slid],$5B,sliderColor[slid]);
 			end;
 		@Horizontal:
 			begin
 			for i:=sliderposX[slid] to sliderposX[slid]+sliderLength[slid] do
-				DrawChar(i,sliderposY[slid],$43,sliderColor[slid]);
+				SCF::DrawChar(i,sliderposY[slid],$43,sliderColor[slid]);
 				
 			calcspres(sliderLength[slid],sliderValue[slid],sliderMax[slid],sliderposX[slid]);
-			DrawChar(spres,sliderposY[slid],$5B,sliderColor[slid]);
+			SCF::DrawChar(spres,sliderposY[slid],$5B,sliderColor[slid]);
 			end;
 		end;
 	end;
@@ -309,18 +158,18 @@ procedure calcslvalue(mousepos,splen,spmax,sppos:byte);
 
 	begin
 	temp:=0;
-	DrawHexByte(16,54,mousepos,1);
-	DrawHexByte(22,54,sppos,1);
-	DrawHexByte(16,55,splen,1);
-	DrawHexByte(22,55,spmax,1);
+	SCF::DrawHexByte(16,54,mousepos,1);
+	SCF::DrawHexByte(22,54,sppos,1);
+	SCF::DrawHexByte(16,55,splen,1);
+	SCF::DrawHexByte(22,55,spmax,1);
 	rpb:=splen/spmax/2;
 	rpb:=mousepos-sppos+rpb;
 	relpos:=rpb;
-	DrawHexInt(16,52,relpos,1);
+	SCF::DrawHexInt(16,52,relpos,1);
 	temp:=relpos*spmax;
-	DrawHexInt(22,52,temp,1);
+	SCF::DrawHexInt(22,52,temp,1);
 	temp:=temp/splen;
-	DrawHexInt(28,52,temp,1);
+	SCF::DrawHexInt(28,52,temp,1);
 	spres:=temp;	
 	end;
 
@@ -409,30 +258,30 @@ procedure handlesliderclick();
 	case clickedSlider of
 		0:  begin
 			i:=sliderValue[0];
-			YMsetFB($20,i);
-			DrawHexByte(10,30,i,4);
+			YM2151::SetFB($20,i);
+			SCF::DrawHexByte(10,30,i,4);
 			end;
 		1:	begin
 			i:=sliderValue[1];
-			DrawHexByte(10,52,i,5);
+			SCF::DrawHexByte(10,52,i,5);
 			end;
 		end;
 	end;
 
 procedure handlemouse();
 	begin
-	mouse_get();	
+	X16Mouse::GetState();	
 	
-	DrawHexByte(75,56,mousebuttons,1);
-	DrawHexInt(70,57,mouseXint,4);
-	DrawHexInt(70,58,mouseYint,5);
-	mouseXchpos:=mouseXint>>3;
-	mouseYchpos:=mouseYint>>3;
-	DrawHexByte(75,57,mouseXchpos,4);
-	DrawHexByte(75,58,mouseYchpos,5);
+	SCF::DrawHexByte(75,56,X16Mouse::Buttons,1);
+	SCF::DrawHexInt(70,57,X16Mouse::X,4);
+	SCF::DrawHexInt(70,58,X16Mouse::Y,5);
+	mouseXchpos:=X16Mouse::X>>3;
+	mouseYchpos:=X16Mouse::Y>>3;
+	SCF::DrawHexByte(75,57,mouseXchpos,4);
+	SCF::DrawHexByte(75,58,mouseYchpos,5);
 	
 
-	if (mousebuttons=1) then 
+	if (X16Mouse::Buttons=1) then 
 		begin
 		handlesliderclick();
 		if mouseClicked=0 then
@@ -442,7 +291,7 @@ procedure handlemouse();
 			mouseClicked:=1;
 			end;
 		end;
-	if (mousebuttons=0) then 
+	if (X16Mouse::Buttons=0) then 
 		begin
 			if mouseClicked=1 then
 			begin
@@ -455,10 +304,10 @@ procedure handlemouse();
 procedure drawButton(butt:byte);
 	var labelx,labely:byte;
 	begin
-	DrawBox(buttonposX[butt],buttonposY[butt],buttonWidth[butt],buttonHeight[butt],buttonColor[butt]);
+	SCF::DrawBox(buttonposX[butt],buttonposY[butt],buttonWidth[butt],buttonHeight[butt],buttonColor[butt]);
 	labelx:=buttonposX[butt]+buttonWidth[butt]>>1;
 	labely:=buttonposY[butt]+buttonHeight[butt]>>1;
-	DrawChar(labelx,labely,buttonLabel[butt],buttonColor[butt]);
+	SCF::DrawChar(labelx,labely,buttonLabel[butt],buttonColor[butt]);
 	//for x:=buttonposX[butt] to buttonposX[butt]+buttonWidth[butt] do
 	//	for y:=buttonposY[butt] to buttonposY[butt]+buttonHeight[butt] do
 	//		DrawChar(x,y,@Space,buttonColor[butt]);
@@ -480,24 +329,22 @@ procedure drawSliders();
 //MAIN START
 
 begin
-YMreset();
-mouse_on();
+YM2151::Reset();
+X16Mouse::CursorOn();
 
-VERA_CTRL := 0;
-VERA_ADDR_HI := $20;
-DrawBox(0,0,80,60,0);
-DrawLabel(0,0,"HOJ",4);
+SCF::InitScreen(0);
+SCF::DrawLabel(0,0,"SYNTHUI",1);
 
 drawButtons();
 drawSliders();
 
 
-YMsetReg($20,%11000111);//RLFFFBBB     Right Left Feedback Connect
-YMsetReg($60,21);//0TTTTTTT			Total level (reversed 0 max, 127 min)
-YMsetReg($80,31);//KK0AAAAA			KS    AR			(Key Scaling, Attack)
-YMsetReg($A0,0);//A00DDDDD			AMS-EN      D1R		(Amplitude modulation, Decay1)
-YMsetReg($C0,0);//TT0DDDDD			DT2    		D2R 	(Useless Detune, Decay2
-YMsetReg($E0,5);//DDDDRRRR			D1L			RR		(Sustain, Release)
+YM2151::SetReg($20,%11000111);//RLFFFBBB     Right Left Feedback Connect
+YM2151::SetReg($60,21);//0TTTTTTT			Total level (reversed 0 max, 127 min)
+YM2151::SetReg($80,31);//KK0AAAAA			KS    AR			(Key Scaling, Attack)
+YM2151::SetReg($A0,0);//A00DDDDD			AMS-EN      D1R		(Amplitude modulation, Decay1)
+YM2151::SetReg($C0,0);//TT0DDDDD			DT2    		D2R 	(Useless Detune, Decay2
+YM2151::SetReg($E0,5);//DDDDRRRR			D1L			RR		(Sustain, Release)
 
 	
 key:=$0;	
@@ -506,27 +353,27 @@ while (key<>3) do
 	getin();
 	if (key<>0) then 
 		begin	
-		if (key=$20) then YMsetReg($08,%00000000) //Keyoff simulation with space
+		if (key=$20) then YM2151::SetReg($08,%00000000) //Keyoff simulation with space
 		else
 			begin
-			DrawHexByte(75, 55,  key, 5);
+			SCF::DrawHexByte(75, 55,  key, 5);
 			key2note();
 			if(note<>$FF) then
 				begin
 				toYMoctavenote();
-				YMsetReg($28,ymoctavenote);
-				YMsetReg($08,%01111000);
+				YM2151::SetReg($28,ymoctavenote);
+				YM2151::SetReg($08,%01111000);
 				end;
 			end;
 		end;
 
 	handlemouse();
 
-	DrawHexByte(2,59,transpose,7);
+	SCF::DrawHexByte(2,59,transpose,7);
 	end;
 
-mouse_off();
-YMreset();
+X16Mouse::CursorOff();
+YM2151::Reset();
 return();
 end.
  

@@ -1,0 +1,37 @@
+unit YM2151; 
+
+var
+    Normal2YMNote: array[12] of byte = (14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13);
+    YMLastState: array[256] of byte;
+
+	YMReg : byte absolute $9FE0;
+	YMData : byte absolute $9FE1;
+
+procedure SetReg(reg,data:byte);
+	begin
+	YMReg:=reg;
+	YMData:=data;
+	YMLastState[reg]:=data;
+	end;
+
+procedure SetFB(reg,data:byte);
+	begin
+	data:=data & %00000111;
+	data:=data << 3;
+	data:=data | %11000111;
+	YMLastState[reg]:=YMLastState[reg]&%11000111;
+	data:=YMLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+	
+procedure Reset(); 
+	var 
+		i : byte;
+	begin
+    fori i := 0 to $5F do SetReg(i,0);
+    fori i := $60 to $7F do SetReg(i,127);
+    for i := $80 to $FF do SetReg(i,0);
+	SetReg(i,0);
+	end;
+
+end.
