@@ -37,9 +37,8 @@ build_list = ,
 data_header_images/image1.flf = 0
 exomize_toggle = 0
 project_path = C:/Users/mpathy/Source/Repos/TrackConv/SynthUI/
-open_files = ,X16Mouse.tru, Player.asm, Player.ras
-current_file = X16Mouse.tru
+open_files = ,synthui.ras, Input.tru, Player.asm, Player.ras
+current_file = Input.tru
 exomizer_toggle = 0
 remove_unused_symbols = 1
 ignore_initial_jump = 0
-

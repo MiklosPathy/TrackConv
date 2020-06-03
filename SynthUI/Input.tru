@@ -1,0 +1,60 @@
+unit Input;
+
+var
+	key : byte;
+	note : byte;
+	octave:byte;
+
+procedure key2note();
+	begin
+	note:=$FF;
+    case key of
+	    $5A: begin octave:=0;note:=0; end;
+	    $53: begin octave:=0;note:=1; end;
+	    $58: begin octave:=0;note:=2; end;
+	    $44: begin octave:=0;note:=3; end; 
+	    $43: begin octave:=0;note:=4; end;
+	    $56: begin octave:=0;note:=5; end;
+	    $47: begin octave:=0;note:=6; end;
+	    $42: begin octave:=0;note:=7; end;
+		$48: begin octave:=0;note:=8; end;
+		$4E: begin octave:=0;note:=9; end;
+		$4A: begin octave:=0;note:=10; end;
+		$4D: begin octave:=0;note:=11; end;
+		$2C: begin octave:=1;note:=0; end;
+		$4C: begin octave:=1;note:=1; end;
+		$2E: begin octave:=1;note:=2; end;
+		$3B: begin octave:=1;note:=3; end;
+		$2F: begin octave:=1;note:=4; end;
+		$51: begin octave:=1;note:=0; end;
+		$32: begin octave:=1;note:=1; end;
+		$57: begin octave:=1;note:=2; end;
+		$33: begin octave:=1;note:=3; end;
+		$45: begin octave:=1;note:=4; end;
+		$52: begin octave:=1;note:=5; end;
+		$35: begin octave:=1;note:=6; end;
+		$54: begin octave:=1;note:=7; end;
+		$36: begin octave:=1;note:=8; end;
+		$59: begin octave:=1;note:=9; end;
+		$37: begin octave:=1;note:=10; end;
+		$55: begin octave:=1;note:=11; end;
+		$49: begin octave:=2;note:=0; end;
+		$39: begin octave:=2;note:=1; end;
+		$4F: begin octave:=2;note:=2; end;
+		$30: begin octave:=2;note:=3; end;
+		$50: begin octave:=2;note:=4; end;
+		$5B: begin octave:=2;note:=5; end;
+		$3D: begin octave:=2;note:=6; end;
+		$5D: begin octave:=2;note:=7; end;
+	    end;
+	end;
+	
+procedure getin();
+	begin
+	asm("
+		jsr $FFE4
+		sta Input_key
+	");
+	end;
+
+end.

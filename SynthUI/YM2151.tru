@@ -34,4 +34,20 @@ procedure Reset();
 	SetReg(i,0);
 	end;
 
+procedure SetNote(octave,note:byte);
+	begin
+	if (note=0 and octave>0) then dec(octave);  //YMidiotizm
+	SetReg($28,(Normal2YMNote[note]&$F)|(octave<<4));
+	end;
+	
+procedure KeyOn();
+	begin
+	SetReg($08,%01111000);
+	end;
+	
+procedure KeyOff();
+	begin
+	SetReg($08,%00000000);
+	end;
+
 end.

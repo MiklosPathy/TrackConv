@@ -3,15 +3,12 @@ program SynthUI;
 @use "SimpleCharFunctions"
 @use "YM2151"
 @use "X16Mouse"
+@use "Input"
 
 
 var
     //WidgetMap: array[4800] of byte;
 
-	ymoctavenote:byte;
-	key : byte;
-	note : byte;
-	octave:byte;
 	transpose:byte=3;
 
 	mouseXchpos: byte;
@@ -33,75 +30,20 @@ var
 	
 	@define Vertical 0
 	@define Horizontal 1
-	@define SliderCount 2
-	sliderposX:array[@SliderCount] of byte = (10,10);
-	sliderposY:array[@SliderCount] of byte = (20,50);
-	sliderLength:array[@SliderCount] of byte = (8,60);
-	sliderColor:array[@SliderCount] of byte = (4,5);
-	sliderValue:array[@SliderCount] of byte = (0,5);
-	sliderMax:array[@SliderCount] of byte = (7,10);
-	sliderMode:array[@SliderCount] of byte = (@Vertical,@Horizontal);
+	@define SliderCount 4
+	sliderposX:array[@SliderCount] of byte = (10,10,10,10);
+	sliderposY:array[@SliderCount] of byte = (20,40,45,50);
+	sliderLength:array[@SliderCount] of byte = (8,10,10,10);
+	sliderColor:array[@SliderCount] of byte = (4,5,6,7);
+	sliderValue:array[@SliderCount] of byte = (0,1,1,0);
+	sliderMax:array[@SliderCount] of byte = (7,2,9,30);
+	sliderMode:array[@SliderCount] of byte = (@Vertical,@Horizontal,@Horizontal,@Horizontal);
 	clickedSlider:byte=$FF;
 
 
-procedure getin();
-	begin
-	asm("
-		jsr $FFE4
-		sta key
-	");
-	end;
 
-procedure key2note();
-	begin
-	note:=$FF;
-    case key of
-	    $5A: begin octave:=0;note:=0; end;
-	    $53: begin octave:=0;note:=1; end;
-	    $58: begin octave:=0;note:=2; end;
-	    $44: begin octave:=0;note:=3; end; 
-	    $43: begin octave:=0;note:=4; end;
-	    $56: begin octave:=0;note:=5; end;
-	    $47: begin octave:=0;note:=6; end;
-	    $42: begin octave:=0;note:=7; end;
-		$48: begin octave:=0;note:=8; end;
-		$4E: begin octave:=0;note:=9; end;
-		$4A: begin octave:=0;note:=10; end;
-		$4D: begin octave:=0;note:=11; end;
-		$2C: begin octave:=1;note:=0; end;
-		$4C: begin octave:=1;note:=1; end;
-		$2E: begin octave:=1;note:=2; end;
-		$3B: begin octave:=1;note:=3; end;
-		$2F: begin octave:=1;note:=4; end;
-		$51: begin octave:=1;note:=0; end;
-		$32: begin octave:=1;note:=1; end;
-		$57: begin octave:=1;note:=2; end;
-		$33: begin octave:=1;note:=3; end;
-		$45: begin octave:=1;note:=4; end;
-		$52: begin octave:=1;note:=5; end;
-		$35: begin octave:=1;note:=6; end;
-		$54: begin octave:=1;note:=7; end;
-		$36: begin octave:=1;note:=8; end;
-		$59: begin octave:=1;note:=9; end;
-		$37: begin octave:=1;note:=10; end;
-		$55: begin octave:=1;note:=11; end;
-		$49: begin octave:=2;note:=0; end;
-		$39: begin octave:=2;note:=1; end;
-		$4F: begin octave:=2;note:=2; end;
-		$30: begin octave:=2;note:=3; end;
-		$50: begin octave:=2;note:=4; end;
-		$5B: begin octave:=2;note:=5; end;
-		$3D: begin octave:=2;note:=6; end;
-		$5D: begin octave:=2;note:=7; end;
-	    end;
-	end;
 
-procedure toYMoctavenote();
-	begin
-	octave:=octave+transpose;  //Transpose
-	if (note=0 and octave>0) then dec(octave);  //YMidiotizm
-	ymoctavenote:=(YM2151::Normal2YMNote[note]&$F)|(octave<<4);
-	end;
+
 
 procedure handlebuttonclick();
 	var i,mx2,my2,clickedButton:byte;
@@ -124,11 +66,62 @@ procedure handlebuttonclick();
 
 	end;
 
-procedure calcspres(splen,spval,spmax,sppos:byte);
+procedure getSlidePosition(splen,spval,spmax,sppos:byte);
 	var temp:integer;
 	begin
-	temp:=splen*spval/spmax;
-	spres:=temp+sppos;
+	if (splen-1>spmax) then
+		begin
+		temp:=splen*spval/spmax;
+		spres:=temp+sppos;
+		if spres>sppos+splen-1 then spres:=sppos+splen-1;
+		end;
+	if (splen-1=spmax) then
+		begin
+		spres:=sppos+spval;
+		end;
+	if (splen-1<spmax) then
+		begin
+		temp:=spmax*spval/splen;
+		spres:=temp+sppos;
+		if spres>sppos+splen-1 then spres:=sppos+splen-1;
+		end;
+	
+	end;
+
+procedure getSliderValue(mousepos,splen,spmax,sppos:byte);
+	var temp,relpos:integer;
+		rpb:byte;
+
+	begin
+	if (splen-1>spmax) then
+		begin
+		temp:=0;
+		SCF::DrawHexByte(16,54,mousepos,1);
+		SCF::DrawHexByte(22,54,sppos,1);
+		SCF::DrawHexByte(16,55,splen,1);
+		SCF::DrawHexByte(22,55,spmax,1);
+		rpb:=splen/spmax/2;
+		rpb:=mousepos-sppos+rpb;
+		relpos:=rpb;
+		SCF::DrawHexInt(16,52,relpos,1);
+		temp:=relpos*spmax;
+		SCF::DrawHexInt(22,52,temp,1);
+		temp:=temp/splen;
+		SCF::DrawHexInt(28,52,temp,1);
+		spres:=temp;	
+		end;
+	if (splen-1=spmax) then
+		begin
+		spres:=mousepos-sppos;
+		end;
+	if (splen-1<spmax) then
+		begin
+		temp:=0;
+		rpb:=mousepos-sppos;
+		relpos:=rpb;
+		temp:=relpos*spmax/splen;
+		spres:=temp;	
+		end;
 	end;
 
 procedure drawSlider(slid:byte);
@@ -146,31 +139,10 @@ procedure drawSlider(slid:byte);
 			for i:=sliderposX[slid] to sliderposX[slid]+sliderLength[slid] do
 				SCF::DrawChar(i,sliderposY[slid],$43,sliderColor[slid]);
 				
-			calcspres(sliderLength[slid],sliderValue[slid],sliderMax[slid],sliderposX[slid]);
+			getSlidePosition(sliderLength[slid],sliderValue[slid],sliderMax[slid],sliderposX[slid]);
 			SCF::DrawChar(spres,sliderposY[slid],$5B,sliderColor[slid]);
 			end;
 		end;
-	end;
-
-procedure calcslvalue(mousepos,splen,spmax,sppos:byte);
-	var temp,relpos:integer;
-		rpb:byte;
-
-	begin
-	temp:=0;
-	SCF::DrawHexByte(16,54,mousepos,1);
-	SCF::DrawHexByte(22,54,sppos,1);
-	SCF::DrawHexByte(16,55,splen,1);
-	SCF::DrawHexByte(22,55,spmax,1);
-	rpb:=splen/spmax/2;
-	rpb:=mousepos-sppos+rpb;
-	relpos:=rpb;
-	SCF::DrawHexInt(16,52,relpos,1);
-	temp:=relpos*spmax;
-	SCF::DrawHexInt(22,52,temp,1);
-	temp:=temp/splen;
-	SCF::DrawHexInt(28,52,temp,1);
-	spres:=temp;	
 	end;
 
 procedure calcSliderpos(slid:byte);
@@ -182,7 +154,7 @@ procedure calcSliderpos(slid:byte);
 			end;
 		@Horizontal:
 			begin	
-			calcslvalue(mouseXchpos,sliderLength[slid],sliderMax[slid],sliderposX[slid]);	
+			getSliderValue(mouseXchpos,sliderLength[slid],sliderMax[slid],sliderposX[slid]);	
 			//sliderValue[slid]:=mouseXchpos-sliderposX[slid];
 			sliderValue[slid]:=spres;
 			end;
@@ -335,34 +307,35 @@ X16Mouse::CursorOn();
 SCF::InitScreen(0);
 SCF::DrawLabel(0,0,"SYNTHUI",1);
 
+SCF::DrawLabel(27,52,"Q",1);
+
 drawButtons();
 drawSliders();
 
 
-YM2151::SetReg($20,%11000111);//RLFFFBBB     Right Left Feedback Connect
-YM2151::SetReg($60,21);//0TTTTTTT			Total level (reversed 0 max, 127 min)
-YM2151::SetReg($80,31);//KK0AAAAA			KS    AR			(Key Scaling, Attack)
-YM2151::SetReg($A0,0);//A00DDDDD			AMS-EN      D1R		(Amplitude modulation, Decay1)
-YM2151::SetReg($C0,0);//TT0DDDDD			DT2    		D2R 	(Useless Detune, Decay2
-YM2151::SetReg($E0,5);//DDDDRRRR			D1L			RR		(Sustain, Release)
+YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
+YM2151::SetReg($60,21);			//0TTTTTTT			Total level (reversed 0 max, 127 min)
+YM2151::SetReg($80,31);			//KK0AAAAA			KS    		AR			(Key Scaling, Attack)
+YM2151::SetReg($A0,0);			//A00DDDDD			AMS-EN      D1R			(Amplitude modulation, Decay1)
+YM2151::SetReg($C0,0);			//TT0DDDDD			DT2    		D2R 		(Useless Detune, Decay2
+YM2151::SetReg($E0,5);			//DDDDRRRR			D1L			RR			(Sustain, Release)
 
 	
-key:=$0;	
-while (key<>3) do
+Input::key:=$0;	
+while (Input::key<>3) do
 	begin
-	getin();
-	if (key<>0) then 
+	Input::getin();
+	if (Input::key<>0) then 
 		begin	
-		if (key=$20) then YM2151::SetReg($08,%00000000) //Keyoff simulation with space
+		if (Input::key=$20) then YM2151::KeyOff() //Keyoff simulation with space
 		else
 			begin
-			SCF::DrawHexByte(75, 55,  key, 5);
-			key2note();
-			if(note<>$FF) then
+			SCF::DrawHexByte(75, 55, Input::key, 5);
+			Input::key2note();
+			if(Input::note<>$FF) then
 				begin
-				toYMoctavenote();
-				YM2151::SetReg($28,ymoctavenote);
-				YM2151::SetReg($08,%01111000);
+				YM2151::SetNote(Input::octave+transpose,Input::note); //Transpose
+				YM2151::KeyOn();
 				end;
 			end;
 		end;
