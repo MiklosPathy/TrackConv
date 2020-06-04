@@ -73,7 +73,7 @@ procedure DrawChar(X,Y,char,color:byte);
 	end;
 
 //Only for uppercase alphabetical and numerical chars (compiler does not convert strings to PETSCII, so this one do something
-procedure DrawLabel(X,Y:byte; caption:pointer; color:byte);
+procedure TextAtPos(X,Y:byte; caption:pointer; color:byte);
 	var i,c,c2:byte;
 	begin
 	i:=0;

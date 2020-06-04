@@ -14,7 +14,7 @@ var
 	mouseXchpos: byte;
 	mouseYchpos: byte;
 	
-	spres:byte;
+	slres:byte;
 	
 	mouseXchposAtClick: byte;
 	mouseYchposAtClick: byte;
@@ -29,7 +29,7 @@ var
 	buttons:array[@ButtonCount] of tButton;
 	
 	tSlider = record
-		posX, posY, Length_, Color, Value, Max_, Mode : byte;	
+		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel : byte;	
 	end;
 
 	@define Vertical 0
@@ -40,10 +40,22 @@ var
 
 	clickedSlider:byte=$FF;
 
+	tLabel = record
+		posX, posY, Value, Color : byte;	
+	end;
+	@define LabelCount 4
+	labels:array[@LabelCount] of tSlider;
 
+procedure drawLabel(lbl:byte);
+	begin
+	SCF::DrawHexByte(labels[lbl].posX,labels[lbl].posY,labels[lbl].Value,labels[lbl].Color);
+	end;
 
-
-
+procedure setLabelValue(lbl,value:byte);
+	begin
+	labels[lbl].Value:=value;
+	drawLabel(lbl);
+	end;
 
 procedure handlebuttonclick();
 	var i,mx2,my2,clickedButton:byte;
@@ -66,32 +78,32 @@ procedure handlebuttonclick();
 
 	end;
 
-procedure getSlidePosition(splen,spval,spmax,sppos:byte);
+procedure getSlidePosition(sllen,slval,slmax,slpos:byte);
 	var temp:integer;
 	begin
-	if (splen-1=spmax) then	spres:=sppos+spval
+	if (sllen-1=slmax) then	slres:=slpos+slval
 	else
 		begin
-		temp:=splen*spval/spmax;
-		spres:=temp+sppos;
-		if spres>sppos+splen-1 then spres:=sppos+splen-1;
+		temp:=sllen*slval/slmax;
+		slres:=temp+slpos;
+		if slres>slpos+sllen-1 then slres:=slpos+sllen-1;
 		end;
 	end;
 
-procedure getSliderValue(mousepos,splen,spmax,sppos:byte);
+procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 	var temp,relpos:integer;
 		rpb:byte;
 	begin
-	if (splen-1=spmax) then	spres:=mousepos-sppos
+	if (sllen-1=slmax) then	slres:=mousepos-slpos
 	else
 		begin
 		temp:=0;
-		rpb:=splen/spmax/2;
-		rpb:=mousepos-sppos+rpb;
+		rpb:=sllen/slmax/2;
+		rpb:=mousepos-slpos+rpb;
 		relpos:=rpb;
-		temp:=relpos*spmax;
-		temp:=temp/splen;
-		spres:=temp;	
+		temp:=relpos*slmax;
+		temp:=temp/sllen;
+		slres:=temp;	
 		end;
 	end;
 
@@ -103,17 +115,21 @@ procedure drawSlider(slid:byte);
 			begin	
 			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
 				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
-			SCF::DrawChar(sliders[slid].posX,sliders[slid].posY+sliders[slid].Value,$5B,sliders[slid].Color);
+
+			getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
+			SCF::DrawChar(sliders[slid].posX,slres,$5B,sliders[slid].Color);
 			end;
 		@Horizontal:
 			begin
 			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
 				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
-				
+			
 			getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posX);
-			SCF::DrawChar(spres,sliders[slid].posY,$5B,sliders[slid].Color);
+			SCF::DrawChar(slres,sliders[slid].posY,$5B,sliders[slid].Color);
 			end;
 		end;
+	if (sliders[slid].AttachedLabel<>$FF) then setLabelValue(sliders[slid].AttachedLabel,sliders[slid].Value);
+
 	end;
 
 procedure calcSliderpos(slid:byte);
@@ -121,13 +137,13 @@ procedure calcSliderpos(slid:byte);
 	case sliders[slid].Mode of
 		@Vertical:
 			begin
-			sliders[slid].Value:=mouseYchpos-sliders[slid].posY;
+			getSliderValue(mouseYchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posY);	
+			sliders[slid].Value:=slres;
 			end;
 		@Horizontal:
 			begin	
 			getSliderValue(mouseXchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posX);	
-			//sliderValue[slid]:=mouseXchpos-sliderposX[slid];
-			sliders[slid].Value:=spres;
+			sliders[slid].Value:=slres;
 			end;
 		end;						
 	end;
@@ -202,11 +218,9 @@ procedure handlesliderclick();
 		0:  begin
 			i:=sliders[0].Value;
 			YM2151::SetFB($20,i);
-			SCF::DrawHexByte(10,30,i,4);
 			end;
 		1:	begin
 			i:=sliders[1].Value;
-			SCF::DrawHexByte(10,52,i,5);
 			end;
 		end;
 	end;
@@ -256,6 +270,8 @@ procedure drawButton(butt:byte);
 	//		DrawChar(x,y,@Space,buttonColor[butt]);
 	end;
 
+
+
 procedure drawButtons();
 	var i:byte;
 	begin
@@ -266,6 +282,12 @@ procedure drawSliders();
 	var i:byte;
 	begin
 	for i:=0 to @SliderCount do drawSlider(i);
+	end;
+	
+procedure drawLabels();
+	var i:byte;
+	begin
+	for i:=0 to @LabelCount do drawLabel(i);
 	end;
 
 procedure createButtons();
@@ -287,13 +309,22 @@ procedure createButtons();
 
 procedure createSliders();
 	begin
+	SCF::TextAtPos(10,18,"FEEDBACK",4);		
+
 	sliders[0].posX:=10;
 	sliders[0].posY:=20;
 	sliders[0].Length_:=8;
 	sliders[0].Color:=4;
 	sliders[0].Value:=0;
 	sliders[0].Max_:=7;
-	sliders[0].Mode:=@Vertical;	
+	sliders[0].Mode:=@Vertical;
+	sliders[0].AttachedLabel:=0;
+	
+	labels[0].posX:=10;
+	labels[0].posY:=29;
+	labels[0].Value:=sliders[0].Value;
+	labels[0].Color:=4;
+
 
 	sliders[1].posX:=10;
 	sliders[1].posY:=40;
@@ -302,6 +333,13 @@ procedure createSliders();
 	sliders[1].Value:=1;
 	sliders[1].Max_:=2;
 	sliders[1].Mode:=@Horizontal;	
+	sliders[1].AttachedLabel:=1;
+
+	labels[1].posX:=6;
+	labels[1].posY:=40;
+	labels[1].Value:=sliders[1].Value;
+	labels[1].Color:=sliders[1].Color;
+	
 
 	sliders[2].posX:=10;
 	sliders[2].posY:=45;
@@ -310,6 +348,13 @@ procedure createSliders();
 	sliders[2].Value:=1;
 	sliders[2].Max_:=9;
 	sliders[2].Mode:=@Horizontal;	
+	sliders[2].AttachedLabel:=2;
+
+	labels[2].posX:=6;
+	labels[2].posY:=45;
+	labels[2].Value:=sliders[2].Value;
+	labels[2].Color:=sliders[2].Color;
+
 
 	sliders[3].posX:=10;
 	sliders[3].posY:=50;
@@ -318,6 +363,12 @@ procedure createSliders();
 	sliders[3].Value:=0;
 	sliders[3].Max_:=30;
 	sliders[3].Mode:=@Horizontal;	
+	sliders[3].AttachedLabel:=3;
+	
+	labels[3].posX:=6;
+	labels[3].posY:=50;
+	labels[3].Value:=sliders[3].Value;
+	labels[3].Color:=sliders[3].Color;
 	end;
 
 //MAIN START
@@ -327,15 +378,14 @@ YM2151::Reset();
 X16Mouse::CursorOn();
 
 SCF::InitScreen(0);
-SCF::DrawLabel(0,0,"YM2151 SYNTH UI",1);
+SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
 
-SCF::DrawLabel(27,52,"Q",1);
 
 createButtons();
 drawButtons();
 createSliders();
 drawSliders();
-
+drawLabels();
 
 YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
 YM2151::SetReg($60,21);			//0TTTTTTT			Total level (reversed 0 max, 127 min)
