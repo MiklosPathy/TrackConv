@@ -72,15 +72,18 @@ procedure DrawChar(X,Y,char,color:byte);
 	VERA_DATA1 := color;
 	end;
 
-//Only for uppercase alphabetical chars (compiler does not convert strings to PETSCII, so this one do something
+//Only for uppercase alphabetical and numerical chars (compiler does not convert strings to PETSCII, so this one do something
 procedure DrawLabel(X,Y:byte; caption:pointer; color:byte);
-	var i,c:byte;
+	var i,c,c2:byte;
 	begin
 	i:=0;
 	c:=caption[i];
 	while (c<>0) do
 		begin
-		DrawChar(X+i,Y,c-$40,color);
+		c2:=$20;
+		if (c>=$41 and c<=$5A) then c2:=c-$40;
+		if (c>=$30 and c<=$39) then c2:=c;
+		DrawChar(X+i,Y,c2,color);
 		inc(i);
 		c:=caption[i];
 		end;

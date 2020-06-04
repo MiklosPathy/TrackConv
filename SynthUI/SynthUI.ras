@@ -356,7 +356,7 @@ YM2151::Reset();
 X16Mouse::CursorOn();
 
 SCF::InitScreen(0);
-SCF::DrawLabel(0,0,"SYNTHUI",1);
+SCF::DrawLabel(0,0,"YM2151 SYNTH UI",1);
 
 SCF::DrawLabel(27,52,"Q",1);
 
