@@ -69,57 +69,28 @@ procedure handlebuttonclick();
 procedure getSlidePosition(splen,spval,spmax,sppos:byte);
 	var temp:integer;
 	begin
-	if (splen-1>spmax) then
+	if (splen-1=spmax) then	spres:=sppos+spval
+	else
 		begin
 		temp:=splen*spval/spmax;
 		spres:=temp+sppos;
 		if spres>sppos+splen-1 then spres:=sppos+splen-1;
 		end;
-	if (splen-1=spmax) then
-		begin
-		spres:=sppos+spval;
-		end;
-	if (splen-1<spmax) then
-		begin
-		temp:=spmax*spval/splen;
-		spres:=temp+sppos;
-		if spres>sppos+splen-1 then spres:=sppos+splen-1;
-		end;
-	
 	end;
 
 procedure getSliderValue(mousepos,splen,spmax,sppos:byte);
 	var temp,relpos:integer;
 		rpb:byte;
-
 	begin
-	if (splen-1>spmax) then
+	if (splen-1=spmax) then	spres:=mousepos-sppos
+	else
 		begin
 		temp:=0;
-		SCF::DrawHexByte(16,54,mousepos,1);
-		SCF::DrawHexByte(22,54,sppos,1);
-		SCF::DrawHexByte(16,55,splen,1);
-		SCF::DrawHexByte(22,55,spmax,1);
 		rpb:=splen/spmax/2;
 		rpb:=mousepos-sppos+rpb;
 		relpos:=rpb;
-		SCF::DrawHexInt(16,52,relpos,1);
 		temp:=relpos*spmax;
-		SCF::DrawHexInt(22,52,temp,1);
 		temp:=temp/splen;
-		SCF::DrawHexInt(28,52,temp,1);
-		spres:=temp;	
-		end;
-	if (splen-1=spmax) then
-		begin
-		spres:=mousepos-sppos;
-		end;
-	if (splen-1<spmax) then
-		begin
-		temp:=0;
-		rpb:=mousepos-sppos;
-		relpos:=rpb;
-		temp:=relpos*spmax/splen;
 		spres:=temp;	
 		end;
 	end;
