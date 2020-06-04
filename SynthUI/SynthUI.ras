@@ -20,24 +20,24 @@ var
 	mouseYchposAtClick: byte;
 	mouseClicked:byte;
 	
+	tButton = record
+		posX, posY, Width, Height, Color, Label : byte;
+	end;
+
+
     @define ButtonCount 2
-	buttonposX:array[@ButtonCount] of byte = (10,15);
-	buttonposY:array[@ButtonCount] of byte = (10,10);
-	buttonWidth:array[@ButtonCount] of byte = (3,3);
-	buttonHeight:array[@ButtonCount] of byte = (3,3);
-	buttonColor:array[@ButtonCount] of byte = (8,9);
-	buttonLabel:array[@ButtonCount] of byte = (45,43);
+	buttons:array[@ButtonCount] of tButton;
 	
+	tSlider = record
+		posX, posY, Length_, Color, Value, Max_, Mode : byte;	
+	end;
+
 	@define Vertical 0
 	@define Horizontal 1
 	@define SliderCount 4
-	sliderposX:array[@SliderCount] of byte = (10,10,10,10);
-	sliderposY:array[@SliderCount] of byte = (20,40,45,50);
-	sliderLength:array[@SliderCount] of byte = (8,10,10,10);
-	sliderColor:array[@SliderCount] of byte = (4,5,6,7);
-	sliderValue:array[@SliderCount] of byte = (0,1,1,0);
-	sliderMax:array[@SliderCount] of byte = (7,2,9,30);
-	sliderMode:array[@SliderCount] of byte = (@Vertical,@Horizontal,@Horizontal,@Horizontal);
+
+	sliders:array[@SliderCount] of tSlider;
+
 	clickedSlider:byte=$FF;
 
 
@@ -52,10 +52,10 @@ procedure handlebuttonclick();
 	clickedButton:=$FF;
 	while (i<@ButtonCount and clickedButton=$FF) do
 		begin;
-		mx2:=buttonposX[i]+buttonWidth[i];
-		my2:=buttonposY[i]+buttonHeight[i];
-		if (mouseXchposAtClick>=buttonposX[i] and mouseXchposAtClick<=mx2) then  //Ouch... Only 2 parametern in and in if??? 
-			if (mouseYchposAtClick>=buttonposY[i] and mouseYchposAtClick<=my2) then clickedButton:=i;
+		mx2:=buttons[i].posX+buttons[i].Width;
+		my2:=buttons[i].posY+buttons[i].Height;
+		if (mouseXchposAtClick>=buttons[i].posX and mouseXchposAtClick<=mx2) then  //Ouch... Only 2 parametern in and in if??? 
+			if (mouseYchposAtClick>=buttons[i].posY and mouseYchposAtClick<=my2) then clickedButton:=i;
 		inc(i);
 		end;
 
@@ -127,36 +127,36 @@ procedure getSliderValue(mousepos,splen,spmax,sppos:byte);
 procedure drawSlider(slid:byte);
 	var i:byte;
 	begin
-	case sliderMode[slid] of
+	case sliders[slid].Mode of
 		@Vertical:
 			begin	
-			for i:=sliderposY[slid] to sliderposY[slid]+sliderLength[slid] do
-				SCF::DrawChar(sliderposX[slid],i,$5D,sliderColor[slid]);
-			SCF::DrawChar(sliderposX[slid],sliderposY[slid]+sliderValue[slid],$5B,sliderColor[slid]);
+			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
+				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
+			SCF::DrawChar(sliders[slid].posX,sliders[slid].posY+sliders[slid].Value,$5B,sliders[slid].Color);
 			end;
 		@Horizontal:
 			begin
-			for i:=sliderposX[slid] to sliderposX[slid]+sliderLength[slid] do
-				SCF::DrawChar(i,sliderposY[slid],$43,sliderColor[slid]);
+			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
+				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
 				
-			getSlidePosition(sliderLength[slid],sliderValue[slid],sliderMax[slid],sliderposX[slid]);
-			SCF::DrawChar(spres,sliderposY[slid],$5B,sliderColor[slid]);
+			getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posX);
+			SCF::DrawChar(spres,sliders[slid].posY,$5B,sliders[slid].Color);
 			end;
 		end;
 	end;
 
 procedure calcSliderpos(slid:byte);
 	begin
-	case sliderMode[slid] of
+	case sliders[slid].Mode of
 		@Vertical:
 			begin
-			sliderValue[slid]:=mouseYchpos-sliderposY[slid];
+			sliders[slid].Value:=mouseYchpos-sliders[slid].posY;
 			end;
 		@Horizontal:
 			begin	
-			getSliderValue(mouseXchpos,sliderLength[slid],sliderMax[slid],sliderposX[slid]);	
+			getSliderValue(mouseXchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posX);	
 			//sliderValue[slid]:=mouseXchpos-sliderposX[slid];
-			sliderValue[slid]:=spres;
+			sliders[slid].Value:=spres;
 			end;
 		end;						
 	end;
@@ -166,11 +166,11 @@ procedure handlesliderclick();
 	begin
 
 	if (mouseClicked=1 and clickedSlider<>$FF) then
-		case sliderMode[clickedSlider] of
+		case sliders[clickedSlider].Mode of
 			@Vertical:
 				begin
-				my2:=sliderposY[clickedSlider]+sliderLength[clickedSlider]-1;
-				if (mouseYchpos>=sliderposY[clickedSlider] and mouseYchpos<=my2) then 
+				my2:=sliders[clickedSlider].posY+sliders[clickedSlider].Length_-1;
+				if (mouseYchpos>=sliders[clickedSlider].posY and mouseYchpos<=my2) then 
 					begin
 					calcSliderpos(clickedSlider);
 					drawSlider(clickedSlider);
@@ -178,8 +178,8 @@ procedure handlesliderclick();
 				end;
 			@Horizontal:
 				begin
-				mx2:=sliderposX[clickedSlider]+sliderLength[clickedSlider]-1;
-				if (mouseXchpos>=sliderposX[clickedSlider] and mouseXchpos<=mx2) then 
+				mx2:=sliders[clickedSlider].posX+sliders[clickedSlider].Length_-1;
+				if (mouseXchpos>=sliders[clickedSlider].posX and mouseXchpos<=mx2) then 
 					begin
 					calcSliderpos(clickedSlider);
 					drawSlider(clickedSlider);
@@ -193,13 +193,13 @@ procedure handlesliderclick();
 
 		while (i<@SliderCount and clickedSlider=$FF) do
 			begin;
-			case sliderMode[i] of
+			case sliders[i].Mode of
 				@Vertical:
 					begin			
-					my2:=sliderposY[i]+sliderLength[i]-1;
-					if (mouseXchpos=sliderposX[i]) then
+					my2:=sliders[i].posY+sliders[i].Length_-1;
+					if (mouseXchpos=sliders[i].posX) then
 						begin
-						if (mouseYchpos>=sliderposY[i] and mouseYchpos<=my2) then 
+						if (mouseYchpos>=sliders[i].posY and mouseYchpos<=my2) then 
 							begin
 							clickedSlider:=i;
 							calcSliderpos(i);
@@ -209,10 +209,10 @@ procedure handlesliderclick();
 					end;
 				@Horizontal:
 					begin
-					mx2:=sliderposX[i]+sliderLength[i]-1;
-					if (mouseYchpos=sliderposY[i]) then
+					mx2:=sliders[i].posX+sliders[i].Length_-1;
+					if (mouseYchpos=sliders[i].posY) then
 						begin
-						if (mouseXchpos>=sliderposX[i] and mouseXchpos<=mx2) then 
+						if (mouseXchpos>=sliders[i].posX and mouseXchpos<=mx2) then 
 							begin
 							clickedSlider:=i;
 							calcSliderpos(i);
@@ -229,12 +229,12 @@ procedure handlesliderclick();
 
 	case clickedSlider of
 		0:  begin
-			i:=sliderValue[0];
+			i:=sliders[0].Value;
 			YM2151::SetFB($20,i);
 			SCF::DrawHexByte(10,30,i,4);
 			end;
 		1:	begin
-			i:=sliderValue[1];
+			i:=sliders[1].Value;
 			SCF::DrawHexByte(10,52,i,5);
 			end;
 		end;
@@ -276,10 +276,10 @@ procedure handlemouse();
 procedure drawButton(butt:byte);
 	var labelx,labely:byte;
 	begin
-	SCF::DrawBox(buttonposX[butt],buttonposY[butt],buttonWidth[butt],buttonHeight[butt],buttonColor[butt]);
-	labelx:=buttonposX[butt]+buttonWidth[butt]>>1;
-	labely:=buttonposY[butt]+buttonHeight[butt]>>1;
-	SCF::DrawChar(labelx,labely,buttonLabel[butt],buttonColor[butt]);
+	SCF::DrawBox(buttons[butt].posX,buttons[butt].posY,buttons[butt].Width,buttons[butt].Height,buttons[butt].Color);
+	labelx:=buttons[butt].posX+buttons[butt].Width>>1;
+	labely:=buttons[butt].posY+buttons[butt].Height>>1;
+	SCF::DrawChar(labelx,labely,buttons[butt].Label,buttons[butt].Color);
 	//for x:=buttonposX[butt] to buttonposX[butt]+buttonWidth[butt] do
 	//	for y:=buttonposY[butt] to buttonposY[butt]+buttonHeight[butt] do
 	//		DrawChar(x,y,@Space,buttonColor[butt]);
@@ -297,6 +297,57 @@ procedure drawSliders();
 	for i:=0 to @SliderCount do drawSlider(i);
 	end;
 
+procedure createButtons();
+	begin
+	buttons[0].posX:=10;
+	buttons[0].posY:=10;
+	buttons[0].Width:=3;
+	buttons[0].Height:=3;
+	buttons[0].Color:=8;
+	buttons[0].Label:=45;
+
+	buttons[1].posX:=15;
+	buttons[1].posY:=10;
+	buttons[1].Width:=3;
+	buttons[1].Height:=3;
+	buttons[1].Color:=9;
+	buttons[1].Label:=43;
+	end;
+
+procedure createSliders();
+	begin
+	sliders[0].posX:=10;
+	sliders[0].posY:=20;
+	sliders[0].Length_:=8;
+	sliders[0].Color:=4;
+	sliders[0].Value:=0;
+	sliders[0].Max_:=7;
+	sliders[0].Mode:=@Vertical;	
+
+	sliders[1].posX:=10;
+	sliders[1].posY:=40;
+	sliders[1].Length_:=10;
+	sliders[1].Color:=5;
+	sliders[1].Value:=1;
+	sliders[1].Max_:=2;
+	sliders[1].Mode:=@Horizontal;	
+
+	sliders[2].posX:=10;
+	sliders[2].posY:=45;
+	sliders[2].Length_:=10;
+	sliders[2].Color:=6;
+	sliders[2].Value:=1;
+	sliders[2].Max_:=9;
+	sliders[2].Mode:=@Horizontal;	
+
+	sliders[3].posX:=10;
+	sliders[3].posY:=50;
+	sliders[3].Length_:=10;
+	sliders[3].Color:=7;
+	sliders[3].Value:=0;
+	sliders[3].Max_:=30;
+	sliders[3].Mode:=@Horizontal;	
+	end;
 
 //MAIN START
 
@@ -309,7 +360,9 @@ SCF::DrawLabel(0,0,"SYNTHUI",1);
 
 SCF::DrawLabel(27,52,"Q",1);
 
+createButtons();
 drawButtons();
+createSliders();
 drawSliders();
 
 
