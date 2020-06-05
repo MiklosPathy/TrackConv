@@ -7,7 +7,7 @@ program SynthUI;
 
 
 var
-    //WidgetMap: array[4800] of byte;
+    WidgetMap: array[4800] of byte;
 
 	transpose:byte=3;
 
@@ -46,6 +46,18 @@ var
 	@define LabelCount 4
 	labels:array[@LabelCount] of tSlider;
 
+procedure PlaceOnWidgetMap(posX,posY,Width,Height,WID:byte);
+var x,y:byte;
+	i:integer;
+	begin
+	for y:=posY to posY+Height do
+		begin
+		i:=y*80;
+		for x:=posX to posX+Width do
+			WidgetMap[i+x]:=WID;
+		end;
+	end;
+
 procedure drawLabel(lbl:byte);
 	begin
 	SCF::DrawHexByte(labels[lbl].posX,labels[lbl].posY,labels[lbl].Value,labels[lbl].Color);
@@ -58,20 +70,11 @@ procedure setLabelValue(lbl,value:byte);
 	end;
 
 procedure handlebuttonclick();
-	var i,mx2,my2,clickedButton:byte;
+	var clickedButton:byte;
 	begin
-	i:=0;
-	clickedButton:=$FF;
-	while (i<@ButtonCount and clickedButton=$FF) do
-		begin;
-		mx2:=buttons[i].posX+buttons[i].Width;
-		my2:=buttons[i].posY+buttons[i].Height;
-		if (mouseXchposAtClick>=buttons[i].posX and mouseXchposAtClick<=mx2) then  //Ouch... Only 2 parametern in and in if??? 
-			if (mouseYchposAtClick>=buttons[i].posY and mouseYchposAtClick<=my2) then clickedButton:=i;
-		inc(i);
-		end;
+	clickedButton:=WidgetMap[(mouseYchposAtClick*80)+mouseXchposAtClick];
 
-	case clickedButton of
+		case clickedButton of
 		0: dec(transpose);
 		1: inc(transpose);
 		end;
@@ -265,12 +268,9 @@ procedure drawButton(butt:byte);
 	labelx:=buttons[butt].posX+buttons[butt].Width>>1;
 	labely:=buttons[butt].posY+buttons[butt].Height>>1;
 	SCF::DrawChar(labelx,labely,buttons[butt].Label,buttons[butt].Color);
-	//for x:=buttonposX[butt] to buttonposX[butt]+buttonWidth[butt] do
-	//	for y:=buttonposY[butt] to buttonposY[butt]+buttonHeight[butt] do
-	//		DrawChar(x,y,@Space,buttonColor[butt]);
+	butt:=butt&%00111111; //Buttons are 00
+	PlaceOnWidgetMap(buttons[butt].posX,buttons[butt].posY,buttons[butt].Width,buttons[butt].Height,butt);
 	end;
-
-
 
 procedure drawButtons();
 	var i:byte;
@@ -371,6 +371,13 @@ procedure createSliders();
 	labels[3].Color:=sliders[3].Color;
 	end;
 
+procedure ClearWidgetMap();
+var i:integer;
+	begin
+	for i:=0 to 4799 do WidgetMap[i]:=$FF;
+	end;
+
+
 //MAIN START
 
 begin
@@ -380,7 +387,7 @@ X16Mouse::CursorOn();
 SCF::InitScreen(0);
 SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
 
-
+ClearWidgetMap();
 createButtons();
 drawButtons();
 createSliders();
