@@ -15,9 +15,7 @@ var
 
 	mouseXchpos: byte;
 	mouseYchpos: byte;
-	
-	slres:byte;
-	
+
 	mouseXchposAtClick: byte;
 	mouseYchposAtClick: byte;
 	mouseClicked:byte;
@@ -43,7 +41,7 @@ var
 		posX, posY, Value, Color : byte;	
 	end;
 
-	labels:array[@WidgetMaxCountByType] of tSlider;
+	labels:array[@WidgetMaxCountByType] of tLabel;
 
 procedure putWidgetMapValue(posX,posY,value:byte);
 var wmp:pointer;
@@ -119,6 +117,7 @@ procedure handlebuttonclick();
 
 procedure getSlidePosition(sllen,slval,slmax,slpos:byte);
 	var temp:integer;
+		slres:byte;
 	begin
 	if (sllen-1=slmax) then	slres:=slpos+slval
 	else
@@ -127,11 +126,12 @@ procedure getSlidePosition(sllen,slval,slmax,slpos:byte);
 		slres:=temp+slpos;
 		if slres>slpos+sllen-1 then slres:=slpos+sllen-1;
 		end;
+	returnvalue(slres);
 	end;
 
 procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 	var temp,relpos:integer;
-		rpb:byte;
+		rpb,slres:byte;
 	begin
 	if (sllen-1=slmax) then	slres:=mousepos-slpos
 	else
@@ -144,10 +144,11 @@ procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 		temp:=temp/sllen;
 		slres:=temp;	
 		end;
+	returnvalue(slres);
 	end;
 
 procedure drawSlider(slid:byte);
-	var i:byte;
+	var i,slres:byte;
 	begin
 	case sliders[slid].Mode of
 		@Vertical:
@@ -155,7 +156,7 @@ procedure drawSlider(slid:byte);
 			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
 				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
 
-			getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
+			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
 			SCF::DrawChar(sliders[slid].posX,slres,$5B,sliders[slid].Color);
 			end;
 		@Horizontal:
@@ -163,7 +164,7 @@ procedure drawSlider(slid:byte);
 			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
 				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
 			
-			getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posX);
+			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posX);
 			SCF::DrawChar(slres,sliders[slid].posY,$5B,sliders[slid].Color);
 			end;
 		end;
@@ -176,13 +177,11 @@ procedure calcSliderpos(slid:byte);
 	case sliders[slid].Mode of
 		@Vertical:
 			begin
-			getSliderValue(mouseYchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posY);	
-			sliders[slid].Value:=slres;
+			sliders[slid].Value:=getSliderValue(mouseYchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posY);
 			end;
 		@Horizontal:
 			begin	
-			getSliderValue(mouseXchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posX);	
-			sliders[slid].Value:=slres;
+			sliders[slid].Value:=getSliderValue(mouseXchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posX);
 			end;
 		end;						
 	end;
