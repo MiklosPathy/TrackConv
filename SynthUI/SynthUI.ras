@@ -10,7 +10,6 @@ program SynthUI;
 
 var
     WidgetMap: array[@WidgetMapSize] of byte;
-    wmp:pointer;
 
 	transpose:byte=3;
 
@@ -74,8 +73,7 @@ var x,y,v:byte;
 	end;
 
 procedure ClearWidgetMap();
-var i:integer;
-	wmp,endpoint:pointer;
+var	wmp,endpoint:pointer;
 	begin
 	wmp:=WidgetMap[0];
 	endpoint:=wmp+@WidgetMapSize;
@@ -192,7 +190,7 @@ procedure calcSliderpos(slid:byte);
 procedure handlesliderclick();
 	var slID,WID,WT,my2,mx2:byte;
 	begin
-	if (mouseClicked=1 and clickedSlider<>$FF) then
+	if (mouseClicked=1 and clickedSlider<>$FF) then //Slider dragging.
 		case sliders[clickedSlider].Mode of
 			@Vertical:
 				begin
@@ -218,20 +216,16 @@ procedure handlesliderclick();
 	clickedSlider:=$FF;
 	WID:=getWidgetMapValue(mouseXchpos,mouseYchpos);
 	WT:=WID&%11000000;
-	SCF::DrawBinByte(40,7,(WID),6);
-	SCF::DrawBinByte(40,8,(WT),7);
 	if WT=%01000000 then //Slider
 		begin
 		slID:=WID&%00111111;
-		SCF::DrawHexByte(40,10,slID,1);
-	
 		clickedSlider:=slID;
 		calcSliderpos(slID);
 		drawSlider(slID);			
 		end;
 	end;
 
-	SCF::DrawBinByte(40,6,clickedSlider,5);
+	//SCF::DrawBinByte(40,6,clickedSlider,5);
 		case clickedSlider of
 			0:  begin
 				slID:=sliders[0].Value;
