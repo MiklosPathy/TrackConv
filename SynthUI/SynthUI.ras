@@ -128,6 +128,20 @@ procedure getSlidePosition(sllen,slval,slmax,slpos:byte);
 		end;
 	returnvalue(slres);
 	end;
+	
+procedure getSlidePositionFine(sllen,slval,slmax:byte);
+	var temp:integer;
+		slres:byte;
+	begin
+	if (sllen-1=slmax) then	slres:=slval
+	else
+		begin
+		temp:=sllen*slval/slmax;
+		slres:=temp;
+		if slres>sllen-1 then slres:=sllen-1;
+		end;
+	returnvalue(slres);
+	end;
 
 procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 	var temp,relpos:integer;
@@ -145,6 +159,50 @@ procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 		slres:=temp;	
 		end;
 	returnvalue(slres);
+	end;
+	
+procedure getSliderValueFine(mousepos,sllen:integer;slmax:byte);
+	var temp:integer;
+		slres:byte;
+	begin
+	temp:=slmax*mousepos/sllen;
+	slres:=temp;	
+	returnvalue(slres);
+	end;
+
+procedure drawSlideHorizontalChar(slID:byte);
+var slres:byte;
+	begin
+	slres:=getSlidePosition(sliders[slID].Length_,sliders[slID].Value,sliders[slID].Max_,sliders[slID].posX);
+	SCF::DrawChar(slres,sliders[slID].posY,$5B,sliders[slID].Color);	
+	end;
+
+procedure getSliderValueHorizontalChar(slID:byte);
+	begin
+	sliders[slID].Value:=getSliderValue(mouseXchpos,sliders[slID].Length_,sliders[slID].Max_,sliders[slID].posX);
+	end;
+
+procedure drawSlideHorizontalFine(slID:byte);
+var slres,posx,chartype,char:byte;
+	begin
+	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+	posx:=(slres>>2)+sliders[slID].posX;
+	chartype:=slres&%00000011;
+	case chartype of
+		0: char:=$74;
+		1: char:=$47;
+		2: char:=$48;
+		3: char:=$6A;
+		end;
+	SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);	
+	end;
+	
+procedure getSliderValueHorizontalFine(slID:byte);
+var mousecorrected,sliderposcorrected:integer;
+	begin
+	sliderposcorrected:=sliders[slID].posX<<2;
+	mousecorrected:=(X16Mouse::X>>1)-sliderposcorrected;
+	sliders[slID].Value:=getSliderValueFine(mousecorrected,sliders[slID].Length_<<2,sliders[slID].Max_);
 	end;
 
 procedure drawSlider(slid:byte);
@@ -164,24 +222,25 @@ procedure drawSlider(slid:byte);
 			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
 				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
 			
-			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posX);
-			SCF::DrawChar(slres,sliders[slid].posY,$5B,sliders[slid].Color);
+			//drawSlideHorizontalChar(slid);
+			drawSlideHorizontalFine(slid);
 			end;
 		end;
 	if (sliders[slid].AttachedLabel<>$FF) then setLabelValue(sliders[slid].AttachedLabel,sliders[slid].Value);
 
 	end;
 
-procedure calcSliderpos(slid:byte);
+procedure calcSliderValue(slID:byte);
 	begin
-	case sliders[slid].Mode of
+	case sliders[slID].Mode of
 		@Vertical:
 			begin
-			sliders[slid].Value:=getSliderValue(mouseYchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posY);
+			sliders[slID].Value:=getSliderValue(mouseYchpos,sliders[slID].Length_,sliders[slID].Max_,sliders[slID].posY);
 			end;
 		@Horizontal:
 			begin	
-			sliders[slid].Value:=getSliderValue(mouseXchpos,sliders[slid].Length_,sliders[slid].Max_,sliders[slid].posX);
+			//getSliderValueHorizontalChar(slID);
+			getSliderValueHorizontalFine(slID);			
 			end;
 		end;						
 	end;
@@ -196,7 +255,7 @@ procedure handlesliderclick();
 				my2:=sliders[clickedSlider].posY+sliders[clickedSlider].Length_-1;
 				if (mouseYchpos>=sliders[clickedSlider].posY and mouseYchpos<=my2) then 
 					begin
-					calcSliderpos(clickedSlider);
+					calcSliderValue(clickedSlider);
 					drawSlider(clickedSlider);
 					end;
 				end;
@@ -205,7 +264,7 @@ procedure handlesliderclick();
 				mx2:=sliders[clickedSlider].posX+sliders[clickedSlider].Length_-1;
 				if (mouseXchpos>=sliders[clickedSlider].posX and mouseXchpos<=mx2) then 
 					begin
-					calcSliderpos(clickedSlider);
+					calcSliderValue(clickedSlider);
 					drawSlider(clickedSlider);
 					end;
 				end;
@@ -219,7 +278,7 @@ procedure handlesliderclick();
 		begin
 		slID:=WID&%00111111;
 		clickedSlider:=slID;
-		calcSliderpos(slID);
+		calcSliderValue(slID);
 		drawSlider(slID);			
 		end;
 	end;
@@ -344,7 +403,7 @@ procedure createUI();
 	createSlider(2,10,45,10,6,1,9,@Horizontal,2);
 
 	createLabel(3,6,50,0,7);
-	createSlider(3,10,50,10,7,0,30,@Horizontal,3);
+	createSlider(3,10,50,10,7,0,$20,@Horizontal,3);
 	end;
 
 
