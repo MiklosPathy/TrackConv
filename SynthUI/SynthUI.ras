@@ -326,15 +326,13 @@ procedure createLabel(lbID,posX,posY,Value,Color:byte);
 	//Label not Widget. No mouseclick. No Widgetmap
 	end;
 
-procedure createButtons();
+procedure createUI();
 	begin
+	SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
+	
 	createButton(0,10,10,3,3,8,45);
 	createButton(1,15,10,3,3,9,43);
-	end;
-
-
-procedure createSliders();
-	begin
+	
 	SCF::TextAtPos(10,18,"FEEDBACK",4);		
 	createLabel(0,10,29,0,4);
 	createSlider(0,10,20,8,4,0,7,@Vertical,0);
@@ -357,12 +355,8 @@ YM2151::Reset();
 X16Mouse::CursorOn();
 
 SCF::InitScreen(0);
-SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
-
 ClearWidgetMap();
-
-createButtons();
-createSliders();
+createUI();
 
 //ShowWidgetMap();
 //return();
