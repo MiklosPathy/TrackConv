@@ -5,9 +5,12 @@ program SynthUI;
 @use "X16Mouse"
 @use "Input"
 
+@define WidgetMapSize 4800
+@define WidgetMaxCountByType 64
 
 var
-    WidgetMap: array[4800] of byte;
+    WidgetMap: array[@WidgetMapSize] of byte;
+    wmp:pointer;
 
 	transpose:byte=3;
 
@@ -24,9 +27,7 @@ var
 		posX, posY, Width, Height, Color, Label : byte;
 	end;
 
-
-    @define ButtonCount 2
-	buttons:array[@ButtonCount] of tButton;
+	buttons:array[@WidgetMaxCountByType] of tButton;
 	
 	tSlider = record
 		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel : byte;	
@@ -34,28 +35,63 @@ var
 
 	@define Vertical 0
 	@define Horizontal 1
-	@define SliderCount 4
 
-	sliders:array[@SliderCount] of tSlider;
+	sliders:array[@WidgetMaxCountByType] of tSlider;
 
 	clickedSlider:byte=$FF;
 
 	tLabel = record
 		posX, posY, Value, Color : byte;	
 	end;
-	@define LabelCount 4
-	labels:array[@LabelCount] of tSlider;
+
+	labels:array[@WidgetMaxCountByType] of tSlider;
+
+procedure putWidgetMapValue(posX,posY,value:byte);
+var wmp:pointer;
+	begin
+	wmp:=WidgetMap[0];
+	wmp:=wmp+(80*posY)+posX;
+	wmp[0]:=value;
+	end;
+
+procedure getWidgetMapValue(posX,posY:byte);
+var wmp:pointer;
+	begin
+	wmp:=WidgetMap[0];
+	wmp:=wmp+(80*posY)+posX;
+	ReturnValue(wmp[0]);
+	end;
+
+procedure ShowWidgetMap();
+var x,y,v:byte;
+	begin
+	for y:=0 to 60 do
+		for x:=0 to 80 do
+			begin
+			v:=getWidgetMapValue(x,y);
+			SCF::DrawChar(x,y,v,1);
+			end;
+	end;
+
+procedure ClearWidgetMap();
+var i:integer;
+	wmp,endpoint:pointer;
+	begin
+	wmp:=WidgetMap[0];
+	endpoint:=wmp+@WidgetMapSize;
+	while (wmp<endpoint) do
+		begin
+		wmp[0]:=$FF;
+		inc(wmp);
+		end;
+	end;
 
 procedure PlaceOnWidgetMap(posX,posY,Width,Height,WID:byte);
 var x,y:byte;
-	i:integer;
 	begin
 	for y:=posY to posY+Height do
-		begin
-		i:=y*80;
 		for x:=posX to posX+Width do
-			WidgetMap[i+x]:=WID;
-		end;
+			putWidgetMapValue(x,y,WID);
 	end;
 
 procedure drawLabel(lbl:byte);
@@ -72,11 +108,13 @@ procedure setLabelValue(lbl,value:byte);
 procedure handlebuttonclick();
 	var clickedButton:byte;
 	begin
-	clickedButton:=WidgetMap[(mouseYchposAtClick*80)+mouseXchposAtClick];
-
+	clickedButton:=getWidgetMapValue(mouseXchposAtClick,mouseYchposAtClick);
+	if ((clickedButton>>6)=0) then
+		begin
 		case clickedButton of
 		0: dec(transpose);
 		1: inc(transpose);
+		end;
 		end;
 
 	end;
@@ -152,9 +190,8 @@ procedure calcSliderpos(slid:byte);
 	end;
 
 procedure handlesliderclick();
-	var i,mx2,my2:byte;
+	var slID,WID,WT,my2,mx2:byte;
 	begin
-
 	if (mouseClicked=1 and clickedSlider<>$FF) then
 		case sliders[clickedSlider].Mode of
 			@Vertical:
@@ -176,56 +213,35 @@ procedure handlesliderclick();
 					end;
 				end;
 			end
-	else
+	else	
+	begin
+	clickedSlider:=$FF;
+	WID:=getWidgetMapValue(mouseXchpos,mouseYchpos);
+	WT:=WID&%11000000;
+	SCF::DrawBinByte(40,7,(WID),6);
+	SCF::DrawBinByte(40,8,(WT),7);
+	if WT=%01000000 then //Slider
 		begin
-		i:=0;
-		clickedSlider:=$FF;
+		slID:=WID&%00111111;
+		SCF::DrawHexByte(40,10,slID,1);
+	
+		clickedSlider:=slID;
+		calcSliderpos(slID);
+		drawSlider(slID);			
+		end;
+	end;
 
-		while (i<@SliderCount and clickedSlider=$FF) do
-			begin;
-			case sliders[i].Mode of
-				@Vertical:
-					begin			
-					my2:=sliders[i].posY+sliders[i].Length_-1;
-					if (mouseXchpos=sliders[i].posX) then
-						begin
-						if (mouseYchpos>=sliders[i].posY and mouseYchpos<=my2) then 
-							begin
-							clickedSlider:=i;
-							calcSliderpos(i);
-							drawSlider(i);
-							end;
-						end;
-					end;
-				@Horizontal:
-					begin
-					mx2:=sliders[i].posX+sliders[i].Length_-1;
-					if (mouseYchpos=sliders[i].posY) then
-						begin
-						if (mouseXchpos>=sliders[i].posX and mouseXchpos<=mx2) then 
-							begin
-							clickedSlider:=i;
-							calcSliderpos(i);
-							drawSlider(i);
-							end;
-						end;
-					end;				
+	SCF::DrawBinByte(40,6,clickedSlider,5);
+		case clickedSlider of
+			0:  begin
+				slID:=sliders[0].Value;
+				YM2151::SetFB($20,slID);
 				end;
-
-			inc(i);
+			1:	begin
+				slID:=sliders[1].Value;
+				end;
 			end;
-		end;
 
-
-	case clickedSlider of
-		0:  begin
-			i:=sliders[0].Value;
-			YM2151::SetFB($20,i);
-			end;
-		1:	begin
-			i:=sliders[1].Value;
-			end;
-		end;
 	end;
 
 procedure handlemouse();
@@ -239,7 +255,7 @@ procedure handlemouse();
 	mouseYchpos:=X16Mouse::Y>>3;
 	SCF::DrawHexByte(75,57,mouseXchpos,4);
 	SCF::DrawHexByte(75,58,mouseYchpos,5);
-	
+	SCF::DrawHexByte(75,59, getWidgetMapValue(mouseXchpos,mouseYchpos),7);
 
 	if (X16Mouse::Buttons=1) then 
 		begin
@@ -257,6 +273,7 @@ procedure handlemouse();
 			begin
 			handlebuttonclick();
 			mouseClicked:=0;
+			clickedSlider:=$FF;
 			end;
 		end;
 	end;
@@ -268,113 +285,75 @@ procedure drawButton(butt:byte);
 	labelx:=buttons[butt].posX+buttons[butt].Width>>1;
 	labely:=buttons[butt].posY+buttons[butt].Height>>1;
 	SCF::DrawChar(labelx,labely,buttons[butt].Label,buttons[butt].Color);
-	butt:=butt&%00111111; //Buttons are 00
-	PlaceOnWidgetMap(buttons[butt].posX,buttons[butt].posY,buttons[butt].Width,buttons[butt].Height,butt);
 	end;
 
-procedure drawButtons();
-	var i:byte;
+procedure createButton(btID,posX,posY,Width,Height,Color,Label:byte);
+var WID:byte;
 	begin
-	for i:=0 to @ButtonCount do drawButton(i);
+	buttons[btID].posX:=posX;
+	buttons[btID].posY:=posY;
+	buttons[btID].Width:=Width;
+	buttons[btID].Height:=Height;
+	buttons[btID].Color:=Color;
+	buttons[btID].Label:=Label;	
+	WID:=btID&%00111111; //Bt type is 00;
+	PlaceOnWidgetMap(posX,posY,Width,Height,WID);
+	drawButton(btID);
 	end;
 
-procedure drawSliders();
-	var i:byte;
+procedure createSlider(slID,posX,posY,Length_,Color,Value,Max_,Mode,AttachedLabelID:byte);
+var WID:byte;
 	begin
-	for i:=0 to @SliderCount do drawSlider(i);
+	sliders[slID].posX:=posX;
+	sliders[slID].posY:=posY;
+	sliders[slID].Length_:=Length_;
+	sliders[slID].Color:=Color;
+	sliders[slID].Value:=Value;
+	sliders[slID].Max_:=Max_;
+	sliders[slID].Mode:=Mode;	
+	sliders[slID].AttachedLabel:=AttachedLabelID;
+
+	drawSlider(slID);
+
+	WID:=slID|%01000000;
+	case Mode of
+		@Horizontal:PlaceOnWidgetMap(posX,posY,Length_,1,WID);
+		@Vertical:PlaceOnWidgetMap(posX,posY,1,Length_,WID);
+		end;
+
 	end;
 	
-procedure drawLabels();
-	var i:byte;
+procedure createLabel(lbID,posX,posY,Value,Color:byte);
 	begin
-	for i:=0 to @LabelCount do drawLabel(i);
+	labels[lbID].posX:=posX;
+	labels[lbID].posY:=posY;
+	labels[lbID].Value:=Value;
+	labels[lbID].Color:=Color;
+	drawLabel(lbID);
+	//Label not Widget. No mouseclick. No Widgetmap
 	end;
 
 procedure createButtons();
 	begin
-	buttons[0].posX:=10;
-	buttons[0].posY:=10;
-	buttons[0].Width:=3;
-	buttons[0].Height:=3;
-	buttons[0].Color:=8;
-	buttons[0].Label:=45;
-
-	buttons[1].posX:=15;
-	buttons[1].posY:=10;
-	buttons[1].Width:=3;
-	buttons[1].Height:=3;
-	buttons[1].Color:=9;
-	buttons[1].Label:=43;
+	createButton(0,10,10,3,3,8,45);
+	createButton(1,15,10,3,3,9,43);
 	end;
+
 
 procedure createSliders();
 	begin
 	SCF::TextAtPos(10,18,"FEEDBACK",4);		
-
-	sliders[0].posX:=10;
-	sliders[0].posY:=20;
-	sliders[0].Length_:=8;
-	sliders[0].Color:=4;
-	sliders[0].Value:=0;
-	sliders[0].Max_:=7;
-	sliders[0].Mode:=@Vertical;
-	sliders[0].AttachedLabel:=0;
+	createLabel(0,10,29,0,4);
+	createSlider(0,10,20,8,4,0,7,@Vertical,0);
 	
-	labels[0].posX:=10;
-	labels[0].posY:=29;
-	labels[0].Value:=sliders[0].Value;
-	labels[0].Color:=4;
+	createLabel(1,6,40,0,5);
+	createSlider(1,10,40,10,5,1,2,@Horizontal,1);
 
+	createLabel(2,6,45,0,6);
+	createSlider(2,10,45,10,6,1,9,@Horizontal,2);
 
-	sliders[1].posX:=10;
-	sliders[1].posY:=40;
-	sliders[1].Length_:=10;
-	sliders[1].Color:=5;
-	sliders[1].Value:=1;
-	sliders[1].Max_:=2;
-	sliders[1].Mode:=@Horizontal;	
-	sliders[1].AttachedLabel:=1;
-
-	labels[1].posX:=6;
-	labels[1].posY:=40;
-	labels[1].Value:=sliders[1].Value;
-	labels[1].Color:=sliders[1].Color;
-	
-
-	sliders[2].posX:=10;
-	sliders[2].posY:=45;
-	sliders[2].Length_:=10;
-	sliders[2].Color:=6;
-	sliders[2].Value:=1;
-	sliders[2].Max_:=9;
-	sliders[2].Mode:=@Horizontal;	
-	sliders[2].AttachedLabel:=2;
-
-	labels[2].posX:=6;
-	labels[2].posY:=45;
-	labels[2].Value:=sliders[2].Value;
-	labels[2].Color:=sliders[2].Color;
-
-
-	sliders[3].posX:=10;
-	sliders[3].posY:=50;
-	sliders[3].Length_:=10;
-	sliders[3].Color:=7;
-	sliders[3].Value:=0;
-	sliders[3].Max_:=30;
-	sliders[3].Mode:=@Horizontal;	
-	sliders[3].AttachedLabel:=3;
-	
-	labels[3].posX:=6;
-	labels[3].posY:=50;
-	labels[3].Value:=sliders[3].Value;
-	labels[3].Color:=sliders[3].Color;
-	end;
-
-procedure ClearWidgetMap();
-var i:integer;
-	begin
-	for i:=0 to 4799 do WidgetMap[i]:=$FF;
+	createLabel(3,6,50,0,7);
+	createSlider(3,10,50,10,7,0,30,@Horizontal,3);
 	end;
 
 
@@ -388,11 +367,12 @@ SCF::InitScreen(0);
 SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
 
 ClearWidgetMap();
+
 createButtons();
-drawButtons();
 createSliders();
-drawSliders();
-drawLabels();
+
+//ShowWidgetMap();
+//return();
 
 YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
 YM2151::SetReg($60,21);			//0TTTTTTT			Total level (reversed 0 max, 127 min)
