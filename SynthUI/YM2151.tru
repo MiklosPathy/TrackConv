@@ -31,8 +31,62 @@ var reg:byte;
 	begin
 	opr:=opr&%00000011;
 	chn:=chn&%00000111;
-	reg:=$60+(opr*8)+chn;
+	reg:=$60+(opr<<3)+chn;
 	data:=data&%01111111;
+	SetReg(reg,data);
+	end;
+
+procedure SetDT1(chn,opr,data:byte);
+var reg:byte;
+	begin
+	opr:=opr&%00000011;
+	chn:=chn&%00000111;
+	reg:=$40+(opr<<3)+chn;
+	data:=data&%00000111;
+	data:=data << 4;
+	data:=data | %10001111;
+	YMLastState[reg]:=YMLastState[reg]&%10001111;	
+	data:=YMLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure SetMUL(chn,opr,data:byte);
+var reg:byte;
+	begin
+	opr:=opr&%00000011;
+	chn:=chn&%00000111;
+	reg:=$40+(opr<<3)+chn;
+	data:=data&%00001111;
+	data:=data | %11110000;
+	YMLastState[reg]:=YMLastState[reg]&%11110000;	
+	data:=YMLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure SetKS(chn,opr,data:byte);
+var reg:byte;
+	begin
+	opr:=opr&%00000011;
+	chn:=chn&%00000111;
+	reg:=$80+(opr<<3)+chn;
+	data:=data&%00000011;
+	data:=data << 6;
+	data:=data | %00111111;
+	YMLastState[reg]:=YMLastState[reg]&%00111111;	
+	data:=YMLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure SetAR(chn,opr,data:byte);
+var reg:byte;
+	begin
+	opr:=opr&%00000011;
+	chn:=chn&%00000111;
+	reg:=$80+(opr<<3)+chn;
+	data:=data&%00011111;
+	data:=data | %11100000;
+	YMLastState[reg]:=YMLastState[reg]&%11100000;	
+	data:=YMLastState[reg] | data;
 	SetReg(reg,data);
 	end;
 	
