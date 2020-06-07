@@ -182,17 +182,12 @@ procedure drawSlider(slid:byte);
 			begin	
 			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
 				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
-
 			drawSlideVerticalFine(slid)
-//			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
-//			SCF::DrawChar(sliders[slid].posX,slres,$5B,sliders[slid].Color);
 			end;
 		@Horizontal:
 			begin
 			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
 				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
-			
-			//drawSlideHorizontalChar(slid);
 			drawSlideHorizontalFine(slid);
 			end;
 		end;
@@ -223,29 +218,36 @@ procedure handlesliderclick();
 		drawSlider(clickedSlider);
 		end
 	else	
-	begin
-	clickedSlider:=$FF;
-	WID:=getWidgetMapValue(mouseXchpos,mouseYchpos);
-	WT:=WID&%11000000;
-	if WT=%01000000 then //Slider
 		begin
-		slID:=WID&%00111111;
-		clickedSlider:=slID;
-		calcSliderValue(clickedSlider);
-		drawSlider(clickedSlider);
+		clickedSlider:=$FF;
+		WID:=getWidgetMapValue(mouseXchpos,mouseYchpos);
+		WT:=WID&%11000000;
+		if WT=%01000000 then //Slider
+			begin
+			slID:=WID&%00111111;
+			clickedSlider:=slID;
+			calcSliderValue(clickedSlider);
+			drawSlider(clickedSlider);
+			end;
 		end;
 	end;
-	
 
-
+procedure handlesliderchange();
+var temp:byte;
+	begin
 	//SCF::DrawBinByte(40,6,clickedSlider,5);
+	
 		case clickedSlider of
 			0:  begin
-				slID:=sliders[0].Value;
-				YM2151::SetFB($20,slID);
+				temp:=sliders[0].Value;
+				YM2151::SetFB($20,temp);
 				end;
 			1:	begin
-				slID:=sliders[1].Value;
+				temp:=sliders[1].Value;
+				end;
+			4: 	begin
+				temp:=sliders[4].Value;
+				YM2151::SetReg($60,temp);
 				end;
 			end;
 
@@ -267,6 +269,7 @@ procedure handlemouse();
 	if (X16Mouse::Buttons=1) then 
 		begin
 		handlesliderclick();
+		handlesliderchange();
 		if mouseClicked=0 then
 			begin
 			mouseXchposAtClick:=mouseXchpos;
@@ -359,6 +362,11 @@ procedure createUI();
 
 	createLabel(3,6,50,0,7);
 	createSlider(3,10,50,10,7,0,$20,@Horizontal,3);
+	
+	SCF::TextAtPos(40,8,"LEVEL",1);		
+	createLabel(4,40,50,0,1);
+	createSlider(4,40,10,32,1,0,127,@Vertical,4);
+
 	end;
 
 
