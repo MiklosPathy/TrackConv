@@ -240,14 +240,14 @@ var temp:byte;
 		case clickedSlider of
 			0:  begin
 				temp:=sliders[0].Value;
-				YM2151::SetFB($20,temp);
+				YM2151::SetFB(0,temp);
 				end;
 			1:	begin
 				temp:=sliders[1].Value;
 				end;
 			4: 	begin
 				temp:=sliders[4].Value;
-				YM2151::SetReg($60,temp);
+				YM2151::SetTL(0,0,temp);
 				end;
 			end;
 
@@ -397,15 +397,15 @@ while (Input::key<>3) do
 	Input::getin();
 	if (Input::key<>0) then 
 		begin	
-		if (Input::key=$20) then YM2151::KeyOff() //Keyoff simulation with space
+		if (Input::key=$20) then YM2151::KeyOff(0) //Keyoff simulation with space
 		else
 			begin
 			SCF::DrawHexByte(75, 55, Input::key, 5);
 			Input::key2note();
 			if(Input::note<>$FF) then
 				begin
-				YM2151::SetNote(Input::octave+transpose,Input::note); //Transpose
-				YM2151::KeyOn();
+				YM2151::SetNote(0,Input::octave+transpose,Input::note); //Transpose
+				YM2151::KeyOn(0,$F);
 				end;
 			end;
 		end;

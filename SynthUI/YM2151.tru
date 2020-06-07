@@ -14,13 +14,25 @@ procedure SetReg(reg,data:byte);
 	YMLastState[reg]:=data;
 	end;
 
-procedure SetFB(reg,data:byte);
+procedure SetFB(chn,data:byte);
+var reg:byte;
 	begin
+	reg:=$20+chn;
 	data:=data & %00000111;
 	data:=data << 3;
 	data:=data | %11000111;
 	YMLastState[reg]:=YMLastState[reg]&%11000111;
 	data:=YMLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+	
+procedure SetTL(chn,opr,data:byte);
+var reg:byte;
+	begin
+	opr:=opr&%00000011;
+	chn:=chn&%00000111;
+	reg:=$60+(opr*8)+chn;
+	data:=data&%01111111;
 	SetReg(reg,data);
 	end;
 	
@@ -34,20 +46,25 @@ procedure Reset();
 	SetReg(i,0);
 	end;
 
-procedure SetNote(octave,note:byte);
+procedure SetNote(chn,octave,note:byte);
 	begin
+	chn:=chn&%00000111;
 	if (note=0 and octave>0) then dec(octave);  //YMidiotizm
-	SetReg($28,(Normal2YMNote[note]&$F)|(octave<<4));
+	SetReg($28+chn,(Normal2YMNote[note]&$F)|(octave<<4));
 	end;
 	
-procedure KeyOn();
+procedure KeyOn(chn,opmask:byte);
 	begin
-	SetReg($08,%01111000);
+	chn:=chn&%00000111;
+	opmask:=opmask&%00001111;
+	opmask:=opmask<<3;
+	SetReg($08,opmask|chn);
 	end;
 	
-procedure KeyOff();
+procedure KeyOff(chn:byte);
 	begin
-	SetReg($08,%00000000);
+	chn:=chn&%00000111;	
+	SetReg($08,chn);
 	end;
 
 end.
