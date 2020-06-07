@@ -160,15 +160,6 @@ procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
 		end;
 	returnvalue(slres);
 	end;
-	
-procedure getSliderValueFine(mousepos,sllen:integer;slmax:byte);
-	var temp:integer;
-		slres:byte;
-	begin
-	temp:=slmax*mousepos/sllen;
-	slres:=temp;	
-	returnvalue(slres);
-	end;
 
 procedure drawSlideHorizontalChar(slID:byte);
 var slres:byte;
@@ -197,9 +188,24 @@ var slres,posx,chartype,char:byte;
 	SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);	
 	end;
 
-procedure getSliderValueFine2(mousepos:integer;mousechpos,slpos,sllen,slmax:byte);
-var mousecorrected,sliderposcorrected:integer;
-	endcharpos:byte;
+procedure drawSlideVerticalFine(slID:byte);
+var slres,posy,chartype,char:byte;
+	begin
+	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+	posy:=(slres>>2)+sliders[slID].posY;
+	chartype:=slres&%00000011;
+	case chartype of
+		0: char:=$77;
+		1: char:=$44;
+		2: char:=$46;
+		3: char:=$6F;
+		end;
+	SCF::DrawChar(sliders[slID].posX,posy,char,sliders[slID].Color);
+	end;
+
+procedure getSliderValueFine(mousepos:integer;mousechpos,slpos,sllen,slmax:byte);
+var mousecorrected,sliderposcorrected,temp:integer;
+	endcharpos,slres:byte;
 	begin
 	if (mousechpos<slpos) then ReturnValue(0);
 	endcharpos:=slpos+sllen-1;
@@ -207,27 +213,9 @@ var mousecorrected,sliderposcorrected:integer;
 	sliderposcorrected:=slpos;
 	sliderposcorrected:=sliderposcorrected<<2;
 	mousecorrected:=(mousepos>>1)-sliderposcorrected;
-	ReturnValue(getSliderValueFine(mousecorrected,sllen<<2,slmax));
-	end;
-	
-procedure getSliderValueHorizontalFine(slID:byte); //2 pixel accuracy
-var mousecorrected,sliderposcorrected:integer;
-	endcharpos:byte;
-	begin
-	if (mouseXchpos<sliders[slID].posX) then
-		begin
-		sliders[slID].Value:=0;
-		return();
-		end;
-	endcharpos:=sliders[slID].posX+sliders[slID].Length_-1;
-	if (endcharpos<mouseXchpos) then
-		begin
-		sliders[slID].Value:=sliders[slID].Max_;
-		return();
-		end;
-	sliderposcorrected:=sliders[slID].posX<<2;
-	mousecorrected:=(X16Mouse::X>>1)-sliderposcorrected;
-	sliders[slID].Value:=getSliderValueFine(mousecorrected,sliders[slID].Length_<<2,sliders[slID].Max_);
+	temp:=slmax*mousecorrected/(sllen<<2);
+	slres:=temp;	
+	returnvalue(slres);
 	end;
 
 procedure drawSlider(slid:byte);
@@ -239,8 +227,9 @@ procedure drawSlider(slid:byte);
 			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
 				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
 
-			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
-			SCF::DrawChar(sliders[slid].posX,slres,$5B,sliders[slid].Color);
+			drawSlideVerticalFine(slid)
+//			slres:=getSlidePosition(sliders[slid].Length_,sliders[slid].Value,sliders[slid].Max_,sliders[slid].posY);
+//			SCF::DrawChar(sliders[slid].posX,slres,$5B,sliders[slid].Color);
 			end;
 		@Horizontal:
 			begin
@@ -260,13 +249,11 @@ procedure calcSliderValue(slID:byte);
 	case sliders[slID].Mode of
 		@Vertical:
 			begin
-			sliders[slID].Value:=getSliderValue(mouseYchpos,sliders[slID].Length_,sliders[slID].Max_,sliders[slID].posY);
+			sliders[slID].Value:=getSliderValueFine(X16Mouse::Y,mouseYchpos,sliders[slID].posY,sliders[slID].Length_,sliders[slID].Max_);
 			end;
 		@Horizontal:
 			begin	
-			//getSliderValueHorizontalChar(slID);
-			//getSliderValueHorizontalFine(slID);			
-			sliders[slID].Value:=getSliderValueFine2(X16Mouse::X,mouseXchpos,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
+			sliders[slID].Value:=getSliderValueFine(X16Mouse::X,mouseXchpos,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
 			end;
 		end;						
 	end;
@@ -278,8 +265,8 @@ procedure handlesliderclick();
 		case sliders[clickedSlider].Mode of
 			@Vertical:
 				begin
-				my2:=sliders[clickedSlider].posY+sliders[clickedSlider].Length_-1;
-				if (mouseYchpos>=sliders[clickedSlider].posY and mouseYchpos<=my2) then 
+//				my2:=sliders[clickedSlider].posY+sliders[clickedSlider].Length_-1;
+//				if (mouseYchpos>=sliders[clickedSlider].posY and mouseYchpos<=my2) then 
 					begin
 					calcSliderValue(clickedSlider);
 					drawSlider(clickedSlider);
