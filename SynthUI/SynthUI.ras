@@ -196,10 +196,35 @@ var slres,posx,chartype,char:byte;
 		end;
 	SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);	
 	end;
-	
-procedure getSliderValueHorizontalFine(slID:byte);
+
+procedure getSliderValueFine2(mousepos:integer;mousechpos,slpos,sllen,slmax:byte);
 var mousecorrected,sliderposcorrected:integer;
+	endcharpos:byte;
 	begin
+	if (mousechpos<slpos) then ReturnValue(0);
+	endcharpos:=slpos+sllen-1;
+	if (endcharpos<mousechpos) then ReturnValue(slmax);
+	sliderposcorrected:=slpos;
+	sliderposcorrected:=sliderposcorrected<<2;
+	mousecorrected:=(mousepos>>1)-sliderposcorrected;
+	ReturnValue(getSliderValueFine(mousecorrected,sllen<<2,slmax));
+	end;
+	
+procedure getSliderValueHorizontalFine(slID:byte); //2 pixel accuracy
+var mousecorrected,sliderposcorrected:integer;
+	endcharpos:byte;
+	begin
+	if (mouseXchpos<sliders[slID].posX) then
+		begin
+		sliders[slID].Value:=0;
+		return();
+		end;
+	endcharpos:=sliders[slID].posX+sliders[slID].Length_-1;
+	if (endcharpos<mouseXchpos) then
+		begin
+		sliders[slID].Value:=sliders[slID].Max_;
+		return();
+		end;
 	sliderposcorrected:=sliders[slID].posX<<2;
 	mousecorrected:=(X16Mouse::X>>1)-sliderposcorrected;
 	sliders[slID].Value:=getSliderValueFine(mousecorrected,sliders[slID].Length_<<2,sliders[slID].Max_);
@@ -240,7 +265,8 @@ procedure calcSliderValue(slID:byte);
 		@Horizontal:
 			begin	
 			//getSliderValueHorizontalChar(slID);
-			getSliderValueHorizontalFine(slID);			
+			//getSliderValueHorizontalFine(slID);			
+			sliders[slID].Value:=getSliderValueFine2(X16Mouse::X,mouseXchpos,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
 			end;
 		end;						
 	end;
@@ -261,8 +287,8 @@ procedure handlesliderclick();
 				end;
 			@Horizontal:
 				begin
-				mx2:=sliders[clickedSlider].posX+sliders[clickedSlider].Length_-1;
-				if (mouseXchpos>=sliders[clickedSlider].posX and mouseXchpos<=mx2) then 
+//				mx2:=sliders[clickedSlider].posX+sliders[clickedSlider].Length_-1;
+//				if (mouseXchpos>=sliders[clickedSlider].posX and mouseXchpos<=mx2) then 
 					begin
 					calcSliderValue(clickedSlider);
 					drawSlider(clickedSlider);
