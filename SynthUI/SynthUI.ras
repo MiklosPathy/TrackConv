@@ -114,20 +114,6 @@ procedure handlebuttonclick();
 		end;
 
 	end;
-
-procedure getSlidePosition(sllen,slval,slmax,slpos:byte);
-	var temp:integer;
-		slres:byte;
-	begin
-	if (sllen-1=slmax) then	slres:=slpos+slval
-	else
-		begin
-		temp:=sllen*slval/slmax;
-		slres:=temp+slpos;
-		if slres>slpos+sllen-1 then slres:=slpos+sllen-1;
-		end;
-	returnvalue(slres);
-	end;
 	
 procedure getSlidePositionFine(sllen,slval,slmax:byte);
 	var temp:integer;
@@ -141,36 +127,6 @@ procedure getSlidePositionFine(sllen,slval,slmax:byte);
 		if slres>sllen-1 then slres:=sllen-1;
 		end;
 	returnvalue(slres);
-	end;
-
-procedure getSliderValue(mousepos,sllen,slmax,slpos:byte);
-	var temp,relpos:integer;
-		rpb,slres:byte;
-	begin
-	if (sllen-1=slmax) then	slres:=mousepos-slpos
-	else
-		begin
-		temp:=0;
-		rpb:=sllen/slmax/2;
-		rpb:=mousepos-slpos+rpb;
-		relpos:=rpb;
-		temp:=relpos*slmax;
-		temp:=temp/sllen;
-		slres:=temp;	
-		end;
-	returnvalue(slres);
-	end;
-
-procedure drawSlideHorizontalChar(slID:byte);
-var slres:byte;
-	begin
-	slres:=getSlidePosition(sliders[slID].Length_,sliders[slID].Value,sliders[slID].Max_,sliders[slID].posX);
-	SCF::DrawChar(slres,sliders[slID].posY,$5B,sliders[slID].Color);	
-	end;
-
-procedure getSliderValueHorizontalChar(slID:byte);
-	begin
-	sliders[slID].Value:=getSliderValue(mouseXchpos,sliders[slID].Length_,sliders[slID].Max_,sliders[slID].posX);
 	end;
 
 procedure drawSlideHorizontalFine(slID:byte);
@@ -219,7 +175,7 @@ var mousecorrected,sliderposcorrected,temp:integer;
 	end;
 
 procedure drawSlider(slid:byte);
-	var i,slres:byte;
+	var i:byte;
 	begin
 	case sliders[slid].Mode of
 		@Vertical:
@@ -259,29 +215,13 @@ procedure calcSliderValue(slID:byte);
 	end;
 
 procedure handlesliderclick();
-	var slID,WID,WT,my2,mx2:byte;
+	var slID,WID,WT:byte;
 	begin
 	if (mouseClicked=1 and clickedSlider<>$FF) then //Slider dragging.
-		case sliders[clickedSlider].Mode of
-			@Vertical:
-				begin
-//				my2:=sliders[clickedSlider].posY+sliders[clickedSlider].Length_-1;
-//				if (mouseYchpos>=sliders[clickedSlider].posY and mouseYchpos<=my2) then 
-					begin
-					calcSliderValue(clickedSlider);
-					drawSlider(clickedSlider);
-					end;
-				end;
-			@Horizontal:
-				begin
-//				mx2:=sliders[clickedSlider].posX+sliders[clickedSlider].Length_-1;
-//				if (mouseXchpos>=sliders[clickedSlider].posX and mouseXchpos<=mx2) then 
-					begin
-					calcSliderValue(clickedSlider);
-					drawSlider(clickedSlider);
-					end;
-				end;
-			end
+		begin
+		calcSliderValue(clickedSlider);
+		drawSlider(clickedSlider);
+		end
 	else	
 	begin
 	clickedSlider:=$FF;
@@ -291,10 +231,12 @@ procedure handlesliderclick();
 		begin
 		slID:=WID&%00111111;
 		clickedSlider:=slID;
-		calcSliderValue(slID);
-		drawSlider(slID);			
+		calcSliderValue(clickedSlider);
+		drawSlider(clickedSlider);
 		end;
 	end;
+	
+
 
 	//SCF::DrawBinByte(40,6,clickedSlider,5);
 		case clickedSlider of
