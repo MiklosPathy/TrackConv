@@ -1,0 +1,55 @@
+Unit Widget;
+
+@define MapSize 4800
+
+var
+    Map: array[@MapSize] of byte;
+    
+procedure putMapValue(posX,posY,value:byte);
+var wmp:pointer;
+	begin
+	wmp:=Map[0];
+	wmp:=wmp+(80*posY)+posX;
+	wmp[0]:=value;
+	end;	
+
+procedure getMapValue(posX,posY:byte);
+var wmp:pointer;
+	begin
+	wmp:=Map[0];
+	wmp:=wmp+(80*posY)+posX;
+	ReturnValue(wmp[0]);
+	end;
+	
+procedure ShowMap();
+var x,y,v:byte;
+	begin
+	for y:=0 to 60 do
+		for x:=0 to 80 do
+			begin
+			v:=getMapValue(x,y);
+			SCF::DrawChar(x,y,v,1);
+			end;
+	end;
+	
+procedure ClearMap();
+var	wmp,endpoint:pointer;
+	begin
+	wmp:=Map[0];
+	endpoint:=wmp+@MapSize;
+	while (wmp<endpoint) do
+		begin
+		wmp[0]:=$FF;
+		inc(wmp);
+		end;
+	end;
+	
+procedure PlaceOnMap(posX,posY,Width,Height,WID:byte);
+var x,y:byte;
+	begin
+	for y:=posY to posY+Height do
+		for x:=posX to posX+Width do
+			putMapValue(x,y,WID);
+	end;
+
+end.

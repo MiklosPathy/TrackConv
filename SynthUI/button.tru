@@ -1,0 +1,40 @@
+Unit Button;
+
+@use "SimpleCharFunctions"
+@use "Widget"
+
+@define MaxButtonCount 64
+
+var
+
+	tButton = record
+		posX, posY, Width, Height, Color, Label_ : byte;
+	end;
+
+	buttons:array[@MaxButtonCount] of Button::tButton;
+
+procedure Draw(butt:byte);
+	var labelx,labely:byte;
+	begin
+	SCF::DrawBox(buttons[butt].posX,buttons[butt].posY,buttons[butt].Width,buttons[butt].Height,buttons[butt].Color);
+	labelx:=buttons[butt].posX+buttons[butt].Width>>1;
+	labely:=buttons[butt].posY+buttons[butt].Height>>1;
+	SCF::DrawChar(labelx,labely,buttons[butt].Label_,buttons[butt].Color);
+	end;
+
+procedure Create(btID,posX,posY,Width,Height,Color,Label_:byte);
+var WID:byte;
+	begin
+	buttons[btID].posX:=posX;
+	buttons[btID].posY:=posY;
+	buttons[btID].Width:=Width;
+	buttons[btID].Height:=Height;
+	buttons[btID].Color:=Color;
+	buttons[btID].Label_:=Label_;	
+	WID:=btID&%00111111; //Bt type is 00;
+	Widget::PlaceOnMap(posX,posY,Width,Height,WID);
+	Draw(btID);
+	end;
+
+
+end.

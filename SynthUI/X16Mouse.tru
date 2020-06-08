@@ -4,6 +4,12 @@ var
 	Buttons: byte;
 	X: integer;
 	Y: integer;
+	Xch: byte;
+	Ych: byte;
+	
+	mouseXchposAtClick: byte;
+	mouseYchposAtClick: byte;
+	mouseClicked:byte;
 
 procedure CursorOn();
 	begin
@@ -20,7 +26,13 @@ procedure CursorOff();
 		jsr $FF68
 	");
 	end;
-	
+
+procedure CalcChPos();
+	begin
+	Xch:=X>>3;
+	Ych:=Y>>3;
+	end;
+
 procedure GetState();
 	begin
 	asm("

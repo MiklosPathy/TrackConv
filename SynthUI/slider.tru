@@ -1,0 +1,166 @@
+Unit Slider;
+
+@use "SimpleCharFunctions"
+@use "Widget"
+@use "X16Mouse"
+@use "Label"
+
+@define SliderMaxCount 64
+
+var
+
+	const Vertical : byte = 0;
+	const Horizontal : byte = 1;
+
+	tSlider = record
+		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel : byte;	
+	end;
+
+	sliders:array[@SliderMaxCount] of Slider::tSlider;
+
+	clickedSlider:byte=$FF;
+
+procedure getSlidePositionFine(sllen,slval,slmax:byte);
+	var temp:integer;
+		slres:byte;
+	begin
+	if (sllen-1=slmax) then	slres:=slval
+	else
+		begin
+		temp:=sllen*slval/slmax;
+		slres:=temp;
+		if slres>sllen-1 then slres:=sllen-1;
+		end;
+	returnvalue(slres);
+	end;
+
+procedure drawSlideHorizontalFine(slID:byte);
+var slres,posx,chartype,char:byte;
+	begin
+	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+	posx:=(slres>>2)+sliders[slID].posX;
+	chartype:=slres&%00000011;
+	case chartype of
+		0: char:=$74;
+		1: char:=$47;
+		2: char:=$48;
+		3: char:=$6A;
+		end;
+	SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);	
+	end;
+
+procedure drawSlideVerticalFine(slID:byte);
+var slres,posy,chartype,char:byte;
+	begin
+	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+	posy:=(slres>>2)+sliders[slID].posY;
+	chartype:=slres&%00000011;
+	case chartype of
+		0: char:=$77;
+		1: char:=$44;
+		2: char:=$46;
+		3: char:=$6F;
+		end;
+	SCF::DrawChar(sliders[slID].posX,posy,char,sliders[slID].Color);
+	end;
+
+procedure getSliderValueFine(mousepos:integer;mousechpos,slpos,sllen,slmax:byte);
+var mousecorrected,sliderposcorrected,temp:integer;
+	endcharpos,slres:byte;
+	begin
+	if (mousechpos<slpos) then ReturnValue(0);
+	endcharpos:=slpos+sllen-1;
+	if (endcharpos<mousechpos) then ReturnValue(slmax);
+	sliderposcorrected:=slpos;
+	sliderposcorrected:=sliderposcorrected<<2;
+	mousecorrected:=(mousepos>>1)-sliderposcorrected;
+	temp:=slmax*mousecorrected/(sllen<<2);
+	slres:=temp;	
+	returnvalue(slres);
+	end;
+
+procedure Draw(slid:byte);
+	var i:byte;
+	begin
+	case sliders[slid].Mode of
+		Vertical:
+			begin	
+			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
+				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
+			drawSlideVerticalFine(slid)
+			end;
+		Horizontal:
+			begin
+			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
+				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
+			drawSlideHorizontalFine(slid);
+			end;
+		end;
+	if (sliders[slid].AttachedLabel<>$FF) then Label::setValue(sliders[slid].AttachedLabel,sliders[slid].Value);
+
+	end;
+
+procedure calcSliderValue(slID:byte);
+	begin
+	case sliders[slID].Mode of
+		Vertical:
+			begin
+			sliders[slID].Value:=getSliderValueFine(X16Mouse::Y,X16Mouse::Ych,sliders[slID].posY,sliders[slID].Length_,sliders[slID].Max_);
+			end;
+		Horizontal:
+			begin	
+			sliders[slID].Value:=getSliderValueFine(X16Mouse::X,X16Mouse::Xch,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
+			end;
+		end;						
+	end;
+
+procedure HandleClick();
+	var slID,WID,WT:byte;
+	begin
+	if (X16Mouse::mouseClicked=1 and clickedSlider<>$FF) then //Slider dragging.
+		begin
+		calcSliderValue(clickedSlider);
+		Draw(clickedSlider);
+		end
+	else	
+		begin
+		clickedSlider:=$FF;
+		WID:=Widget::getMapValue(X16Mouse::Xch,X16Mouse::Ych);
+		WT:=WID&%11000000;
+		if WT=%01000000 then //Slider
+			begin
+			slID:=WID&%00111111;
+			clickedSlider:=slID;
+			calcSliderValue(clickedSlider);
+			Draw(clickedSlider);
+			end;
+		end;
+	end;
+
+procedure getValue(slID:byte);
+	begin
+	ReturnValue(sliders[slID].Value);
+	end;
+
+procedure Create(slID,posX,posY,Length_,Color,Value,Max_,Mode,AttachedLabelID:byte);
+var WID:byte;
+	begin
+	sliders[slID].posX:=posX;
+	sliders[slID].posY:=posY;
+	sliders[slID].Length_:=Length_;
+	sliders[slID].Color:=Color;
+	sliders[slID].Value:=Value;
+	sliders[slID].Max_:=Max_;
+	sliders[slID].Mode:=Mode;	
+	sliders[slID].AttachedLabel:=AttachedLabelID;
+
+	Draw(slID);
+
+	WID:=slID|%01000000;
+	case Mode of
+		Horizontal:Widget::PlaceOnMap(posX,posY,Length_,1,WID);
+		Vertical:Widget::PlaceOnMap(posX,posY,1,Length_,WID);
+		end;
+
+	end;
+end.
