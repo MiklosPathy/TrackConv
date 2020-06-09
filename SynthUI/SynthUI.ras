@@ -53,62 +53,79 @@ var
 
 procedure setDT1(op,value:byte);
 	begin
-	if (YM2151OpStats[op].DT1<>value) then
-		begin
-		YM2151OpStats[op].DT1:=value;
-		Slider::setValue(sDT1+(op*10),value);
-		YM2151::SetDT1(currentchanel,op,value);
-		end;
+	YM2151OpStats[op].DT1:=value;
+	Slider::setValue(sDT1+(op*10),value);
+	YM2151::SetDT1(currentchanel,op,value);
 	end;
 
 procedure setMUL(op,value:byte);
 	begin
-	if (YM2151OpStats[op].MUL<>value) then
-		begin
-		YM2151OpStats[op].MUL:=value;
-		Slider::setValue(sMUL+(op*10),value);
-		YM2151::SetMUL(currentchanel,op,value);
-		end;
+	YM2151OpStats[op].MUL:=value;
+	Slider::setValue(sMUL+(op*10),value);
+	YM2151::SetMUL(currentchanel,op,value);
 	end;
 
 procedure setTL(op,value:byte);
 	begin
-	if (YM2151OpStats[op].TL<>value) then
-		begin
-		YM2151OpStats[op].TL:=value;
-		Slider::setValue(sTL+(op*10),value);
-		YM2151::SetTL(currentchanel,op,value);
-		end;
+	YM2151OpStats[op].TL:=value;
+	Slider::setValue(sTL+(op*10),value);
+	YM2151::SetTL(currentchanel,op,value);
 	end;
 	
 procedure setKS(op,value:byte);
 	begin
-	if (YM2151OpStats[op].KS<>value) then
-		begin
-		YM2151OpStats[op].KS:=value;
-		Slider::setValue(sKS+(op*10),value);
-		YM2151::SetKS(currentchanel,op,value);
-		end;
+	YM2151OpStats[op].KS:=value;
+	Slider::setValue(sKS+(op*10),value);
+	YM2151::SetKS(currentchanel,op,value);
 	end;
 
 procedure setAR(op,value:byte);
 	begin
-	if (YM2151OpStats[op].AR<>value) then
-		begin
-		YM2151OpStats[op].AR:=value;
-		Slider::setValue(sAR+(op*10),value);
-		YM2151::SetAR(currentchanel,op,value);
-		end;
+	YM2151OpStats[op].AR:=value;
+	Slider::setValue(sAR+(op*10),value);
+	YM2151::SetAR(currentchanel,op,value);
+	end;
+	
+procedure setD1R(op,value:byte);
+	begin
+	YM2151OpStats[op].D1R:=value;
+	Slider::setValue(sD1R+(op*10),value);
+	YM2151::SetD1R(currentchanel,op,value);
+	end;
+
+procedure setDT2(op,value:byte);
+	begin
+	YM2151OpStats[op].DT2:=value;
+	Slider::setValue(sDT2+(op*10),value);
+	YM2151::SetDT2(currentchanel,op,value);
+	end;
+	
+procedure setD2R(op,value:byte);
+	begin
+	YM2151OpStats[op].D2R:=value;
+	Slider::setValue(sD2R+(op*10),value);
+	YM2151::SetD2R(currentchanel,op,value);
+	end;
+	
+procedure setD1L(op,value:byte);
+	begin
+	YM2151OpStats[op].D1L:=value;
+	Slider::setValue(sD1L+(op*10),value);
+	YM2151::SetD1L(currentchanel,op,value);
+	end;
+	
+procedure setRR(op,value:byte);
+	begin
+	YM2151OpStats[op].RR:=value;
+	Slider::setValue(sRR+(op*10),value);
+	YM2151::SetRR(currentchanel,op,value);
 	end;
 
 procedure setFB(value:byte);
 	begin
-	if (YM2151State[0].FB<>value) then
-		begin
-		YM2151State[0].FB:=value;
-		Slider::setValue(sFB,value);
-		YM2151::SetFB(currentchanel,value);
-		end;
+	YM2151State[0].FB:=value;
+	Slider::setValue(sFB,value);
+	YM2151::SetFB(currentchanel,value);
 	end;
 
 procedure handlebuttonclick();
@@ -150,7 +167,27 @@ procedure handlesliderchange();
 			sAR:		setAR(0,Slider::getValue(sAR));
 			sAR+10:		setAR(1,Slider::getValue(sAR+10));
 			sAR+20:		setAR(2,Slider::getValue(sAR+20));
-			sAR+30:		setAR(3,Slider::getValue(sAR+30));						
+			sAR+30:		setAR(3,Slider::getValue(sAR+30));
+			sD1R:		setD1R(0,Slider::getValue(sD1R));
+			sD1R+10:	setD1R(1,Slider::getValue(sD1R+10));
+			sD1R+20:	setD1R(2,Slider::getValue(sD1R+20));
+			sD1R+30:	setD1R(3,Slider::getValue(sD1R+30));
+			sDT2:		setDT2(0,Slider::getValue(sDT2));
+			sDT2+10:	setDT2(1,Slider::getValue(sDT2+10));
+			sDT2+20:	setDT2(2,Slider::getValue(sDT2+20));
+			sDT2+30:	setDT2(3,Slider::getValue(sDT2+30));
+			sD2R:		setD2R(0,Slider::getValue(sD2R));
+			sD2R+10:	setD2R(1,Slider::getValue(sD2R+10));
+			sD2R+20:	setD2R(2,Slider::getValue(sD2R+20));
+			sD2R+30:	setD2R(3,Slider::getValue(sD2R+30));				
+			sD1L:		setD1L(0,Slider::getValue(sD1L));
+			sD1L+10:	setD1L(1,Slider::getValue(sD1L+10));
+			sD1L+20:	setD1L(2,Slider::getValue(sD1L+20));
+			sD1L+30:	setD1L(3,Slider::getValue(sD1L+30));
+			sRR:		setRR(0,Slider::getValue(sRR));
+			sRR+10:		setRR(1,Slider::getValue(sRR+10));
+			sRR+20:		setRR(2,Slider::getValue(sRR+20));
+			sRR+30:		setRR(3,Slider::getValue(sRR+30));	
 			end;
 
 	end;
@@ -197,34 +234,55 @@ var opmult,color:byte;
 	begin
 	opmult:=op*10;	
 
-	color:=5;
+	color:=1;
 	SCF::TextAtPos(Xpos,Ypos,"DT1",color);	
 	Label::Create(sDT1+opmult,Xpos+6,Ypos,color);
 	Slider::Create(sDT1+opmult,Xpos+10,Ypos,10,color,7,Horizontal,sDT1+opmult);
 
-	color:=6;
-	SCF::TextAtPos(Xpos,Ypos+2,"MUL",color);
-	Label::Create(sMUL+opmult,Xpos+6,Ypos+2,color);
-	Slider::Create(sMUL+opmult,Xpos+10,Ypos+2,10,color,15,Horizontal,sMUL+opmult);
+	color:=2;
+	SCF::TextAtPos(Xpos,Ypos+1,"MUL",color);
+	Label::Create(sMUL+opmult,Xpos+6,Ypos+1,color);
+	Slider::Create(sMUL+opmult,Xpos+10,Ypos+1,10,color,15,Horizontal,sMUL+opmult);
 
-	color:=1;
-	SCF::TextAtPos(Xpos,Ypos+4,"LEVEL",color);		
-	Label::Create(sTL+opmult,Xpos+6,Ypos+4,color);
-	Slider::Create(sTL+opmult,Xpos+10,Ypos+4,32,color,127,Horizontal,sTL+opmult);
+	color:=3;
+	SCF::TextAtPos(Xpos,Ypos+2,"TL",color);		
+	Label::Create(sTL+opmult,Xpos+6,Ypos+2,color);
+	Slider::Create(sTL+opmult,Xpos+10,Ypos+2,32,color,127,Horizontal,sTL+opmult);
+
+	color:=4;
+	SCF::TextAtPos(Xpos,Ypos+3,"KS",color);
+	Label::Create(sKS+opmult,Xpos+6,Ypos+3,color);
+	Slider::Create(sKS+opmult,Xpos+10,Ypos+3,10,color,3,Horizontal,sKS+opmult);
+
+	color:=5;
+	SCF::TextAtPos(Xpos,Ypos+4,"AR",color);	
+	Label::Create(sAR+opmult,Xpos+6,Ypos+4,color);
+	Slider::Create(sAR+opmult,Xpos+10,Ypos+4,10,color,31,Horizontal,sAR+opmult);
+
+	color:=6;
+	SCF::TextAtPos(Xpos,Ypos+5,"D1R",color);	
+	Label::Create(sD1R+opmult,Xpos+6,Ypos+5,color);
+	Slider::Create(sD1R+opmult,Xpos+10,Ypos+5,10,color,31,Horizontal,sD1R+opmult);	
 
 	color:=7;
-	SCF::TextAtPos(Xpos,Ypos+6,"KS",color);
-	Label::Create(sKS+opmult,Xpos+6,Ypos+6,color);
-	Slider::Create(sKS+opmult,Xpos+10,Ypos+6,10,color,3,Horizontal,sKS+opmult);
-
+	SCF::TextAtPos(Xpos,Ypos+6,"DT2",color);	
+	Label::Create(sDT2+opmult,Xpos+6,Ypos+6,color);
+	Slider::Create(sDT2+opmult,Xpos+10,Ypos+6,10,color,3,Horizontal,sDT2+opmult);	
+	
 	color:=8;
-	SCF::TextAtPos(Xpos,Ypos+8,"AR",color);	
-	Label::Create(sAR+opmult,Xpos+6,Ypos+8,color);
-	Slider::Create(sAR+opmult,Xpos+10,Ypos+8,10,color,31,Horizontal,sAR+opmult);
-
+	SCF::TextAtPos(Xpos,Ypos+7,"D2R",color);	
+	Label::Create(sD2R+opmult,Xpos+6,Ypos+7,color);
+	Slider::Create(sD2R+opmult,Xpos+10,Ypos+7,10,color,31,Horizontal,sD2R+opmult);	
 	
-
+	color:=9;
+	SCF::TextAtPos(Xpos,Ypos+8,"D1L",color);	
+	Label::Create(sD1L+opmult,Xpos+6,Ypos+8,color);
+	Slider::Create(sD1L+opmult,Xpos+10,Ypos+8,10,color,15,Horizontal,sD1L+opmult);	
 	
+	color:=10;
+	SCF::TextAtPos(Xpos,Ypos+9,"RR",color);	
+	Label::Create(sRR+opmult,Xpos+6,Ypos+9,color);
+	Slider::Create(sRR+opmult,Xpos+10,Ypos+9,10,color,15,Horizontal,sRR+opmult);
 	end;
 
 procedure createUI();
@@ -232,9 +290,9 @@ procedure createUI();
 	SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
 
 	createOPBlock(0,1,4);
-	createOPBlock(1,1,14);
-	createOPBlock(2,1,24);
-	createOPBlock(3,1,34);	
+	createOPBlock(1,1,18);
+	createOPBlock(2,1,32);
+	createOPBlock(3,1,46);	
 	
 	Button::Create(0,70,10,3,3,8,45);
 	Button::Create(1,75,10,3,3,9,43);
@@ -262,14 +320,16 @@ createUI();
 //return();
 
 YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
-YM2151::SetReg($A0,0);			//A00DDDDD			AMS-EN      D1R			(Amplitude modulation, Decay1)
-YM2151::SetReg($C0,0);			//TT0DDDDD			DT2    		D2R 		(Useless Detune, Decay2
-YM2151::SetReg($E0,5);			//DDDDRRRR			D1L			RR			(Sustain, Release)
 setFB(4);
 setMUL(0,1);
 setTL(0,20);
 setKS(0,0);
 setAR(0,31);
+setD1R(0,31);
+setDT2(0,0);
+setD2R(0,0);
+setD1L(0,0);
+setRR(0,5);
 	
 Input::key:=$0;	
 while (Input::key<>3) do
