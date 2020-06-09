@@ -276,9 +276,11 @@ procedure handlemouse();
 		end;
 	end;
 
-procedure CreateStdVerticalSlider(slID,Ypos,Xpos,Length_,Max_:byte);
+procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:string);
 	begin
-	
+	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
+	Label::Create(slID,Xpos+4,Ypos,Color);
+	Slider::Create(slID,Xpos+8,Ypos,Length_,Color,Max_,Horizontal,slID);
 	end;
 
 
@@ -286,11 +288,11 @@ procedure createOPBlock(op,Xpos,Ypos:byte);
 var opmult,color:byte;
 	begin
 	opmult:=op*10;	
-
+	
 	color:=1;
-	SCF::TextAtPos(Xpos,Ypos,"DT1",color);	
-	Label::Create(sDT1+opmult,Xpos+6,Ypos,color);
-	Slider::Create(sDT1+opmult,Xpos+10,Ypos,10,color,7,Horizontal,sDT1+opmult);
+	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
+	//inc(Ypos);inc(color);
+	//CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos+1,10,15,color,"MUL");
 
 	color:=2;
 	SCF::TextAtPos(Xpos,Ypos+1,"MUL",color);
