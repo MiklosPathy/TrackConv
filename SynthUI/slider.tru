@@ -13,7 +13,7 @@ var
 	const Horizontal : byte = 1;
 
 	tSlider = record
-		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel : byte;	
+		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel, PrevValue : byte;	
 	end;
 
 	sliders:array[@SliderMaxCount] of Slider::tSlider;
@@ -100,16 +100,37 @@ procedure Draw(slid:byte);
 
 	end;
 
+procedure getValue(slID:byte);
+	begin
+	ReturnValue(sliders[slID].Value);
+	end;
+	
+procedure setValue(slID,value:byte);
+	begin
+	if (value>sliders[slID].Max_) then value:=sliders[slID].Max_;
+	if (value<>sliders[slID].PrevValue) then
+		begin
+		sliders[slID].PrevValue:=sliders[slID].Value;
+		sliders[slID].Value:=value;
+		Draw(slID);
+		end;
+	end;
+
 procedure calcSliderValue(slID:byte);
+var temp:byte;
 	begin
 	case sliders[slID].Mode of
 		Vertical:
 			begin
-			sliders[slID].Value:=getSliderValueFine(X16Mouse::Y,X16Mouse::Ych,sliders[slID].posY,sliders[slID].Length_,sliders[slID].Max_);
+			temp:=getSliderValueFine(X16Mouse::Y,X16Mouse::Ych,sliders[slID].posY,sliders[slID].Length_,sliders[slID].Max_);
+			setValue(slID,temp);
+			//sliders[slID].Value:=getSliderValueFine(X16Mouse::Y,X16Mouse::Ych,sliders[slID].posY,sliders[slID].Length_,sliders[slID].Max_);
 			end;
 		Horizontal:
 			begin	
-			sliders[slID].Value:=getSliderValueFine(X16Mouse::X,X16Mouse::Xch,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
+			temp:=getSliderValueFine(X16Mouse::X,X16Mouse::Xch,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
+			setValue(slID,temp);
+			//sliders[slID].Value:=getSliderValueFine(X16Mouse::X,X16Mouse::Xch,sliders[slID].posX,sliders[slID].Length_,sliders[slID].Max_);
 			end;
 		end;						
 	end;
@@ -120,7 +141,6 @@ procedure HandleClick();
 	if (X16Mouse::mouseClicked=1 and clickedSlider<>$FF) then //Slider dragging.
 		begin
 		calcSliderValue(clickedSlider);
-		Draw(clickedSlider);
 		end
 	else	
 		begin
@@ -132,21 +152,11 @@ procedure HandleClick();
 			slID:=WID&%00111111;
 			clickedSlider:=slID;
 			calcSliderValue(clickedSlider);
-			Draw(clickedSlider);
 			end;
 		end;
 	end;
 
-procedure getValue(slID:byte);
-	begin
-	ReturnValue(sliders[slID].Value);
-	end;
-	
-procedure setValue(slID,value:byte);
-	begin
-	sliders[slID].Value:=max(sliders[slID].Max_,value);
-	Draw(slID);
-	end;
+
 
 procedure Create(slID,posX,posY,Length_,Color,Max_,Mode,AttachedLabelID:byte);
 var WID:byte;
