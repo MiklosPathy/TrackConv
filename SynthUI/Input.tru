@@ -2,6 +2,7 @@ unit Input;
 
 var
 	key : byte;
+	lastkey : byte;
 	note : byte;
 	octave:byte;
 

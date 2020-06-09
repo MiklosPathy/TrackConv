@@ -31,8 +31,10 @@ var
 	const sW   : byte = 46;
 	
 	const cAMSEN:byte = 0;
-	const cR    :byte = 10;
-	const cL    :byte = 11;
+	const cKEYON:byte = 1;
+	const cR    :byte = 40;
+	const cL    :byte = 41;
+	
 
 
 	const Vertical : byte = 0;
@@ -42,7 +44,7 @@ var
 	currentchanel:byte=0;
 	
 	tYM2151OpStat = record
-		DT1,MUL,TL,KS,AR,AMSEN,D1R,DT2,D2R,D1L,RR:byte;
+		DT1,MUL,TL,KS,AR,AMSEN,D1R,DT2,D2R,D1L,RR,KEYON:byte;
 	end;
 	
 	tYM2151State = record
@@ -135,6 +137,41 @@ procedure setCON(value:byte);
 	Slider::setValue(sCON,value);
 	YM2151::SetCON(currentchanel,value);
 	Conn::Show(value);
+	end;
+
+procedure setPMS(value:byte);
+	begin
+	YM2151State[0].PMS:=value;
+	Slider::setValue(sPMS,value);
+	YM2151::SetPMS(currentchanel,value);
+	end;
+
+procedure setAMS(value:byte);
+	begin
+	YM2151State[0].AMS:=value;
+	Slider::setValue(sAMS,value);
+	YM2151::SetAMS(currentchanel,value);
+	end;
+
+procedure setLFRQ(value:byte);
+	begin
+	YM2151State[0].LFRQ:=value;
+	Slider::setValue(sLFRQ,value);
+	YM2151::SetLFRQ(value);
+	end;
+
+procedure setPMDAMD(value:byte);
+	begin
+	YM2151State[0].PMDAMD:=value;
+	Slider::setValue(sPMDAMD,value);
+	YM2151::SetPMDAMD(value);
+	end;
+	
+procedure setW(value:byte);
+	begin
+	YM2151State[0].W:=value;
+	Slider::setValue(sW,value);
+	YM2151::SetW(value);
 	end;
 
 procedure handlebuttonclick();
@@ -239,6 +276,12 @@ procedure handlemouse();
 		end;
 	end;
 
+procedure CreateStdVerticalSlider(slID,Ypos,Xpos,Length_,Max_:byte);
+	begin
+	
+	end;
+
+
 procedure createOPBlock(op,Xpos,Ypos:byte);
 var opmult,color:byte;
 	begin
@@ -307,13 +350,13 @@ procedure createUI();
 	Button::Create(0,70,10,3,3,8,45);
 	Button::Create(1,75,10,3,3,9,43);
 	
-	SCF::TextAtPos(70,18,"FB",4);
-	Label::Create(sFB,70,29,4);
-	Slider::Create(sFB,70,20,8,4,7,Vertical,sFB);
+	SCF::TextAtPos(50,3,"FB",4);
+	Label::Create(sFB,50,14,4);
+	Slider::Create(sFB,50,5,8,4,7,Vertical,sFB);
 
-	SCF::TextAtPos(75,18,"CON",4);
-	Label::Create(sCON,75,29,4);
-	Slider::Create(sCON,75,20,8,4,7,Vertical,sCON);
+	SCF::TextAtPos(55,3,"CON",4);
+	Label::Create(sCON,55,14,4);
+	Slider::Create(sCON,55,5,8,4,7,Vertical,sCON);
 	
 	Conn::Xpos:=60;
 	Conn::Ypos:=40;
@@ -336,35 +379,33 @@ createUI();
 
 YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
 setFB(4);
-setMUL(0,1);
-setTL(0,20);
-setKS(0,0);
-setAR(0,31);
-setD1R(0,31);
-setDT2(0,0);
-setD2R(0,0);
-setD1L(0,0);
-setRR(0,5);
+setMUL(0,1);setMUL(1,2);setMUL(2,3);setMUL(3,0);
+setTL(0,20);setTL(1,20);setTL(2,20);setTL(3,20);
+setKS(0,0);setKS(1,0);setKS(2,0);setKS(3,0);
+setAR(0,31);setAR(1,31);setAR(2,31);setAR(3,31);
+setD1R(0,31);setD1R(1,31);setD1R(2,31);setD1R(3,31);
+setDT2(0,0);setDT2(1,0);setDT2(2,0);setDT2(3,0);
+setD2R(0,0);setD2R(1,0);setD2R(2,0);setD2R(3,0);
+setD1L(0,0);setD1L(1,0);setD1L(2,0);setD1L(3,0);
+setRR(0,5);setRR(1,5);setRR(2,5);setRR(3,5);
 setCON(7);
 	
 Input::key:=$0;	
 while (Input::key<>3) do
 	begin
 	Input::getin();
+	if (Input::key=0 and Input::lastkey<>0) then YM2151::KeyOff(currentchanel);
 	if (Input::key<>0) then 
-		begin	
-		if (Input::key=$20) then YM2151::KeyOff(0) //Keyoff simulation with space
-		else
+		begin
+		SCF::DrawHexByte(75, 55, Input::key, 5);
+		Input::key2note();
+		if(Input::note<>$FF) then
 			begin
-			SCF::DrawHexByte(75, 55, Input::key, 5);
-			Input::key2note();
-			if(Input::note<>$FF) then
-				begin
-				YM2151::SetNote(0,Input::octave+transpose,Input::note); //Transpose
-				YM2151::KeyOn(0,$F);
-				end;
+			YM2151::SetNote(0,Input::octave+transpose,Input::note); //Transpose
+			YM2151::KeyOn(0,$F);
 			end;
 		end;
+	Input::lastkey:=Input::key;
 
 	handlemouse();
 
