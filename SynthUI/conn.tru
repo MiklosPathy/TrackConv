@@ -1,0 +1,146 @@
+Unit Conn;
+
+@use "SCF"
+
+var
+	Xpos:byte=60;
+	Ypos:byte=40;
+	Color:byte=1;
+	LastCon:byte=$FF;
+
+	c00:string=($31,$43,$33,$43,$32,$43,$34,$43,$57);
+	
+	c10:string=($31,$6E,$20,$20,$20,$20,$20);
+	c11:string=($20,$6B,$32,$43,$34,$43,$57);
+	c12:string=($33,$7D,$20,$20,$20,$20,$20);
+
+	c20:string=($32,$43,$33,$6E,$20,$20,$20);
+	c21:string=($20,$20,$20,$6B,$34,$43,$57);
+	c22:string=($20,$20,$31,$7D,$20,$20,$20);
+
+	c30:string=($31,$43,$32,$6E,$20,$20,$20);
+	c31:string=($20,$20,$20,$6B,$34,$43,$57);
+	c32:string=($20,$20,$33,$7D,$20,$20,$20);
+
+	c40:string=($31,$43,$33,$6E,$20);
+	c41:string=($20,$20,$20,$6B,$57);
+	c42:string=($32,$43,$34,$7D,$20);
+	
+	c50:string=($31,$72,$32,$6E,$20);
+	c51:string=($20,$42,$20,$42,$20);
+	c52:string=($20,$6B,$33,$5B,$57);
+	c53:string=($20,$42,$20,$42,$20);
+	c54:string=($20,$6D,$34,$7D,$20);
+
+	c60:string=($31,$43,$32,$6E,$20);
+	c61:string=($20,$20,$20,$42,$20);
+	c62:string=($20,$20,$33,$5B,$57);
+	c63:string=($20,$20,$20,$42,$20);
+	c64:string=($20,$20,$34,$7D,$20);
+	
+	c70:string=($31,$6E,$20);
+	c71:string=($20,$42,$20);
+	c72:string=($32,$73,$20);
+	c73:string=($20,$6B,$57);		
+	c74:string=($33,$73,$20);
+	c75:string=($20,$42,$20);
+	c76:string=($34,$7D,$20);			
+
+procedure StringAtPos(X,Y:byte; caption:pointer; color:byte);
+	var i,c:byte;
+	begin
+	i:=0;
+	c:=caption[i];
+	while (c<>0) do
+		begin
+		SCF::DrawChar(X+i,Y,c,color);
+		inc(i);
+		c:=caption[i];
+		end;
+	end;
+
+procedure C0();
+	begin
+	StringAtPos(Xpos,Ypos+3,c00,Color);
+	end;
+
+procedure C1();
+	begin
+	StringAtPos(Xpos+2,Ypos+2,c10,Color);
+	StringAtPos(Xpos+2,Ypos+3,c11,Color);
+	StringAtPos(Xpos+2,Ypos+4,c12,Color);	
+	end;
+	
+procedure C2();
+	begin
+	StringAtPos(Xpos+2,Ypos+2,c20,Color);
+	StringAtPos(Xpos+2,Ypos+3,c21,Color);
+	StringAtPos(Xpos+2,Ypos+4,c22,Color);	
+	end;
+
+procedure C3();
+	begin
+	StringAtPos(Xpos+2,Ypos+2,c30,Color);
+	StringAtPos(Xpos+2,Ypos+3,c31,Color);
+	StringAtPos(Xpos+2,Ypos+4,c32,Color);	
+	end;
+
+procedure C4();
+	begin
+	StringAtPos(Xpos+4,Ypos+2,c40,Color);
+	StringAtPos(Xpos+4,Ypos+3,c41,Color);
+	StringAtPos(Xpos+4,Ypos+4,c42,Color);	
+	end;
+	
+procedure C5();
+	begin
+	StringAtPos(Xpos+4,Ypos+1,c50,Color);
+	StringAtPos(Xpos+4,Ypos+2,c51,Color);
+	StringAtPos(Xpos+4,Ypos+3,c52,Color);	
+	StringAtPos(Xpos+4,Ypos+4,c53,Color);	
+	StringAtPos(Xpos+4,Ypos+5,c54,Color);	
+	end;
+	
+procedure C6();
+	begin
+	StringAtPos(Xpos+4,Ypos+1,c60,Color);
+	StringAtPos(Xpos+4,Ypos+2,c61,Color);
+	StringAtPos(Xpos+4,Ypos+3,c62,Color);	
+	StringAtPos(Xpos+4,Ypos+4,c63,Color);	
+	StringAtPos(Xpos+4,Ypos+5,c64,Color);	
+	end;
+
+procedure C7();
+	begin
+	StringAtPos(Xpos+6,Ypos,c70,Color);
+	StringAtPos(Xpos+6,Ypos+1,c71,Color);
+	StringAtPos(Xpos+6,Ypos+2,c72,Color);	
+	StringAtPos(Xpos+6,Ypos+3,c73,Color);	
+	StringAtPos(Xpos+6,Ypos+4,c74,Color);	
+	StringAtPos(Xpos+6,Ypos+5,c75,Color);	
+	StringAtPos(Xpos+6,Ypos+6,c76,Color);					
+	end;
+
+procedure Show(con:byte);
+	begin
+	if (LastCon<>con) then
+		begin
+		SCF::DrawBox(Xpos,Ypos,9,7,0);
+
+			case con of
+			0: C0();
+			1: C1();
+			2: C2();
+			3: C3();
+			4: C4();
+			5: C5();
+			6: C6();
+			7: C7();
+			end;
+			
+		LastCon:=con;
+		end;
+	end;
+
+
+end.

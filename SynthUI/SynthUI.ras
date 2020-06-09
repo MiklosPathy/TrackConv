@@ -8,6 +8,7 @@ program SynthUI;
 @use "Label"
 @use "Slider"
 @use "Button"
+@use "Conn"
 
 var
 	const sDT1 : byte = 0;
@@ -127,6 +128,14 @@ procedure setFB(value:byte);
 	Slider::setValue(sFB,value);
 	YM2151::SetFB(currentchanel,value);
 	end;
+	
+procedure setCON(value:byte);
+	begin
+	YM2151State[0].CON:=value;
+	Slider::setValue(sCON,value);
+	YM2151::SetCON(currentchanel,value);
+	Conn::Show(value);
+	end;
 
 procedure handlebuttonclick();
 	var clickedButton:byte;
@@ -148,6 +157,7 @@ procedure handlesliderchange();
 	
 		case Slider::clickedSlider of
 			sFB:		setFB(Slider::getValue(sFB));
+			sCON:		setCON(Slider::getValue(sCON));
 			sDT1:		setDT1(0,Slider::getValue(sDT1));
 			sDT1+10:	setDT1(1,Slider::getValue(sDT1+10));
 			sDT1+20:	setDT1(2,Slider::getValue(sDT1+20));
@@ -297,12 +307,17 @@ procedure createUI();
 	Button::Create(0,70,10,3,3,8,45);
 	Button::Create(1,75,10,3,3,9,43);
 	
-	SCF::TextAtPos(70,18,"FEEDBACK",4);
+	SCF::TextAtPos(70,18,"FB",4);
 	Label::Create(sFB,70,29,4);
 	Slider::Create(sFB,70,20,8,4,7,Vertical,sFB);
 
-
-
+	SCF::TextAtPos(75,18,"CON",4);
+	Label::Create(sCON,75,29,4);
+	Slider::Create(sCON,75,20,8,4,7,Vertical,sCON);
+	
+	Conn::Xpos:=60;
+	Conn::Ypos:=40;
+	Conn::Show(7);
 	end;
 
 
@@ -330,6 +345,7 @@ setDT2(0,0);
 setD2R(0,0);
 setD1L(0,0);
 setRR(0,5);
+setCON(7);
 	
 Input::key:=$0;	
 while (Input::key<>3) do
