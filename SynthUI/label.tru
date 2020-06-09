@@ -1,6 +1,6 @@
 Unit Label;
 
-@use "SimpleCharFunctions"
+@use "SCF"
 
 @define LabelMaxCount 64
 

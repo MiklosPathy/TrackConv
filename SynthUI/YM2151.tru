@@ -1,6 +1,6 @@
 unit YM2151; 
 
-@use "SimpleCharFunctions"
+@use "SCF"
 
 var
     Normal2YMNote: array[12] of byte = (14, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13);

@@ -1,6 +1,6 @@
 Unit Button;
 
-@use "SimpleCharFunctions"
+@use "SCF"
 @use "Widget"
 
 @define MaxButtonCount 64

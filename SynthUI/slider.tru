@@ -1,6 +1,6 @@
 Unit Slider;
 
-@use "SimpleCharFunctions"
+@use "SCF"
 @use "Widget"
 @use "X16Mouse"
 @use "Label"

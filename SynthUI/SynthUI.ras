@@ -1,6 +1,6 @@
 program SynthUI;
 
-@use "SimpleCharFunctions"
+@use "SCF"
 @use "YM2151"
 @use "X16Mouse"
 @use "Input"
