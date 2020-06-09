@@ -14,6 +14,18 @@ var
 	const Horizontal : byte = 1;
 
 	transpose:byte=3;
+	
+	tYM2151OpStat = record
+		DT1,MUL,TL,KS,AR,AMSEN,D1R,DT2,D2R,D1L,RR:byte;
+	end;
+	
+	tYM2151State = record
+		R,L,FB,CON,PMS,AMS,LFRQ,PMDAMD,W:byte;
+	end;		
+	
+	YM2151OpStats:array[4] of tYM2151OpStat;
+	YM2151State:array[0] of tYM2151State;
+
 
 procedure handlebuttonclick();
 	var clickedButton:byte;
