@@ -22,11 +22,11 @@ procedure setValue(lbl,value:byte);
 	Draw(lbl);
 	end;
 
-procedure Create(lbID,posX,posY,Value,Color:byte);
+procedure Create(lbID,posX,posY,Color:byte);
 	begin
 	labels[lbID].posX:=posX;
 	labels[lbID].posY:=posY;
-	labels[lbID].Value:=Value;
+	labels[lbID].Value:=0;
 	labels[lbID].Color:=Color;
 	Draw(lbID);
 	//Label not true Widget. No mouseclick. No Widgetmap

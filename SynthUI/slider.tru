@@ -141,15 +141,21 @@ procedure getValue(slID:byte);
 	begin
 	ReturnValue(sliders[slID].Value);
 	end;
+	
+procedure setValue(slID,value:byte);
+	begin
+	sliders[slID].Value:=max(sliders[slID].Max_,value);
+	Draw(slID);
+	end;
 
-procedure Create(slID,posX,posY,Length_,Color,Value,Max_,Mode,AttachedLabelID:byte);
+procedure Create(slID,posX,posY,Length_,Color,Max_,Mode,AttachedLabelID:byte);
 var WID:byte;
 	begin
 	sliders[slID].posX:=posX;
 	sliders[slID].posY:=posY;
 	sliders[slID].Length_:=Length_;
 	sliders[slID].Color:=Color;
-	sliders[slID].Value:=Value;
+	sliders[slID].Value:=0;
 	sliders[slID].Max_:=Max_;
 	sliders[slID].Mode:=Mode;	
 	sliders[slID].AttachedLabel:=AttachedLabelID;

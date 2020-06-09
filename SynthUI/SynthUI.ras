@@ -10,10 +10,35 @@ program SynthUI;
 @use "Button"
 
 var
+	const sDT1 : byte = 0;
+	const sMUL : byte = 1;
+	const sTL  : byte = 2;
+	const sKS  : byte = 3;
+	const sAR  : byte = 4;
+	const sD1R : byte = 5;
+	const sDT2 : byte = 6;
+	const sD2R : byte = 7;
+	const sD1L : byte = 8;
+	const sRR  : byte = 9;
+	
+	const sFB  : byte = 40;
+	const sCON : byte = 41;
+	const sPMS : byte = 42;
+	const sAMS : byte = 43;
+	const sLFRQ : byte = 44;
+	const sPMDAMD : byte = 45;
+	const sW   : byte = 46;
+	
+	const cAMSEN:byte = 0;
+	const cR    :byte = 10;
+	const cL    :byte = 11;
+
+
 	const Vertical : byte = 0;
 	const Horizontal : byte = 1;
 
 	transpose:byte=3;
+	currentchanel:byte=0;
 	
 	tYM2151OpStat = record
 		DT1,MUL,TL,KS,AR,AMSEN,D1R,DT2,D2R,D1L,RR:byte;
@@ -26,6 +51,65 @@ var
 	YM2151OpStats:array[4] of tYM2151OpStat;
 	YM2151State:array[0] of tYM2151State;
 
+procedure setDT1(op,value:byte);
+	begin
+	if (YM2151OpStats[op].DT1<>value) then
+		begin
+		YM2151OpStats[op].DT1:=value;
+		Slider::setValue(sDT1+(op*10),value);
+		YM2151::SetDT1(currentchanel,op,value);
+		end;
+	end;
+
+procedure setMUL(op,value:byte);
+	begin
+	if (YM2151OpStats[op].MUL<>value) then
+		begin
+		YM2151OpStats[op].MUL:=value;
+		Slider::setValue(sMUL+(op*10),value);
+		YM2151::SetMUL(currentchanel,op,value);
+		end;
+	end;
+
+procedure setTL(op,value:byte);
+	begin
+	if (YM2151OpStats[op].TL<>value) then
+		begin
+		YM2151OpStats[op].TL:=value;
+		Slider::setValue(sTL+(op*10),value);
+		YM2151::SetTL(currentchanel,op,value);
+		end;
+	end;
+	
+procedure setKS(op,value:byte);
+	begin
+	if (YM2151OpStats[op].KS<>value) then
+		begin
+		YM2151OpStats[op].KS:=value;
+		Slider::setValue(sKS+(op*10),value);
+		YM2151::SetKS(currentchanel,op,value);
+		end;
+	end;
+
+procedure setAR(op,value:byte);
+	begin
+	if (YM2151OpStats[op].AR<>value) then
+		begin
+		YM2151OpStats[op].AR:=value;
+		Slider::setValue(sAR+(op*10),value);
+		YM2151::SetAR(currentchanel,op,value);
+		end;
+	end;
+
+procedure setFB(value:byte);
+	begin
+	if (YM2151State[0].FB<>value) then
+		begin
+		YM2151State[0].FB:=value;
+		Slider::setValue(sFB,value);
+		YM2151::SetFB(currentchanel,value);
+		end;
+	end;
 
 procedure handlebuttonclick();
 	var clickedButton:byte;
@@ -46,12 +130,27 @@ procedure handlesliderchange();
 	//SCF::DrawBinByte(40,6,clickedSlider,5);
 	
 		case Slider::clickedSlider of
-			0:	YM2151::SetFB(0,Slider::getValue(0));
-			1:	YM2151::SetDT1(0,0,Slider::getValue(1));
-			2:	YM2151::SetMUL(0,0,Slider::getValue(2));
-			3:	YM2151::SetKS(0,0,Slider::getValue(3));
-			4:	YM2151::SetAR(0,0,Slider::getValue(4));
-			10:	YM2151::SetTL(0,0,Slider::getValue(10));
+			sFB:		setFB(Slider::getValue(sFB));
+			sDT1:		setDT1(0,Slider::getValue(sDT1));
+			sDT1+10:	setDT1(1,Slider::getValue(sDT1+10));
+			sDT1+20:	setDT1(2,Slider::getValue(sDT1+20));
+			sDT1+30:	setDT1(3,Slider::getValue(sDT1+30));
+			sMUL:		setMUL(0,Slider::getValue(sMUL));
+			sMUL+10:	setMUL(1,Slider::getValue(sMUL+10));
+			sMUL+20:	setMUL(2,Slider::getValue(sMUL+20));
+			sMUL+30:	setMUL(3,Slider::getValue(sMUL+30));						
+			sTL:		setTL(0,Slider::getValue(sTL));
+			sTL+10:		setTL(1,Slider::getValue(sTL+10));
+			sTL+20:		setTL(2,Slider::getValue(sTL+20));
+			sTL+30:		setTL(3,Slider::getValue(sTL+30));									
+			sKS:		setKS(0,Slider::getValue(sKS));
+			sKS+10:		setKS(1,Slider::getValue(sKS+10));
+			sKS+20:		setKS(2,Slider::getValue(sKS+20));
+			sKS+30:		setKS(3,Slider::getValue(sKS+30));
+			sAR:		setAR(0,Slider::getValue(sAR));
+			sAR+10:		setAR(1,Slider::getValue(sAR+10));
+			sAR+20:		setAR(2,Slider::getValue(sAR+20));
+			sAR+30:		setAR(3,Slider::getValue(sAR+30));						
 			end;
 
 	end;
@@ -93,37 +192,58 @@ procedure handlemouse();
 		end;
 	end;
 
+procedure createOPBlock(op,Xpos,Ypos:byte);
+var opmult,color:byte;
+	begin
+	opmult:=op*10;	
+
+	color:=5;
+	SCF::TextAtPos(Xpos,Ypos,"DT1",color);	
+	Label::Create(sDT1+opmult,Xpos+6,Ypos,color);
+	Slider::Create(sDT1+opmult,Xpos+10,Ypos,10,color,7,Horizontal,sDT1+opmult);
+
+	color:=6;
+	SCF::TextAtPos(Xpos,Ypos+2,"MUL",color);
+	Label::Create(sMUL+opmult,Xpos+6,Ypos+2,color);
+	Slider::Create(sMUL+opmult,Xpos+10,Ypos+2,10,color,15,Horizontal,sMUL+opmult);
+
+	color:=1;
+	SCF::TextAtPos(Xpos,Ypos+4,"LEVEL",color);		
+	Label::Create(sTL+opmult,Xpos+6,Ypos+4,color);
+	Slider::Create(sTL+opmult,Xpos+10,Ypos+4,32,color,127,Horizontal,sTL+opmult);
+
+	color:=7;
+	SCF::TextAtPos(Xpos,Ypos+6,"KS",color);
+	Label::Create(sKS+opmult,Xpos+6,Ypos+6,color);
+	Slider::Create(sKS+opmult,Xpos+10,Ypos+6,10,color,3,Horizontal,sKS+opmult);
+
+	color:=8;
+	SCF::TextAtPos(Xpos,Ypos+8,"AR",color);	
+	Label::Create(sAR+opmult,Xpos+6,Ypos+8,color);
+	Slider::Create(sAR+opmult,Xpos+10,Ypos+8,10,color,31,Horizontal,sAR+opmult);
+
+	
+
+	
+	end;
+
 procedure createUI();
 	begin
 	SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
+
+	createOPBlock(0,1,1);
+	createOPBlock(1,1,15);
+	createOPBlock(2,1,30);
+	createOPBlock(3,1,45);	
 	
-	Button::Create(0,10,10,3,3,8,45);
-	Button::Create(1,15,10,3,3,9,43);
+	Button::Create(0,70,10,3,3,8,45);
+	Button::Create(1,75,10,3,3,9,43);
 	
-	SCF::TextAtPos(10,18,"FEEDBACK",4);
-	Label::Create(0,10,29,0,4);
-	Slider::Create(0,10,20,8,4,0,7,Vertical,0);
+	SCF::TextAtPos(70,18,"FEEDBACK",4);
+	Label::Create(sFB,70,29,4);
+	Slider::Create(sFB,70,20,8,4,7,Vertical,sFB);
 
-	SCF::TextAtPos(0,40,"DT1",5);	
-	Label::Create(1,6,40,0,5);
-	Slider::Create(1,10,40,10,5,1,7,Horizontal,1);
 
-	SCF::TextAtPos(0,42,"MUL",6);	
-	Label::Create(2,6,42,0,6);
-	Slider::Create(2,10,42,10,6,1,15,Horizontal,2);
-
-	SCF::TextAtPos(0,44,"KS",7);	
-	Label::Create(3,6,44,0,7);
-	Slider::Create(3,10,44,10,7,0,3,Horizontal,3);
-
-	SCF::TextAtPos(0,46,"AR",8);	
-	Label::Create(4,6,46,0,8);
-	Slider::Create(4,10,46,10,8,31,31,Horizontal,4);
-
-	
-	SCF::TextAtPos(40,8,"LEVEL",1);		
-	Label::Create(10,40,50,0,1);
-	Slider::Create(10,40,10,32,1,0,127,Vertical,10);
 
 	end;
 
@@ -141,9 +261,12 @@ createUI();
 //Widget::ShowWidgetMap();
 //return();
 
+setFB(4);
+setMUL(0,1);
 YM2151::SetReg($20,%11000111);	//RLFFFCCC		    Right Left Feedback Connect
-YM2151::SetReg($60,21);			//0TTTTTTT			Total level (reversed 0 max, 127 min)
-YM2151::SetReg($80,31);			//KK0AAAAA			KS    		AR			(Key Scaling, Attack)
+setTL(0,21);
+setKS(0,0);
+setAR(0,31);
 YM2151::SetReg($A0,0);			//A00DDDDD			AMS-EN      D1R			(Amplitude modulation, Decay1)
 YM2151::SetReg($C0,0);			//TT0DDDDD			DT2    		D2R 		(Useless Detune, Decay2
 YM2151::SetReg($E0,5);			//DDDDRRRR			D1L			RR			(Sustain, Release)
