@@ -195,6 +195,7 @@ procedure handlesliderchange();
 		case Slider::clickedSlider of
 			sFB:		setFB(Slider::getValue(sFB));
 			sCON:		setCON(Slider::getValue(sCON));
+			sPMS:		setPMS(Slider::getValue(sPMS));
 			sDT1:		setDT1(0,Slider::getValue(sDT1));
 			sDT1+10:	setDT1(1,Slider::getValue(sDT1+10));
 			sDT1+20:	setDT1(2,Slider::getValue(sDT1+20));
@@ -277,17 +278,17 @@ procedure handlemouse();
 	end;
 
 //For some reason these create stack overflow, or i dont know what, the program just exits
-procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:string);
+procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
 	begin
 	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
 	Label::Create(slID,Xpos+4,Ypos,Color);
 	Slider::Create(slID,Xpos+8,Ypos,Length_,Color,Max_,Horizontal,slID);
 	end;
 
-procedure CreateStdVerticalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:string);
+procedure CreateStdVerticalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
 	begin
 	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
-	Label::Create(slID,Xpos,Ypos+Length_+4,Color);
+	Label::Create(slID,Xpos,Ypos+Length_+3,Color);
 	Slider::Create(slID,Xpos,Ypos+2,Length_,Color,Max_,Vertical,slID);
 	end;
 
@@ -295,60 +296,27 @@ procedure createOPBlock(op,Xpos,Ypos:byte);
 var opmult,color:byte;
 	begin
 	opmult:=op*10;	
-	
 	color:=1;
-	SCF::TextAtPos(Xpos,Ypos,"DT1",color);	
-	Label::Create(sDT1+opmult,Xpos+6,Ypos,color);
-	Slider::Create(sDT1+opmult,Xpos+10,Ypos,10,color,7,Horizontal,sDT1+opmult);
 	
-	//CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
-	//inc(Ypos);inc(color);
-	//CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos+1,10,15,color,"MUL");
-
-	color:=2;
-	SCF::TextAtPos(Xpos,Ypos+1,"MUL",color);
-	Label::Create(sMUL+opmult,Xpos+6,Ypos+1,color);
-	Slider::Create(sMUL+opmult,Xpos+10,Ypos+1,10,color,15,Horizontal,sMUL+opmult);
-
-	color:=3;
-	SCF::TextAtPos(Xpos,Ypos+2,"TL",color);		
-	Label::Create(sTL+opmult,Xpos+6,Ypos+2,color);
-	Slider::Create(sTL+opmult,Xpos+10,Ypos+2,32,color,127,Horizontal,sTL+opmult);
-
-	color:=4;
-	SCF::TextAtPos(Xpos,Ypos+3,"KS",color);
-	Label::Create(sKS+opmult,Xpos+6,Ypos+3,color);
-	Slider::Create(sKS+opmult,Xpos+10,Ypos+3,10,color,3,Horizontal,sKS+opmult);
-
-	color:=5;
-	SCF::TextAtPos(Xpos,Ypos+4,"AR",color);	
-	Label::Create(sAR+opmult,Xpos+6,Ypos+4,color);
-	Slider::Create(sAR+opmult,Xpos+10,Ypos+4,10,color,31,Horizontal,sAR+opmult);
-
-	color:=6;
-	SCF::TextAtPos(Xpos,Ypos+5,"D1R",color);	
-	Label::Create(sD1R+opmult,Xpos+6,Ypos+5,color);
-	Slider::Create(sD1R+opmult,Xpos+10,Ypos+5,10,color,31,Horizontal,sD1R+opmult);	
-
-	color:=7;
-	SCF::TextAtPos(Xpos,Ypos+6,"DT2",color);	
-	Label::Create(sDT2+opmult,Xpos+6,Ypos+6,color);
-	Slider::Create(sDT2+opmult,Xpos+10,Ypos+6,10,color,3,Horizontal,sDT2+opmult);	
-	
-	color:=8;
-	SCF::TextAtPos(Xpos,Ypos+7,"D2R",color);	
-	Label::Create(sD2R+opmult,Xpos+6,Ypos+7,color);
-	Slider::Create(sD2R+opmult,Xpos+10,Ypos+7,10,color,31,Horizontal,sD2R+opmult);	
-	
-	color:=9;
-	SCF::TextAtPos(Xpos,Ypos+8,"D1L",color);	
-	Label::Create(sD1L+opmult,Xpos+6,Ypos+8,color);
-	Slider::Create(sD1L+opmult,Xpos+10,Ypos+8,10,color,15,Horizontal,sD1L+opmult);	
-	
-	color:=10;
-	SCF::TextAtPos(Xpos,Ypos+9,"RR",color);	
-	Label::Create(sRR+opmult,Xpos+6,Ypos+9,color);
-	Slider::Create(sRR+opmult,Xpos+10,Ypos+9,10,color,15,Horizontal,sRR+opmult);
+	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sAR+opmult,Xpos,Ypos,10,31,color,"AR");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sD1R+opmult,Xpos,Ypos,10,31,color,"D1R");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sD2R+opmult,Xpos,Ypos,10,31,color,"D2R");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sD1L+opmult,Xpos,Ypos,10,15,color,"D1L");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sRR+opmult,Xpos,Ypos,10,15,color,"RR");
 	end;
 
 procedure createUI();
@@ -376,6 +344,9 @@ procedure createUI();
 	Conn::Xpos:=60;
 	Conn::Ypos:=40;
 	Conn::Show(7);
+	
+	CreateStdVerticalSlider(sPMS,50,20,8,7,4,"PMS");
+
 	end;
 
 
