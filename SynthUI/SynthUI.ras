@@ -276,6 +276,7 @@ procedure handlemouse();
 		end;
 	end;
 
+//For some reason these create stack overflow, or i dont know what, the program just exits
 procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:string);
 	begin
 	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
@@ -283,6 +284,12 @@ procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Capti
 	Slider::Create(slID,Xpos+8,Ypos,Length_,Color,Max_,Horizontal,slID);
 	end;
 
+procedure CreateStdVerticalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:string);
+	begin
+	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
+	Label::Create(slID,Xpos,Ypos+Length_+4,Color);
+	Slider::Create(slID,Xpos,Ypos+2,Length_,Color,Max_,Vertical,slID);
+	end;
 
 procedure createOPBlock(op,Xpos,Ypos:byte);
 var opmult,color:byte;
@@ -290,7 +297,11 @@ var opmult,color:byte;
 	opmult:=op*10;	
 	
 	color:=1;
-	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
+	SCF::TextAtPos(Xpos,Ypos,"DT1",color);	
+	Label::Create(sDT1+opmult,Xpos+6,Ypos,color);
+	Slider::Create(sDT1+opmult,Xpos+10,Ypos,10,color,7,Horizontal,sDT1+opmult);
+	
+	//CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
 	//inc(Ypos);inc(color);
 	//CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos+1,10,15,color,"MUL");
 
@@ -355,6 +366,8 @@ procedure createUI();
 	SCF::TextAtPos(50,3,"FB",4);
 	Label::Create(sFB,50,14,4);
 	Slider::Create(sFB,50,5,8,4,7,Vertical,sFB);
+
+//	CreateStdVerticalSlider(sFB,50,3,8,7,4,"FB");
 
 	SCF::TextAtPos(55,3,"CON",4);
 	Label::Create(sCON,55,14,4);
