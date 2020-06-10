@@ -1,0 +1,93 @@
+Unit CheckBox;
+
+@use "SCF"
+@use "Widget"
+
+@define MaxCheckBoxCount 64
+
+var
+
+	tCheckBox = record
+		posX, posY, Width, Height, Value, ColorOn, ColorOff:byte;
+	end;
+
+	checkboxes:array[@MaxCheckBoxCount] of CheckBox::tCheckBox;
+	captions:array[@MaxCheckBoxCount] of pointer;
+	
+	clickedcheckbox:byte=$FF;
+
+procedure TextLength(text:pointer;);
+	var i,c:byte;
+	begin
+	i:=0;
+	c:=text[i];
+	while (c<>0) do
+		begin
+		inc(i);
+		c:=text[i];
+		end;
+	ReturnValue(i);
+	end;
+
+procedure Draw(cbID:byte);
+	var labelx,labely,color:byte;
+	begin
+	if (checkboxes[cbID].Value=0) then color:=checkboxes[cbID].ColorOff else color:=checkboxes[cbID].ColorOn;
+
+	SCF::DrawBox(checkboxes[cbID].posX,checkboxes[cbID].posY,checkboxes[cbID].Width,checkboxes[cbID].Height,color);
+	//labelx:=checkboxes[cbID].Width+TextLength(checkboxes[cbID].Label);
+	//labelx:=labelx>>1;
+	//labelx:=labelx+checkboxes[cbID].posX;
+	labelx:=checkboxes[cbID].posX+1;
+	labely:=checkboxes[cbID].posY+checkboxes[cbID].Height>>1;
+	//SCF::TextAtPos(labelx,labely,captions[cbID],color); 
+
+	end;
+
+procedure getValue(cbID:byte);
+	begin
+	ReturnValue(checkboxes[cbID].Value);
+	end;
+	
+procedure setValue(cbID,value:byte);
+	begin
+	if (checkboxes[cbID].Value<>value) then 
+		begin
+		checkboxes[cbID].Value:=value;
+		Draw(cbID);
+		end;
+	end;
+
+procedure HandleClick();
+	var cbID,WID,WT:byte;
+	begin
+	WID:=Widget::getMapValue(X16Mouse::mouseXchposAtClick,X16Mouse::mouseYchposAtClick);
+	WT:=WID&%11000000;
+	if (WT=%10000000) then //10 checkbox
+		begin
+		cbID:=WID&%00111111;
+		if (checkboxes[cbID].Value=0) then checkboxes[cbID].Value:=1 else checkboxes[cbID].Value:=0;
+		Draw(cbID);
+		clickedcheckbox:=cbID;
+		end;
+	end;
+
+procedure Create(cbID,posX,posY,Width,Height,ColorOn,ColorOff:byte;Caption:pointer);
+var WID:byte;
+	begin
+	checkboxes[cbID].posX:=posX;
+	checkboxes[cbID].posY:=posY;
+	checkboxes[cbID].Width:=Width;
+	checkboxes[cbID].Height:=Height;
+	checkboxes[cbID].ColorOn:=ColorOn;
+	checkboxes[cbID].ColorOff:=ColorOff;
+	captions[cbID]:=Caption;
+
+	WID:=cbID|%10000000; //Cb type is 10;
+	Widget::PlaceOnMap(posX,posY,Width,Height,WID);
+	Draw(cbID);
+	end;
+
+
+end.
+

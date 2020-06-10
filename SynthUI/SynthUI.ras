@@ -8,6 +8,7 @@ program SynthUI;
 @use "Label"
 @use "Slider"
 @use "Button"
+@use "CheckBox"
 @use "Conn"
 
 var
@@ -127,7 +128,7 @@ procedure setRR(op,value:byte);
 procedure setAMSEN(op,value:byte);
 	begin
 	YM2151OpStats[op].AMSEN:=value;
-	//Slider::setValue(cAMSEN+(op*10),value);
+	CheckBox::setValue(cAMSEN+(op*10),value);
 	YM2151::SetAMSEN(currentchanel,op,value);
 	end;
 
@@ -184,14 +185,14 @@ procedure setW(value:byte);
 procedure setR(value:byte);
 	begin
 	YM2151State[0].R:=value;
-	//Slider::setValue(cR,value);
+	CheckBox::setValue(cR,value);
 	YM2151::SetR(currentchanel,value);
 	end;
 
 procedure setL(value:byte);
 	begin
 	YM2151State[0].L:=value;
-	//Slider::setValue(cR,value);
+	CheckBox::setValue(cL,value);
 	YM2151::SetL(currentchanel,value);
 	end;
 
@@ -266,6 +267,19 @@ procedure handlesliderchange();
 
 	end;
 
+procedure handlecheckboxchange();
+	begin
+	case CheckBox::clickedcheckbox of
+		cAMSEN:	 	setAMSEN(0,CheckBox::getValue(cAMSEN));
+		cAMSEN+10:	setAMSEN(1,CheckBox::getValue(cAMSEN+10));
+		cAMSEN+20: 	setAMSEN(2,CheckBox::getValue(cAMSEN+20));
+		cAMSEN+30: 	setAMSEN(3,CheckBox::getValue(cAMSEN+30));						
+		cL:		 	setL(CheckBox::getValue(cL));
+		cR:		 	setR(CheckBox::getValue(cR));
+	end;
+	CheckBox::clickedcheckbox:=$FF;
+	end;
+
 procedure handlemouse();
 	begin
 	X16Mouse::GetState();
@@ -297,6 +311,8 @@ procedure handlemouse();
 			if X16Mouse::mouseClicked=1 then
 			begin
 			handlebuttonclick();
+			CheckBox::HandleClick();
+			handlecheckboxchange();
 			X16Mouse::mouseClicked:=0;
 			Slider::clickedSlider:=$FF;
 			end;
@@ -349,6 +365,8 @@ var opmult,color:byte;
 	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
 	inc(Ypos);
 	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	inc(Ypos);
+	CheckBox::Create(cAMSEN+opmult,Xpos,Ypos,3,1,5,2,"");
 	end;
 
 procedure createUI();
@@ -382,7 +400,8 @@ var Ypos:byte;
 	Button::Create(0,13,59,1,1,7,45);
 	Button::Create(1,16,59,1,1,7,43);
 
-
+	CheckBox::Create(cR,54,40,3,3,5,2,"R");
+	CheckBox::Create(cL,50,40,3,3,5,2,"L");
 	end;
 
 
