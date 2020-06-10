@@ -320,13 +320,13 @@ var opmult,color:byte;
 	
 	Ypos:=Ypos-5;inc(color);
 	Xpos:=Xpos+22;
-	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
-	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
 	inc(Ypos);inc(color);
-	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
 	end;
 
 procedure createUI();
@@ -343,14 +343,11 @@ var Ypos:byte;
 	Ypos:=Ypos+10;
 	createOPBlock(3,1,Ypos);	
 	
-	Button::Create(0,70,10,3,3,8,45);
-	Button::Create(1,75,10,3,3,9,43);
-	
 	CreateStdVerticalSlider(sFB,50,3,8,7,4,"FB");
 	CreateStdVerticalSlider(sCON,55,3,8,7,4,"CON");
 	
 	Conn::Xpos:=60;
-	Conn::Ypos:=40;
+	Conn::Ypos:=5;
 	Conn::Show(7);
 	
 	CreateStdVerticalSlider(sPMS,50,20,8,7,4,"PMS");
@@ -358,6 +355,11 @@ var Ypos:byte;
 	CreateStdVerticalSlider(sLFRQ,60,20,8,$FF,4,"LFRQ");
 	CreateStdVerticalSlider(sPMDAMD,65,20,8,$FF,4,"PMDAMD");	
 	CreateStdVerticalSlider(sW,75,20,8,3,4,"W");	
+
+	SCF::TextAtPos(0,59,"TRANSPOSE",7);
+	Button::Create(0,13,59,1,1,7,45);
+	Button::Create(1,16,59,1,1,7,43);
+
 
 	end;
 
@@ -407,7 +409,7 @@ while (Input::key<>3) do
 
 	handlemouse();
 
-	SCF::DrawHexByte(2,59,transpose,7);
+	SCF::DrawHexByte(10,59,transpose,7);
 	end;
 
 X16Mouse::CursorOff();
