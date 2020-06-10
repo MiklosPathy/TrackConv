@@ -196,6 +196,10 @@ procedure handlesliderchange();
 			sFB:		setFB(Slider::getValue(sFB));
 			sCON:		setCON(Slider::getValue(sCON));
 			sPMS:		setPMS(Slider::getValue(sPMS));
+			sAMS:		setAMS(Slider::getValue(sAMS));
+			sLFRQ:		setLFRQ(Slider::getValue(sLFRQ));
+			sPMDAMD:	setPMDAMD(Slider::getValue(sPMDAMD));
+			sW:			setW(Slider::getValue(sW));
 			sDT1:		setDT1(0,Slider::getValue(sDT1));
 			sDT1+10:	setDT1(1,Slider::getValue(sDT1+10));
 			sDT1+20:	setDT1(2,Slider::getValue(sDT1+20));
@@ -277,7 +281,6 @@ procedure handlemouse();
 		end;
 	end;
 
-//For some reason these create stack overflow, or i dont know what, the program just exits
 procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
 	begin
 	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
@@ -298,54 +301,63 @@ var opmult,color:byte;
 	opmult:=op*10;	
 	color:=1;
 	
-	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
-	inc(Ypos);inc(color);
-	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
-	inc(Ypos);inc(color);
-	CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
-	inc(Ypos);inc(color);
-	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	SCF::DrawHexByte(Xpos,Ypos,op+1,color);
+	inc(Ypos);
+
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sAR+opmult,Xpos,Ypos,10,31,color,"AR");
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sD1R+opmult,Xpos,Ypos,10,31,color,"D1R");
-	inc(Ypos);inc(color);
-	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sD2R+opmult,Xpos,Ypos,10,31,color,"D2R");
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sD1L+opmult,Xpos,Ypos,10,15,color,"D1L");
 	inc(Ypos);inc(color);
 	CreateStdHorizontalSlider(sRR+opmult,Xpos,Ypos,10,15,color,"RR");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
+
+	
+	Ypos:=Ypos-5;inc(color);
+	Xpos:=Xpos+22;
+	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	inc(Ypos);inc(color);
+	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
 	end;
 
 procedure createUI();
+var Ypos:byte;
 	begin
 	SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
 
-	createOPBlock(0,1,4);
-	createOPBlock(1,1,18);
-	createOPBlock(2,1,32);
-	createOPBlock(3,1,46);	
+	Ypos:=3;
+	createOPBlock(0,1,Ypos);
+	Ypos:=Ypos+10;
+	createOPBlock(1,1,Ypos);
+	Ypos:=Ypos+10;
+	createOPBlock(2,1,Ypos);
+	Ypos:=Ypos+10;
+	createOPBlock(3,1,Ypos);	
 	
 	Button::Create(0,70,10,3,3,8,45);
 	Button::Create(1,75,10,3,3,9,43);
 	
-	SCF::TextAtPos(50,3,"FB",4);
-	Label::Create(sFB,50,14,4);
-	Slider::Create(sFB,50,5,8,4,7,Vertical,sFB);
-
-//	CreateStdVerticalSlider(sFB,50,3,8,7,4,"FB");
-
-	SCF::TextAtPos(55,3,"CON",4);
-	Label::Create(sCON,55,14,4);
-	Slider::Create(sCON,55,5,8,4,7,Vertical,sCON);
+	CreateStdVerticalSlider(sFB,50,3,8,7,4,"FB");
+	CreateStdVerticalSlider(sCON,55,3,8,7,4,"CON");
 	
 	Conn::Xpos:=60;
 	Conn::Ypos:=40;
 	Conn::Show(7);
 	
 	CreateStdVerticalSlider(sPMS,50,20,8,7,4,"PMS");
+	CreateStdVerticalSlider(sAMS,55,20,8,3,4,"AMS");
+	CreateStdVerticalSlider(sLFRQ,60,20,8,$FF,4,"LFRQ");
+	CreateStdVerticalSlider(sPMDAMD,65,20,8,$FF,4,"PMDAMD");	
+	CreateStdVerticalSlider(sW,75,20,8,3,4,"W");	
 
 	end;
 
