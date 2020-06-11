@@ -8,6 +8,8 @@ var
 
 	YMReg : byte absolute $9FE0;
 	YMData : byte absolute $9FE1;
+	
+	opmask : byte = %01111000;
 
 procedure SetReg(reg,data:byte);
 	begin
@@ -245,7 +247,29 @@ var reg:byte;
 	data:=YMLastState[reg] | data;
 	SetReg(reg,data);
 	end;
-	
+
+procedure SetAtKeyOnOperatorEnabled(opr,data:byte);
+var mask,maskneg:byte;
+	begin
+	case opr of
+		1: opr:=2;
+		2: opr:=1;
+	end;
+		
+	mask:=1<<(opr+3);
+	maskneg:=$FF xor mask;
+	if data=0 then
+		begin
+		opmask:=opmask&maskneg;
+		end
+	else
+		begin
+		opmask:=opmask|mask;
+		end;
+	SCF::TextAtPos(65,0,"OM",1);	
+	SCF::DrawBinByte(70,0,opmask,1);	
+	end;
+
 procedure Reset(); 
 	var 
 		i : byte;
@@ -263,11 +287,9 @@ procedure SetNote(chn,octave,note:byte);
 	SetReg($28+chn,(Normal2YMNote[note]&$F)|(octave<<4));
 	end;
 	
-procedure KeyOn(chn,opmask:byte);
+procedure KeyOn(chn:byte);
 	begin
 	chn:=chn&%00000111;
-	opmask:=opmask&%00001111;
-	opmask:=opmask<<3;
 	SetReg($08,opmask|chn);
 	end;
 	

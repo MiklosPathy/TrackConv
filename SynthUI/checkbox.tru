@@ -12,36 +12,15 @@ var
 	end;
 
 	checkboxes:array[@MaxCheckBoxCount] of CheckBox::tCheckBox;
-	captions:array[@MaxCheckBoxCount] of pointer;
 	
 	clickedcheckbox:byte=$FF;
 
-procedure TextLength(text:pointer;);
-	var i,c:byte;
-	begin
-	i:=0;
-	c:=text[i];
-	while (c<>0) do
-		begin
-		inc(i);
-		c:=text[i];
-		end;
-	ReturnValue(i);
-	end;
-
 procedure Draw(cbID:byte);
-	var labelx,labely,color:byte;
+	var color:byte;
 	begin
 	if (checkboxes[cbID].Value=0) then color:=checkboxes[cbID].ColorOff else color:=checkboxes[cbID].ColorOn;
 
 	SCF::DrawBox(checkboxes[cbID].posX,checkboxes[cbID].posY,checkboxes[cbID].Width,checkboxes[cbID].Height,color);
-	//labelx:=checkboxes[cbID].Width+TextLength(checkboxes[cbID].Label);
-	//labelx:=labelx>>1;
-	//labelx:=labelx+checkboxes[cbID].posX;
-	labelx:=checkboxes[cbID].posX+1;
-	labely:=checkboxes[cbID].posY+checkboxes[cbID].Height>>1;
-	//SCF::TextAtPos(labelx,labely,captions[cbID],color); 
-
 	end;
 
 procedure getValue(cbID:byte);
@@ -72,7 +51,7 @@ procedure HandleClick();
 		end;
 	end;
 
-procedure Create(cbID,posX,posY,Width,Height,ColorOn,ColorOff:byte;Caption:pointer);
+procedure Create(cbID,posX,posY,Width,Height,ColorOn,ColorOff:byte);
 var WID:byte;
 	begin
 	checkboxes[cbID].posX:=posX;
@@ -81,7 +60,6 @@ var WID:byte;
 	checkboxes[cbID].Height:=Height;
 	checkboxes[cbID].ColorOn:=ColorOn;
 	checkboxes[cbID].ColorOff:=ColorOff;
-	captions[cbID]:=Caption;
 
 	WID:=cbID|%10000000; //Cb type is 10;
 	Widget::PlaceOnMap(posX,posY,Width,Height,WID);
