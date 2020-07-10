@@ -2,6 +2,7 @@ Unit CheckBox;
 
 @use "SCF"
 @use "Widget"
+@use "X16Mouse"
 
 @define MaxCheckBoxCount 64
 
