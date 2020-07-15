@@ -10,9 +10,91 @@ program SynthUI_PSG;
 @use "Button"
 @use "CheckBox"
 
-var  
-   i: byte; 
+var 
+
+	transpose:byte=3;
+	currentchanel:byte=0;
+
+
+procedure handlemouse();
+	begin
+	X16Mouse::GetState();
+	X16Mouse::CalcChPos();
+
+//	X16Mouse::Xch:=(X16Mouse::X>>3);
+//	X16Mouse::Ych:=(X16Mouse::Y>>3);
+	
+	SCF::DrawHexByte(75,56,X16Mouse::Buttons,1);
+	SCF::DrawHexInt(70,57,X16Mouse::X,4);
+	SCF::DrawHexInt(70,58,X16Mouse::Y,5);
+	SCF::DrawHexByte(75,57,X16Mouse::Xch,4);
+	SCF::DrawHexByte(75,58,X16Mouse::Ych,5);
+	SCF::DrawHexByte(75,59, Widget::getMapValue(X16Mouse::Xch,X16Mouse::Ych),7);
+
+	if (X16Mouse::Buttons=1) then 
+		begin
+		Slider::HandleClick();
+		//handlesliderchange();
+		if X16Mouse::mouseClicked=0 then
+			begin
+			X16Mouse::mouseXchposAtClick:=X16Mouse::Xch;
+			X16Mouse::mouseYchposAtClick:=X16Mouse::Ych;
+			X16Mouse::mouseClicked:=1;
+			end;
+		end;
+	if (X16Mouse::Buttons=0) then 
+		begin
+			if X16Mouse::mouseClicked=1 then
+			begin
+			//handlebuttonclick();
+			CheckBox::HandleClick();
+			//handlecheckboxchange();
+			X16Mouse::mouseClicked:=0;
+			Slider::clickedSlider:=$FF;
+			end;
+		end;
+	end;
+
+procedure createUI();
+begin
+end;
+
 
 begin
+PSG::Reset();
+X16Mouse::CursorOn();
 
+SCF::InitScreen(0);
+Widget::ClearMap();
+createUI();
+
+Input::key:=$0;	
+while (Input::key<>3) do
+	begin
+	Input::getin();
+	//if (Input::key=0 and Input::lastkey<>0) then PSG::SetVol(currentchanel,0);
+	if (Input::key=$20) then PSG::SetVol(currentchanel,0);
+	if (Input::key<>0) then 
+		begin
+		SCF::DrawHexByte(75, 55, Input::key, 5);
+		Input::key2note();
+		if(Input::note<>$FF) then
+			begin
+			PSG::SetNote(currentchanel,Input::octave+transpose,Input::note); //Transpose
+			PSG::SetVol(currentchanel,63);
+			PSG::SetWF(currentchanel,1);
+			PSG::SetL(currentchanel,1);
+			PSG::SetR(currentchanel,1);
+			end;
+		end;
+	Input::lastkey:=Input::key;
+
+	handlemouse();
+
+	SCF::DrawHexByte(10,59,transpose,7);
+	end;
+
+X16Mouse::CursorOff();
+PSG::Reset();
+return();
 end.

@@ -86,7 +86,7 @@ procedure TextAtPos(X,Y:byte; caption:pointer; color:byte);
 		begin
 		c2:=$20;
 		if (c>=$41 and c<=$5A) then c2:=c-$40;
-		if (c>=$30 and c<=$39) then c2:=c;
+		if (c>=$20 and c<=$40) then c2:=c;
 		DrawChar(X+i,Y,c2,color);
 		inc(i);
 		c:=caption[i];

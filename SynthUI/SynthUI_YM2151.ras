@@ -31,17 +31,21 @@ var
 	const sPMDAMD : byte = 45;
 	const sW   : byte = 46;
 	
+	const sTRANSPOSE : byte = 50;
+	
 	const cAMSEN:byte = 0;
 	const cKEYON:byte = 1;
 	const cR    :byte = 40;
 	const cL    :byte = 41;
 	
+	const cHOLDKEY :byte = 50;
 
 
 	const Vertical : byte = 0;
 	const Horizontal : byte = 1;
 
-	transpose:byte=3;
+	transpose:byte=0;
+	holdkey:byte=0;
 	currentchanel:byte=0;
 	
 	tYM2151OpStat = record
@@ -203,6 +207,35 @@ procedure setL(value:byte);
 	YM2151::SetL(currentchanel,value);
 	end;
 
+procedure setHOLDKEY(value:byte);
+	begin
+	CheckBox::setValue(cHOLDKEY,value);
+	holdkey:=value;
+	end;
+
+procedure setTRANSPOSE(value:byte);
+	begin
+	Slider::setValue(sTRANSPOSE,value);
+	transpose:=value;
+	end;
+
+procedure dumpRegs();
+var y,x:byte;
+	begin
+	for x:=0 to 15 do
+		begin
+		SCF::DrawHexByte(x*3+4, 42, x, 3);		
+		end;
+		
+	for y:=0 to 15 do
+		begin
+		SCF::DrawHexByte(0, y+43, y*16, 3);
+		for x:=0 to 15 do
+			begin
+			SCF::DrawHexByte(x*3+4, y+43, YM2151::YMLastState[(y*16)+x], 2);
+			end;
+		end;
+	end;
 
 procedure handlebuttonclick();
 	var clickedButton:byte;
@@ -211,8 +244,8 @@ procedure handlebuttonclick();
 	if ((clickedButton>>6)=0) then
 		begin
 		case clickedButton of
-		0: dec(transpose);
-		1: inc(transpose);
+//		0: dec(transpose);
+//		1: inc(transpose);
 		end;
 		end;
 
@@ -270,6 +303,7 @@ procedure handlesliderchange();
 			sRR+10:		setRR(1,Slider::getValue(sRR+10));
 			sRR+20:		setRR(2,Slider::getValue(sRR+20));
 			sRR+30:		setRR(3,Slider::getValue(sRR+30));	
+			sTRANSPOSE:	setTRANSPOSE(Slider::getValue(sTRANSPOSE));
 			end;
 
 	end;
@@ -287,6 +321,7 @@ procedure handlecheckboxchange();
 		cKEYON+30: 	setKEYON(3,CheckBox::getValue(cKEYON+30));			
 		cL:		 	setL(CheckBox::getValue(cL));
 		cR:		 	setR(CheckBox::getValue(cR));
+		cHOLDKEY:	setHOLDKEY(CheckBox::getValue(cHOLDKEY));
 	end;
 	CheckBox::clickedcheckbox:=$FF;
 	end;
@@ -367,7 +402,7 @@ var opmult,color:byte;
 	inc(Ypos);
 	CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
 
-	color:=7;
+	color:=1;
 	Ypos:=Ypos-5;
 	Xpos:=Xpos+22;
 	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
@@ -378,14 +413,14 @@ var opmult,color:byte;
 	inc(Ypos);
 	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
 	inc(Ypos);
-	SCF::TextAtPos(Xpos,Ypos,"AMSEN",7);
+	SCF::TextAtPos(Xpos,Ypos,"AMSEN",color);
 	CheckBox::Create(cAMSEN+opmult,Xpos+7,Ypos,3,1,5,2);
 	end;
 
 procedure createUI();
 var Ypos,color:byte;
 	begin
-	SCF::TextAtPos(0,0,"YM2151 SYNTH UI",1);
+	SCF::TextAtPos(0,0,"YM2151 SYNTH UI    V0.2",1);
 
 	Ypos:=3;
 	createOPBlock(0,1,Ypos);
@@ -398,29 +433,38 @@ var Ypos,color:byte;
 	
 	color:=1;
 
-	CreateStdVerticalSlider(sFB,50,3,8,7,color,"FB");
-	CreateStdVerticalSlider(sCON,55,3,8,7,color,"CON");
+	CreateStdVerticalSlider(sFB,44,3,8,7,color,"FB");
+	CreateStdVerticalSlider(sCON,48,3,8,7,color,"CON");
 	
-	Conn::Xpos:=60;
+	Conn::Xpos:=52;
 	Conn::Ypos:=5;
-	Conn::Show(7);
+	//Conn::Show(7);
 	
-	CreateStdVerticalSlider(sPMS,50,20,8,7,color,"PMS");
-	CreateStdVerticalSlider(sAMS,55,20,8,3,color,"AMS");
-	CreateStdVerticalSlider(sLFRQ,60,20,8,$FF,color,"LFRQ");
-	CreateStdVerticalSlider(sPMDAMD,65,20,8,$FF,color,"PMDAMD");	
-	CreateStdVerticalSlider(sW,75,20,8,3,color,"W");	
-
-	Ypos:=35;
-	SCF::TextAtPos(50,Ypos,"LEFT",color);
-	CheckBox::Create(cR,56,Ypos,3,1,5,2);
+	Ypos:=17;
+	SCF::TextAtPos(44,Ypos,"LEFT",color);
+	CheckBox::Create(cR,50,Ypos,3,1,5,2);
 	Ypos:=Ypos+2;
-	SCF::TextAtPos(50,Ypos,"RIGHT",color);
-	CheckBox::Create(cL,56,Ypos,3,1,5,2);
+	SCF::TextAtPos(44,Ypos,"RIGHT",color);
+	CheckBox::Create(cL,50,Ypos,3,1,5,2);
 	
-	SCF::TextAtPos(0,59,"TRANSPOSE",7);
-	Button::Create(0,13,59,1,1,7,45);
-	Button::Create(1,16,59,1,1,7,43);
+	color:=15;
+	CreateStdVerticalSlider(sPMS,50,25,8,7,color,"PMS");
+	CreateStdVerticalSlider(sAMS,55,25,8,3,color,"AMS");
+	CreateStdVerticalSlider(sW,60,25,8,3,color,"W");	
+	CreateStdVerticalSlider(sLFRQ,65,3,47,$FF,color,"LFRQ");
+	CreateStdVerticalSlider(sPMDAMD,70,3,47,$FF,color,"PMDAMD");	
+
+	Ypos:=59;
+	color:=7;
+	SCF::TextAtPos(22,Ypos,"HOLDKEY",color);
+	CheckBox::Create(cHOLDKEY,30,Ypos,3,1,5,2);
+	
+	SCF::TextAtPos(0,59,"TRANSPOSE",color);
+	Label::Create(sTRANSPOSE,10,59,color);
+	Slider::Create(sTRANSPOSE,13,59,6,color,6,Horizontal,sTRANSPOSE);	
+
+//	Button::Create(0,13,59,1,1,7,45);
+//	Button::Create(1,16,59,1,1,7,43);
 	end;
 
 
@@ -453,14 +497,22 @@ setAMSEN(0,1);setAMSEN(1,1);setAMSEN(2,1);setAMSEN(3,1);
 setRR(0,5);setRR(1,5);setRR(2,5);setRR(3,5);
 setKEYON(0,1);setKEYON(1,1);setKEYON(2,1);setKEYON(3,1);
 
+setHOLDKEY(0);
+setTRANSPOSE(3);
+
 	
 Input::key:=$0;	
 while (Input::key<>3) do
 	begin
 	Input::getin();
-	if (Input::key=0 and Input::lastkey<>0) then YM2151::KeyOff(currentchanel);
+	if (holdkey=0) then
+		if (Input::key=0 and Input::lastkey<>0) then YM2151::KeyOff(currentchanel);
+
 	if (Input::key<>0) then 
 		begin
+		if (Input::key=$0D) then dumpRegs();
+		if (holdkey=1 and Input::key=$20) then YM2151::KeyOff(currentchanel);
+		
 		SCF::DrawHexByte(75, 55, Input::key, 5);
 		Input::key2note();
 		if(Input::note<>$FF) then
@@ -473,7 +525,7 @@ while (Input::key<>3) do
 
 	handlemouse();
 
-	SCF::DrawHexByte(10,59,transpose,7);
+	//SCF::DrawHexByte(10,59,transpose,7);
 	end;
 
 X16Mouse::CursorOff();

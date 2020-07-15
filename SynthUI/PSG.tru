@@ -1,6 +1,8 @@
 Unit PSG;
 var  
     PSGLastState: array[64] of byte;
+    PSGNoteTable: array[128] of integer = (41,44,47,49,52,55,59,62,66,70,74,78,83,88,93,99,104,111,117,124,132,139,148,156,166,176,186,197,209,221,234,248,263,279,295,313,331,351,372,394,418,442,469,497,526,557,591,626,663,702,744,788,835,885,937,993,1052,1115,1181,1251,1326,1405,1488,1577,1670,1770,1875,1986,2105,2230,2362,2503,2652,2809,2976,3153,3341,3539,3750,3973,4209,4459,4724,5005,5303,5618,5952,6306,6681,7079,7500,7946,8418,8919,9449,10011,10606,11237,11905,12613,13363,14157,14999,15891,16836,17837,18898,20022,21212,22474,23810,25226,26726,28315,29999,31782,33672,35674,37796,40043,42424,44947,47620,50451,53451,56630,59997,63565);
+    PSGNote:integer;
 
 procedure SetReg(reg,data :byte);
 	begin
@@ -14,4 +16,96 @@ procedure SetReg(reg,data :byte);
 	VERA_DATA1 := data;
 	end;
 
+procedure Reset(); 
+	var i : byte;
+	begin
+    fori i := 0 to 63 do SetReg(i,0);
+	end;
+
+procedure SetFreq(chn:byte, data:integer);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	SetReg(reg,data);
+	inc(reg);
+	SetReg(reg,data>>8);
+	end;
+
+procedure SetVol(chn:byte, data:byte);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	reg:=reg+2;
+	data:=data&%00111111;	
+	PSGLastState[reg]:=PSGLastState[reg]&%11000000;
+	data:=PSGLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+	
+procedure SetL(chn:byte, data:byte);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	reg:=reg+2;
+	data:=data&%00000001;
+	data:=data<<6;
+	PSGLastState[reg]:=PSGLastState[reg]&%10111111;
+	data:=PSGLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure SetR(chn:byte, data:byte);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	reg:=reg+2;
+	data:=data&%00000001;
+	data:=data<<7;
+	PSGLastState[reg]:=PSGLastState[reg]&%01111111;
+	data:=PSGLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+	
+procedure SetWF(chn:byte, data:byte);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	reg:=reg+3;
+	data:=data&%00000011;
+	data:=data<<6;
+	PSGLastState[reg]:=PSGLastState[reg]&%00111111;
+	data:=PSGLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure SetPW(chn:byte, data:byte);
+var reg:byte;
+	begin
+	reg:=chn&%00001111;
+	reg:=reg<<2;
+	reg:=reg+3;
+	data:=data&%00111111;
+	PSGLastState[reg]:=PSGLastState[reg]&%11000000;
+	data:=PSGLastState[reg] | data;
+	SetReg(reg,data);
+	end;
+
+procedure getFreq(octave,note:byte);
+var i:byte;
+	begin
+	i:=octave*12+note;
+	PSGNote:=PSGNoteTable[i];
+	end;
+
+procedure SetNote(chn,octave,note:byte);
+	begin
+	getFreq(octave,note);
+	SetFreq(chn,PSGNote);
+	end;
+	
 end.
