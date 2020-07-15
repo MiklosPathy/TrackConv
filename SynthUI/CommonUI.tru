@@ -1,0 +1,25 @@
+Unit CommonUI;
+
+@use "SCF"
+@use "Label"
+@use "Slider"
+
+var  
+	const Vertical : byte = 0;
+	const Horizontal : byte = 1;
+
+procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
+	begin
+	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
+	Label::Create(slID,Xpos+4,Ypos,Color);
+	Slider::Create(slID,Xpos+7,Ypos,Length_,Color,Max_,Horizontal,slID);
+	end;
+
+procedure CreateStdVerticalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
+	begin
+	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
+	Label::Create(slID,Xpos,Ypos+Length_+3,Color);
+	Slider::Create(slID,Xpos,Ypos+2,Length_,Color,Max_,Vertical,slID);
+	end;
+
+end.

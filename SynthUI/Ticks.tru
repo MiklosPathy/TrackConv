@@ -1,0 +1,49 @@
+Unit Ticks;
+var
+	ti0 : byte absolute $00A0;
+	ti1 : byte absolute $00A1;
+	ti2 : byte absolute $00A2;
+	ti : integer absolute $00A0;		
+	dp : pointer;
+	lastti : integer;
+	lastti0 : byte;
+	lastti1 : byte;
+	lastti2 : byte;
+ 
+procedure GetTI();
+	begin
+	asm("
+		jsr $FFDE
+		sta Ticks_ti0
+		stx Ticks_ti1
+		sty Ticks_ti2
+	");
+	end;
+
+procedure WaitTicks(ticks:byte);
+	var 
+		targetticks : integer;
+	begin
+	targetticks:=lastti+ticks;
+	GetTI();
+	while (targetticks>ti) do 
+		begin
+		GetTI();
+		end;
+	lastti:=ti;
+	end;
+
+procedure TickedByte();
+var result:byte;
+	begin
+	GetTI();
+	if ti0<>lastti0 then 
+		begin
+		result:=1;
+		lastti0:=ti0;		
+		end
+	else result:=0;
+	Returnvalue(result);
+	end;
+
+end.

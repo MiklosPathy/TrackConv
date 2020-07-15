@@ -44,7 +44,7 @@ var reg:byte;
 	SetReg(reg,data);
 	end;
 	
-procedure SetL(chn:byte, data:byte);
+procedure SetR(chn:byte, data:byte);
 var reg:byte;
 	begin
 	reg:=chn&%00001111;
@@ -57,7 +57,7 @@ var reg:byte;
 	SetReg(reg,data);
 	end;
 
-procedure SetR(chn:byte, data:byte);
+procedure SetL(chn:byte, data:byte);
 var reg:byte;
 	begin
 	reg:=chn&%00001111;

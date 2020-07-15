@@ -10,6 +10,7 @@ program SynthUI_YM2151;
 @use "Button"
 @use "CheckBox"
 @use "Conn"
+@use "CommonUI"
 
 var
 	const sDT1 : byte = 0;
@@ -40,9 +41,6 @@ var
 	
 	const cHOLDKEY :byte = 50;
 
-
-	const Vertical : byte = 0;
-	const Horizontal : byte = 1;
 
 	transpose:byte=0;
 	holdkey:byte=0;
@@ -365,20 +363,6 @@ procedure handlemouse();
 		end;
 	end;
 
-procedure CreateStdHorizontalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
-	begin
-	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
-	Label::Create(slID,Xpos+4,Ypos,Color);
-	Slider::Create(slID,Xpos+7,Ypos,Length_,Color,Max_,Horizontal,slID);
-	end;
-
-procedure CreateStdVerticalSlider(slID,Xpos,Ypos,Length_,Max_,Color:byte;Caption:pointer);
-	begin
-	SCF::TextAtPos(Xpos,Ypos,Caption,Color);	
-	Label::Create(slID,Xpos,Ypos+Length_+3,Color);
-	Slider::Create(slID,Xpos,Ypos+2,Length_,Color,Max_,Vertical,slID);
-	end;
-
 procedure createOPBlock(op,Xpos,Ypos:byte);
 var opmult,color:byte;
 	begin
@@ -390,28 +374,28 @@ var opmult,color:byte;
 	inc(Ypos);
 
 	inc(Ypos);
-	CreateStdHorizontalSlider(sAR+opmult,Xpos,Ypos,10,31,color,"AR");
+	CommonUI::CreateStdHorizontalSlider(sAR+opmult,Xpos,Ypos,10,31,color,"AR");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sD1R+opmult,Xpos,Ypos,10,31,color,"D1R");
+	CommonUI::CreateStdHorizontalSlider(sD1R+opmult,Xpos,Ypos,10,31,color,"D1R");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sD2R+opmult,Xpos,Ypos,10,31,color,"D2R");
+	CommonUI::CreateStdHorizontalSlider(sD2R+opmult,Xpos,Ypos,10,31,color,"D2R");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sD1L+opmult,Xpos,Ypos,10,15,color,"D1L");
+	CommonUI::CreateStdHorizontalSlider(sD1L+opmult,Xpos,Ypos,10,15,color,"D1L");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sRR+opmult,Xpos,Ypos,10,15,color,"RR");
+	CommonUI::CreateStdHorizontalSlider(sRR+opmult,Xpos,Ypos,10,15,color,"RR");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
+	CommonUI::CreateStdHorizontalSlider(sTL+opmult,Xpos,Ypos,32,127,color,"TL");
 
 	color:=1;
 	Ypos:=Ypos-5;
 	Xpos:=Xpos+22;
-	CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
+	CommonUI::CreateStdHorizontalSlider(sMUL+opmult,Xpos,Ypos,10,15,color,"MUL");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
+	CommonUI::CreateStdHorizontalSlider(sDT1+opmult,Xpos,Ypos,10,7,color,"DT1");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
+	CommonUI::CreateStdHorizontalSlider(sDT2+opmult,Xpos,Ypos,10,3,color,"DT2");
 	inc(Ypos);
-	CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
+	CommonUI::CreateStdHorizontalSlider(sKS+opmult,Xpos,Ypos,10,3,color,"KS");
 	inc(Ypos);
 	SCF::TextAtPos(Xpos,Ypos,"AMSEN",color);
 	CheckBox::Create(cAMSEN+opmult,Xpos+7,Ypos,3,1,5,2);
@@ -433,8 +417,8 @@ var Ypos,color:byte;
 	
 	color:=1;
 
-	CreateStdVerticalSlider(sFB,44,3,8,7,color,"FB");
-	CreateStdVerticalSlider(sCON,48,3,8,7,color,"CON");
+	CommonUI::CreateStdVerticalSlider(sFB,44,3,8,7,color,"FB");
+	CommonUI::CreateStdVerticalSlider(sCON,48,3,8,7,color,"CON");
 	
 	Conn::Xpos:=52;
 	Conn::Ypos:=5;
@@ -448,11 +432,11 @@ var Ypos,color:byte;
 	CheckBox::Create(cL,50,Ypos,3,1,5,2);
 	
 	color:=15;
-	CreateStdVerticalSlider(sPMS,50,25,8,7,color,"PMS");
-	CreateStdVerticalSlider(sAMS,55,25,8,3,color,"AMS");
-	CreateStdVerticalSlider(sW,60,25,8,3,color,"W");	
-	CreateStdVerticalSlider(sLFRQ,65,3,47,$FF,color,"LFRQ");
-	CreateStdVerticalSlider(sPMDAMD,70,3,47,$FF,color,"PMDAMD");	
+	CommonUI::CreateStdVerticalSlider(sPMS,50,25,8,7,color,"PMS");
+	CommonUI::CreateStdVerticalSlider(sAMS,55,25,8,3,color,"AMS");
+	CommonUI::CreateStdVerticalSlider(sW,60,25,8,3,color,"W");	
+	CommonUI::CreateStdVerticalSlider(sLFRQ,65,3,47,$FF,color,"LFRQ");
+	CommonUI::CreateStdVerticalSlider(sPMDAMD,70,3,47,$FF,color,"PMDAMD");	
 
 	Ypos:=59;
 	color:=7;

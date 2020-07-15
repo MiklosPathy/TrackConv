@@ -9,11 +9,121 @@ program SynthUI_PSG;
 @use "Slider"
 @use "Button"
 @use "CheckBox"
+@use "Ticks"
+@use "CommonUI"
 
 var 
 
+	const sDT	:byte = 0;
+	const sVOL	:byte = 1;
+	const sWF	:byte = 2;
+	const sPW	:byte = 3;
+
+	const cR    :byte = 0;
+	const cL    :byte = 1;
+
+	const sTRANSPOSE : byte = 50;
+	const cHOLDKEY :byte = 50;
+
+	const Vertical : byte = 0;
+	const Horizontal : byte = 1;
+
 	transpose:byte=3;
+	holdkey:byte=0;
 	currentchanel:byte=0;
+	
+	tPSGChnStat = record
+		DT,VOL,WF,PW,R,L:byte;
+	end;
+	PSGChns:array[16] of tPSGChnStat;
+
+
+procedure setDT(chn,value:byte);
+	begin
+	PSGChns[chn].DT:=value;
+	Slider::setValue(sDT+(chn*4),value);
+	PSG::SetNote(chn,Input::octave+transpose,Input::note+PSGChns[chn].DT);
+	end;
+	
+procedure setVOL(chn,value:byte);
+	begin
+	PSGChns[chn].VOL:=value;
+	Slider::setValue(sVOL+(chn*4),value);
+	PSG::SetVol(chn,value);
+	end;
+
+procedure setWF(chn,value:byte);
+	begin
+	PSGChns[chn].WF:=value;
+	Slider::setValue(sWF+(chn*4),value);
+	PSG::SetWF(chn,value);
+	end;
+	
+procedure setPW(chn,value:byte);
+	begin
+	PSGChns[chn].PW:=value;
+	Slider::setValue(sPW+(chn*4),value);
+	PSG::SetPW(chn,value);
+	end;
+
+procedure setR(chn,value:byte);
+	begin
+	PSGChns[chn].R:=value;
+	CheckBox::setValue(cR+(chn*4),value);
+	PSG::SetR(chn,value);
+	end;
+
+procedure setL(chn,value:byte);
+	begin
+	PSGChns[chn].L:=value;
+	CheckBox::setValue(cL+(chn*4),value);
+	PSG::SetL(chn,value);
+	end;
+
+
+
+
+
+procedure setHOLDKEY(value:byte);
+	begin
+	CheckBox::setValue(cHOLDKEY,value);
+	holdkey:=value;
+	end;
+
+procedure setTRANSPOSE(value:byte);
+	begin
+	Slider::setValue(sTRANSPOSE,value);
+	transpose:=value;
+	end;
+
+
+
+
+
+
+procedure handlesliderchange();
+	begin
+	//SCF::DrawBinByte(40,6,clickedSlider,5);
+	
+		case Slider::clickedSlider of
+			sDT:		setDT(0,Slider::getValue(sDT));
+			sVOL:		setVOL(0,Slider::getValue(sVOL));
+			sWF:		setWF(0,Slider::getValue(sWF));
+			sPW:		setPW(0,Slider::getValue(sPW));
+			sTRANSPOSE:	setTRANSPOSE(Slider::getValue(sTRANSPOSE));
+			end;
+
+	end;
+
+procedure handlecheckboxchange();
+	begin
+	case CheckBox::clickedcheckbox of
+		cL:		 	setL(0,CheckBox::getValue(cL));
+		cR:		 	setR(0,CheckBox::getValue(cR));
+		cHOLDKEY:	setHOLDKEY(CheckBox::getValue(cHOLDKEY));
+	end;
+	CheckBox::clickedcheckbox:=$FF;
+	end;
 
 
 procedure handlemouse();
@@ -34,7 +144,7 @@ procedure handlemouse();
 	if (X16Mouse::Buttons=1) then 
 		begin
 		Slider::HandleClick();
-		//handlesliderchange();
+		handlesliderchange();
 		if X16Mouse::mouseClicked=0 then
 			begin
 			X16Mouse::mouseXchposAtClick:=X16Mouse::Xch;
@@ -48,17 +158,63 @@ procedure handlemouse();
 			begin
 			//handlebuttonclick();
 			CheckBox::HandleClick();
-			//handlecheckboxchange();
+			handlecheckboxchange();
 			X16Mouse::mouseClicked:=0;
 			Slider::clickedSlider:=$FF;
 			end;
 		end;
 	end;
 
-procedure createUI();
-begin
-end;
+procedure createPSGChnBlock(chn,Xpos,Ypos:byte);
+var chnmult,color:byte;
+	begin
+	chnmult:=chn*4;	
+	color:=1;
+	
+	SCF::DrawHexByte(Xpos,Ypos,chn,color);
 
+	SCF::TextAtPos(Xpos+3,Ypos,"LEFT",color);
+	CheckBox::Create(cR+chnmult,Xpos+8,Ypos,3,1,5,2);
+
+	SCF::TextAtPos(Xpos+13,Ypos,"RIGHT",color);
+	CheckBox::Create(cL+chnmult,Xpos+19,Ypos,3,1,5,2);	
+
+	CommonUI::CreateStdHorizontalSlider(sVOL+chnmult,Xpos,Ypos+3,32,63,color,"VOL");
+	CommonUI::CreateStdHorizontalSlider(sWF+chnmult,Xpos,Ypos+4,3,3,color,"WF");
+	CommonUI::CreateStdHorizontalSlider(sPW+chnmult,Xpos+15,Ypos+4,16,63,color,"PW");
+
+	color:=7;	
+	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos+2,32,36,color,"DT");
+	end;
+
+procedure createUI();
+var Ypos,color:byte;
+	begin
+	SCF::TextAtPos(0,0,"PSG SYNTH UI    V0.1",1);
+	
+	color:=1;
+
+	Ypos:=59;
+	color:=7;
+	SCF::TextAtPos(22,Ypos,"HOLDKEY",color);
+	CheckBox::Create(cHOLDKEY,30,Ypos,3,1,5,2);
+	
+	SCF::TextAtPos(0,59,"TRANSPOSE",color);
+	Label::Create(sTRANSPOSE,10,59,color);
+	Slider::Create(sTRANSPOSE,13,59,6,color,7,Horizontal,sTRANSPOSE);	
+	
+	Ypos:=5;
+	createPSGChnBlock(0,1,Ypos);
+	end;
+
+procedure StepSoftSynth();
+	begin
+	if PSGChns[currentchanel].VOL<>0 then setVOL(currentchanel,PSGChns[currentchanel].VOL-1);
+	end;
+
+procedure dumpRegs();
+	begin
+	end;
 
 begin
 PSG::Reset();
@@ -68,30 +224,41 @@ SCF::InitScreen(0);
 Widget::ClearMap();
 createUI();
 
+setDT(0,0);
+setVOL(0,63);
+setWF(0,0);
+setPW(0,31);
+setL(0,1);
+setR(0,1);
+
+setHOLDKEY(0);
+setTRANSPOSE(3);
+
+
 Input::key:=$0;	
 while (Input::key<>3) do
 	begin
 	Input::getin();
-	//if (Input::key=0 and Input::lastkey<>0) then PSG::SetVol(currentchanel,0);
-	if (Input::key=$20) then PSG::SetVol(currentchanel,0);
+	if (holdkey=0) then
+		if (Input::key=0 and Input::lastkey<>0) then begin /*PSG::SetVol(currentchanel,0);volume:=0;*/end;
+
 	if (Input::key<>0) then 
 		begin
+		if (Input::key=$0D) then dumpRegs();
+		if (holdkey=1 and Input::key=$20) then setVOL(currentchanel,0);
+		
 		SCF::DrawHexByte(75, 55, Input::key, 5);
 		Input::key2note();
 		if(Input::note<>$FF) then
 			begin
-			PSG::SetNote(currentchanel,Input::octave+transpose,Input::note); //Transpose
-			PSG::SetVol(currentchanel,63);
-			PSG::SetWF(currentchanel,1);
-			PSG::SetL(currentchanel,1);
-			PSG::SetR(currentchanel,1);
+			PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
+			setVOL(currentchanel,63);
 			end;
 		end;
 	Input::lastkey:=Input::key;
 
 	handlemouse();
-
-	SCF::DrawHexByte(10,59,transpose,7);
+	if Ticks::TickedByte()<>0 then StepSoftSynth();
 	end;
 
 X16Mouse::CursorOff();
