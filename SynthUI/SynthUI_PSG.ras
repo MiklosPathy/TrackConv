@@ -1,0 +1,18 @@
+program SynthUI_PSG;
+
+@use "PSG"
+@use "SCF"
+@use "X16Mouse"
+@use "Input"
+@use "Widget"
+@use "Label"
+@use "Slider"
+@use "Button"
+@use "CheckBox"
+
+var  
+   i: byte; 
+
+begin
+
+end.

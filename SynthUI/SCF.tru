@@ -7,6 +7,7 @@ var
 procedure DrawBinByte(X, Y, Number:byte, Col: byte);
 	begin
 	X := X * 2;
+	VERA_ADDR_HI := $20;
 	VERA_ADDR_MID := Y;
 	VERA_ADDR_LO := X;
 
@@ -33,6 +34,7 @@ procedure DrawBinByte(X, Y, Number:byte, Col: byte);
 procedure DrawHexByte(X, Y, Number:byte, Col: byte);
 	begin
 	X := X * 2;
+	VERA_ADDR_HI := $20;
 	VERA_ADDR_MID := Y;
 	VERA_ADDR_LO := X;
 
@@ -47,6 +49,7 @@ procedure DrawHexByte(X, Y, Number:byte, Col: byte);
 procedure DrawHexInt(X, Y, Number:integer, Col: byte);
 	begin
 	X := X * 2;
+	VERA_ADDR_HI := $20;
 	VERA_ADDR_MID := Y;
 	VERA_ADDR_LO := X;
 
@@ -65,6 +68,7 @@ procedure DrawHexInt(X, Y, Number:integer, Col: byte);
 procedure DrawChar(X,Y,char,color:byte);
 	begin
 	X := X * 2;
+	VERA_ADDR_HI := $20;
 	VERA_ADDR_MID := Y;
 	VERA_ADDR_LO := X;
 	VERA_DATA1 := char;
@@ -100,7 +104,6 @@ procedure DrawBox(posX,posY,Width,Height,color:byte);
 procedure InitScreen(color:byte);
 	begin
 	VERA_CTRL := 0;
-	VERA_ADDR_HI := $20;
 	DrawBox(0,0,80,60,color);
 	end;
 

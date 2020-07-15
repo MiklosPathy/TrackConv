@@ -1,0 +1,17 @@
+Unit PSG;
+var  
+    PSGLastState: array[64] of byte;
+
+procedure SetReg(reg,data :byte);
+	begin
+	reg:=reg & %00111111;
+	PSGLastState[reg]:=data;
+	//$1F9C0 - $1F9FF 	PSG registers
+	reg:=reg | %11000000; //+$C0;
+	VERA_ADDR_HI := $01;
+	VERA_ADDR_MID := $F9;
+	VERA_ADDR_LO := reg;
+	VERA_DATA1 := data;
+	end;
+
+end.
