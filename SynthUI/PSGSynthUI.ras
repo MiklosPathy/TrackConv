@@ -1,4 +1,4 @@
-program SynthUI_PSG;
+program PSGSynthUI;
 
 @use "PSG"
 @use "SCF"
@@ -173,18 +173,19 @@ var chnmult,color:byte;
 	
 	SCF::DrawHexByte(Xpos,Ypos,chn,color);
 
-	SCF::TextAtPos(Xpos+3,Ypos,"LEFT",color);
-	CheckBox::Create(cR+chnmult,Xpos+8,Ypos,3,1,5,2);
+	CommonUI::CreateStdHorizontalSlider(sVOL+chnmult,Xpos,Ypos+3,16,63,color,"VOL");
+	CommonUI::CreateStdHorizontalSlider(sPW+chnmult,Xpos,Ypos+4,16,63,color,"PW");
+	CommonUI::CreateStdHorizontalSlider(sWF+chnmult,Xpos,Ypos+5,3,3,color,"WF");
 
-	SCF::TextAtPos(Xpos+13,Ypos,"RIGHT",color);
-	CheckBox::Create(cL+chnmult,Xpos+19,Ypos,3,1,5,2);	
+	SCF::TextAtPos(Xpos+11,Ypos+5,"L",color);
+	CheckBox::Create(cL+chnmult,Xpos+13,Ypos+5,3,1,5,2);
 
-	CommonUI::CreateStdHorizontalSlider(sVOL+chnmult,Xpos,Ypos+3,32,63,color,"VOL");
-	CommonUI::CreateStdHorizontalSlider(sWF+chnmult,Xpos,Ypos+4,3,3,color,"WF");
-	CommonUI::CreateStdHorizontalSlider(sPW+chnmult,Xpos+15,Ypos+4,16,63,color,"PW");
+	SCF::TextAtPos(Xpos+18,Ypos+5,"R",color);
+	CheckBox::Create(cR+chnmult,Xpos+20,Ypos+5,3,1,5,2);	
 
+	
 	color:=7;	
-	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos+2,32,36,color,"DT");
+	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos+2,16,63,color,"DT");
 	end;
 
 procedure createUI();

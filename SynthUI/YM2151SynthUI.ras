@@ -1,4 +1,4 @@
-program SynthUI_YM2151;
+program YM2151SynthUI;
 
 @use "SCF"
 @use "YM2151"
