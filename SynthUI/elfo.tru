@@ -1,0 +1,17 @@
+Unit ELFO;
+//Envelope / Low Frequency Oscillator
+
+var  
+   	@define ELFOCount 4
+		
+	tELFO = record 
+		UPDURATION,MAXLEVEL,MAXDURATION,DOWNDURATION,MINLEVEL,MINDURATION : byte;
+	end;	
+
+	ELFOz:array[@ELFOCount] of ELFO::tELFO;
+
+procedure myProcedure();
+begin
+end;
+
+end.

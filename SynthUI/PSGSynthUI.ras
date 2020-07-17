@@ -11,6 +11,7 @@ program PSGSynthUI;
 @use "CheckBox"
 @use "Ticks"
 @use "CommonUI"
+@use "ELFO"
 
 var 
 
@@ -19,8 +20,20 @@ var
 	const sWF	:byte = 2;
 	const sPW	:byte = 3;
 
+	const sUPDURATION	:byte = 4;
+	const sMAXLEVEL		:byte = 5;
+	const sMAXDURATION	:byte = 6;
+	const sDOWNDURATION	:byte = 7;
+	const sMINLEVEL		:byte = 8;
+	const sMINDURATION	:byte = 9;
+
+
 	const cR    :byte = 0;
 	const cL    :byte = 1;
+
+	const cREPEAT		:byte = 3;
+	const cKEYSYNC		:byte = 4;
+
 
 	const sTRANSPOSE : byte = 50;
 	const cHOLDKEY :byte = 50;
@@ -168,7 +181,7 @@ procedure handlemouse();
 procedure createPSGChnBlock(chn,Xpos,Ypos:byte);
 var chnmult,color:byte;
 	begin
-	chnmult:=chn*4;	
+	chnmult:=chn*10;	
 	color:=1;
 	
 	SCF::DrawHexByte(Xpos,Ypos,chn,color);
@@ -186,6 +199,29 @@ var chnmult,color:byte;
 	
 	color:=7;	
 	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos+2,16,63,color,"DT");
+	end;
+	
+procedure createELFOBlock(chn,Xpos,Ypos:byte);
+var chnmult,color:byte;
+	begin
+	chnmult:=chn*10;
+	color:=7;
+	
+	SCF::DrawHexByte(Xpos,Ypos,chn,color);
+
+	CommonUI::CreateStdHorizontalSlider(sMAXLEVEL+chnmult,Xpos,Ypos+3,16,63,color,"MXL");
+	CommonUI::CreateStdHorizontalSlider(sMINLEVEL+chnmult,Xpos,Ypos+4,16,63,color,"MNL");
+
+	CommonUI::CreateStdHorizontalSlider(sUPDURATION+chnmult,Xpos,Ypos+5,16,63,color,"UD");
+	CommonUI::CreateStdHorizontalSlider(sMAXDURATION+chnmult,Xpos,Ypos+6,16,63,color,"MXD");
+	CommonUI::CreateStdHorizontalSlider(sDOWNDURATION+chnmult,Xpos,Ypos+7,16,63,color,"DD");
+	CommonUI::CreateStdHorizontalSlider(sMINDURATION+chnmult,Xpos,Ypos+8,16,63,color,"MND");
+
+	SCF::TextAtPos(Xpos,Ypos+9,"REP",color);
+	CheckBox::Create(cREPEAT+chnmult,Xpos+4,Ypos+9,3,1,5,2);
+
+	SCF::TextAtPos(Xpos,Ypos+10,"KS",color);
+	CheckBox::Create(cKEYSYNC+chnmult,Xpos+4,Ypos+10,3,1,5,2);	
 	end;
 
 procedure createUI();
@@ -206,6 +242,8 @@ var Ypos,color:byte;
 	
 	Ypos:=5;
 	createPSGChnBlock(0,1,Ypos);
+
+	createELFOBlock(0,40,Ypos);
 	end;
 
 procedure StepSoftSynth();
