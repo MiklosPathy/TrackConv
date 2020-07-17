@@ -13,7 +13,7 @@ var
 	const Horizontal : byte = 1;
 
 	tSlider = record
-		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel, PrevValue : byte;	
+		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel, PrevValue, PrevSlideCharPos : byte;	
 	end;
 
 	sliders:array[@SliderMaxCount] of Slider::tSlider;
@@ -34,36 +34,6 @@ procedure getSlidePositionFine(sllen,slval,slmax:byte);
 	returnvalue(slres);
 	end;
 
-procedure drawSlideHorizontalFine(slID:byte);
-var slres,posx,chartype,char:byte;
-	begin
-	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
-	posx:=(slres>>2)+sliders[slID].posX;
-	chartype:=slres&%00000011;
-	case chartype of
-		0: char:=$74;
-		1: char:=$47;
-		2: char:=$48;
-		3: char:=$6A;
-		end;
-	SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);	
-	end;
-
-procedure drawSlideVerticalFine(slID:byte);
-var slres,posy,chartype,char:byte;
-	begin
-	slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
-	posy:=(slres>>2)+sliders[slID].posY;
-	chartype:=slres&%00000011;
-	case chartype of
-		0: char:=$77;
-		1: char:=$44;
-		2: char:=$46;
-		3: char:=$6F;
-		end;
-	SCF::DrawChar(sliders[slID].posX,posy,char,sliders[slID].Color);
-	end;
-
 procedure getSliderValueFine(mousepos:integer;mousechpos,slpos,sllen,slmax:byte);
 var mousecorrected,sliderposcorrected,temp:integer;
 	endcharpos,slres:byte;
@@ -79,25 +49,47 @@ var mousecorrected,sliderposcorrected,temp:integer;
 	returnvalue(slres);
 	end;
 
-procedure Draw(slid:byte);
-	var i:byte;
+procedure DrawSlide(slID:byte);
+var slres,posx,posy,chartype,char:byte;
 	begin
-	case sliders[slid].Mode of
-		Vertical:
-			begin	
-			for i:=sliders[slid].posY to sliders[slid].posY+sliders[slid].Length_ do
-				SCF::DrawChar(sliders[slid].posX,i,$5D,sliders[slid].Color);
-			drawSlideVerticalFine(slid)
-			end;
-		Horizontal:
+	if sliders[slID].Mode=Horizontal then
+		begin
+		slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+		posx:=(slres>>2)+sliders[slID].posX;
+		if posx<>sliders[slID].PrevSlideCharPos then 
 			begin
-			for i:=sliders[slid].posX to sliders[slid].posX+sliders[slid].Length_ do
-				SCF::DrawChar(i,sliders[slid].posY,$43,sliders[slid].Color);
-			drawSlideHorizontalFine(slid);
+			SCF::DrawChar(sliders[slID].PrevSlideCharPos,sliders[slID].posY,$43,sliders[slID].Color);
+			sliders[slID].PrevSlideCharPos:=posx;
+			end;	
+		chartype:=slres&%00000011;
+		case chartype of
+			0: char:=$74;
+			1: char:=$47;
+			2: char:=$48;
+			3: char:=$6A;
 			end;
+		SCF::DrawChar(posx,sliders[slID].posY,char,sliders[slID].Color);		
+		end
+	else
+		begin
+		slres:=getSlidePositionFine(sliders[slID].Length_<<2,sliders[slID].Value,sliders[slID].Max_);
+		posy:=(slres>>2)+sliders[slID].posY;
+		if posy<>sliders[slID].PrevSlideCharPos then 
+			begin
+			SCF::DrawChar(sliders[slID].posX,sliders[slID].PrevSlideCharPos,$5D,sliders[slID].Color);
+			sliders[slID].PrevSlideCharPos:=posy;
+			end;
+		chartype:=slres&%00000011;
+		case chartype of
+			0: char:=$77;
+			1: char:=$44;
+			2: char:=$46;
+			3: char:=$6F;
+			end;
+		SCF::DrawChar(sliders[slID].posX,posy,char,sliders[slID].Color);
 		end;
-	if (sliders[slid].AttachedLabel<>$FF) then Label::setValue(sliders[slid].AttachedLabel,sliders[slid].Value);
 
+	if (sliders[slID].AttachedLabel<>$FF) then Label::setValue(sliders[slID].AttachedLabel,sliders[slID].Value);
 	end;
 
 procedure getValue(slID:byte);
@@ -112,7 +104,7 @@ procedure setValue(slID,value:byte);
 		begin
 		sliders[slID].PrevValue:=sliders[slID].Value;
 		sliders[slID].Value:=value;
-		Draw(slID);
+		DrawSlide(slID);
 		end;
 	end;
 
@@ -159,7 +151,7 @@ procedure HandleClick();
 
 
 procedure Create(slID,posX,posY,Length_,Color,Max_,Mode,AttachedLabelID:byte);
-var WID:byte;
+var WID,i:byte;
 	begin
 	sliders[slID].posX:=posX;
 	sliders[slID].posY:=posY;
@@ -170,13 +162,22 @@ var WID:byte;
 	sliders[slID].Mode:=Mode;	
 	sliders[slID].AttachedLabel:=AttachedLabelID;
 
-	Draw(slID);
-
 	WID:=slID|%01000000;
 	case Mode of
-		Horizontal:Widget::PlaceOnMap(posX,posY,Length_,1,WID);
-		Vertical:Widget::PlaceOnMap(posX,posY,1,Length_,WID);
+		Horizontal:
+			begin
+			Widget::PlaceOnMap(posX,posY,Length_,1,WID);
+			sliders[slID].PrevSlideCharPos:=posX;
+			for i:=posX to posX+Length_ do SCF::DrawChar(i,posY,$43,Color);
+			end;
+		Vertical:
+			begin
+			Widget::PlaceOnMap(posX,posY,1,Length_,WID);
+			sliders[slID].PrevSlideCharPos:=posY;
+			for i:=posY to posY+Length_ do SCF::DrawChar(posX,i,$5D,Color);
+			end;
 		end;
 
+	DrawSlide(slID);
 	end;
 end.
