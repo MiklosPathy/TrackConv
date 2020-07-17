@@ -220,15 +220,15 @@ procedure setTRANSPOSE(value:byte);
 procedure dumpRegs();
 var y,x:byte;
 	begin
-	for x:=0 to 15 do
+	fori x:=0 to 15 do
 		begin
 		SCF::DrawHexByte(x*3+4, 42, x, 3);		
 		end;
 		
-	for y:=0 to 15 do
+	fori y:=0 to 15 do
 		begin
 		SCF::DrawHexByte(0, y+43, y*16, 3);
-		for x:=0 to 15 do
+		fori x:=0 to 15 do
 			begin
 			SCF::DrawHexByte(x*3+4, y+43, YM2151::YMLastState[(y*16)+x], 2);
 			end;
