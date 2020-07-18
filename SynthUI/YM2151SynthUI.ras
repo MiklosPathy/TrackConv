@@ -508,8 +508,6 @@ while (Input::key<>3) do
 	Input::lastkey:=Input::key;
 
 	handlemouse();
-
-	//SCF::DrawHexByte(10,59,transpose,7);
 	end;
 
 X16Mouse::CursorOff();

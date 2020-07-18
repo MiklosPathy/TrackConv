@@ -13,7 +13,7 @@ var
 	const Horizontal : byte = 1;
 
 	tSlider = record
-		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel, PrevValue, PrevSlideCharPos : byte;	
+		posX, posY, Length_, Color, Value, Max_, Mode, AttachedLabel, PrevValue, PrevSlideCharPos, NeedToSetValueLater, SetValueLater : byte;	
 	end;
 
 	sliders:array[@SliderMaxCount] of Slider::tSlider;
@@ -108,6 +108,30 @@ procedure setValue(slID,value:byte);
 		end;
 	end;
 
+procedure setValueLater(slID,value:byte);
+	begin
+	sliders[slID].NeedToSetValueLater:=1;
+	sliders[slID].SetValueLater:=value;
+	end;
+	
+procedure processSetLaterValues();
+var slID:byte;
+	begin
+	for slID:=0 to @SliderMaxCount do 
+		if sliders[slID].NeedToSetValueLater=1 then
+		begin
+		sliders[slID].NeedToSetValueLater:=0;
+		setValue(slID,sliders[slID].SetValueLater)
+		end;
+
+	end;
+
+procedure resetAllSetLaterValues();
+var slID:byte;
+	begin
+	for slID:=0 to @SliderMaxCount do sliders[slID].NeedToSetValueLater:=0;
+	end;
+
 procedure calcSliderValue(slID:byte);
 var temp:byte;
 	begin
@@ -161,6 +185,7 @@ var WID,i:byte;
 	sliders[slID].Max_:=Max_;
 	sliders[slID].Mode:=Mode;	
 	sliders[slID].AttachedLabel:=AttachedLabelID;
+	sliders[slID].NeedToSetValueLater:=0;
 
 	WID:=slID|%01000000;
 	case Mode of
