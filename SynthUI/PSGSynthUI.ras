@@ -14,6 +14,7 @@ program PSGSynthUI;
 @use "ELFO"
 
 var 
+   	Default_irq_handler:pointer;
 
 	const sDT	:byte = 0;
 	const sVOL	:byte = 1;
@@ -54,42 +55,42 @@ var
 procedure setDT(chn,value:byte);
 	begin
 	PSGChns[chn].DT:=value;
-	Slider::setValue(sDT+(chn*4),value);
+	Slider::setValueLater(sDT+(chn*10),value);
 	PSG::SetNote(chn,Input::octave+transpose,Input::note+PSGChns[chn].DT);
 	end;
 	
 procedure setVOL(chn,value:byte);
 	begin
 	PSGChns[chn].VOL:=value;
-	Slider::setValue(sVOL+(chn*4),value);
+	Slider::setValueLater(sVOL+(chn*10),value);
 	PSG::SetVol(chn,value);
 	end;
 
 procedure setWF(chn,value:byte);
 	begin
 	PSGChns[chn].WF:=value;
-	Slider::setValue(sWF+(chn*4),value);
+	Slider::setValueLater(sWF+(chn*10),value);
 	PSG::SetWF(chn,value);
 	end;
 	
 procedure setPW(chn,value:byte);
 	begin
 	PSGChns[chn].PW:=value;
-	Slider::setValue(sPW+(chn*4),value);
+	Slider::setValueLater(sPW+(chn*10),value);
 	PSG::SetPW(chn,value);
 	end;
 
 procedure setR(chn,value:byte);
 	begin
 	PSGChns[chn].R:=value;
-	CheckBox::setValue(cR+(chn*4),value);
+	CheckBox::setValue(cR+(chn*10),value);
 	PSG::SetR(chn,value);
 	end;
 
 procedure setL(chn,value:byte);
 	begin
 	PSGChns[chn].L:=value;
-	CheckBox::setValue(cL+(chn*4),value);
+	CheckBox::setValue(cL+(chn*10),value);
 	PSG::SetL(chn,value);
 	end;
 
@@ -246,14 +247,60 @@ var Ypos,color:byte;
 	createELFOBlock(0,40,Ypos);
 	end;
 
-procedure StepSoftSynth();
-	begin
-	if PSGChns[currentchanel].VOL<>0 then setVOL(currentchanel,PSGChns[currentchanel].VOL-1);
-	end;
-
 procedure dumpRegs();
 	begin
 	end;
+
+
+
+
+procedure DoThisInIRQ();
+	begin
+	//if PSGChns[currentchanel].VOL<>0 then setVOL(currentchanel,PSGChns[currentchanel].VOL-1);
+	end;
+
+procedure SetIRQToMyHandler();
+	begin
+	asm("
+    lda $0314
+    sta Default_irq_handler
+    lda $0315
+    sta Default_irq_handler+1
+	sei
+	lda #<custom_irq_handler
+	sta $0314
+	lda #>custom_irq_handler
+	sta $0315
+	cli
+	rts
+
+//Turbo Rascal compiler trick: i want my custom handler compiled, so it is in this block, and then call out to a pascal procedure.
+custom_irq_handler:
+//Handle only VSYNC interrupt, so we run only 60 times per second
+    lda $9F27	
+    and #$01
+    beq irq_done
+    ; Whatever code your program
+    ; wanted to execute...
+	");
+
+	DoThisInIRQ();
+	
+	asm("
+//This is recommended to only have VSYNC interrupt. Or what and how.	
+    lda #$01
+    sta $9F27
+irq_done:
+    ; Return to Kernal handling:
+    jmp (Default_irq_handler)
+
+	");
+	end;
+
+
+
+
+
 
 begin
 PSG::Reset();
@@ -261,6 +308,7 @@ X16Mouse::CursorOn();
 
 SCF::InitScreen(0);
 Widget::ClearMap();
+Slider::resetAllSetLaterValues();
 createUI();
 
 setDT(0,0);
@@ -273,10 +321,13 @@ setR(0,1);
 setHOLDKEY(0);
 setTRANSPOSE(3);
 
+SetIRQToMyHandler();
+
 
 Input::key:=$0;	
 while (Input::key<>3) do
 	begin
+	Slider::processSetLaterValues();
 	Input::getin();
 	if (holdkey=0) then
 		if (Input::key=0 and Input::lastkey<>0) then begin /*PSG::SetVol(currentchanel,0);volume:=0;*/end;
@@ -295,9 +346,7 @@ while (Input::key<>3) do
 			end;
 		end;
 	Input::lastkey:=Input::key;
-
 	handlemouse();
-	if Ticks::TickedByte()<>0 then StepSoftSynth();
 	end;
 
 X16Mouse::CursorOff();

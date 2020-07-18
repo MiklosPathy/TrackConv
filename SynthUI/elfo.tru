@@ -10,6 +10,10 @@ var
 
 	ELFOz:array[@ELFOCount] of ELFO::tELFO;
 
+
+
+
+
 procedure myProcedure();
 begin
 end;
