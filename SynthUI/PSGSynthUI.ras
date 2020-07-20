@@ -13,7 +13,13 @@ program PSGSynthUI;
 @use "CommonUI"
 @use "ELFO"
 
+
+
 var 
+	const CS	:byte = 10;
+	const CS2	:byte = CS*2;
+	const CS3	:byte = CS*3;
+		
    	Default_irq_handler:pointer;
 
 	const sDT	:byte = 0;
@@ -32,7 +38,7 @@ var
 	const cR    :byte = 0;
 	const cL    :byte = 1;
 
-	const cREPEAT		:byte = 3;
+	const cREPEATE		:byte = 3;
 	const cKEYSYNC		:byte = 4;
 
 
@@ -50,47 +56,49 @@ var
 		DT,VOL,WF,PW,R,L:byte;
 	end;
 	PSGChns:array[16] of tPSGChnStat;
+	
+	sliderupdatecount:byte=0;
 
 
 procedure setDT(chn,value:byte);
 	begin
 	PSGChns[chn].DT:=value;
-	Slider::setValueLater(sDT+(chn*10),value);
+	Slider::setValueLater(sDT+(chn*CS),value);
 	PSG::SetNote(chn,Input::octave+transpose,Input::note+PSGChns[chn].DT);
 	end;
 	
 procedure setVOL(chn,value:byte);
 	begin
 	PSGChns[chn].VOL:=value;
-	Slider::setValueLater(sVOL+(chn*10),value);
+	Slider::setValueLater(sVOL+(chn*CS),value);
 	PSG::SetVol(chn,value);
 	end;
 
 procedure setWF(chn,value:byte);
 	begin
 	PSGChns[chn].WF:=value;
-	Slider::setValueLater(sWF+(chn*10),value);
+	Slider::setValueLater(sWF+(chn*CS),value);
 	PSG::SetWF(chn,value);
 	end;
 	
 procedure setPW(chn,value:byte);
 	begin
 	PSGChns[chn].PW:=value;
-	Slider::setValueLater(sPW+(chn*10),value);
+	Slider::setValueLater(sPW+(chn*CS),value);
 	PSG::SetPW(chn,value);
 	end;
 
 procedure setR(chn,value:byte);
 	begin
 	PSGChns[chn].R:=value;
-	CheckBox::setValue(cR+(chn*10),value);
+	CheckBox::setValue(cR+(chn*CS),value);
 	PSG::SetR(chn,value);
 	end;
 
 procedure setL(chn,value:byte);
 	begin
 	PSGChns[chn].L:=value;
-	CheckBox::setValue(cL+(chn*10),value);
+	CheckBox::setValue(cL+(chn*CS),value);
 	PSG::SetL(chn,value);
 	end;
 
@@ -113,6 +121,53 @@ procedure setTRANSPOSE(value:byte);
 
 
 
+procedure setUPDURATION(elfo,value:byte);
+	begin
+	ELFO::setUPDURATION(elfo,value);
+	Slider::setValue(sUPDURATION+(elfo*CS),value);
+	end;
+
+procedure setMAXLEVEL(elfo,value:byte);
+	begin
+	ELFO::setMAXLEVEL(elfo,value);
+	Slider::setValue(sMAXLEVEL+(elfo*CS),value);
+	end;
+
+procedure setMAXDURATION(elfo,value:byte);
+	begin
+	ELFO::setMAXDURATION(elfo,value);
+	Slider::setValue(sMAXDURATION+(elfo*CS),value);
+	end;
+
+procedure setDOWNDURATION(elfo,value:byte);
+	begin
+	ELFO::setDOWNDURATION(elfo,value);
+	Slider::setValue(sDOWNDURATION+(elfo*CS),value);
+	end;
+
+procedure setMINLEVEL(elfo,value:byte);
+	begin
+	ELFO::setMINLEVEL(elfo,value);
+	Slider::setValue(sMINLEVEL+(elfo*CS),value);
+	end;
+
+procedure setMINDURATION(elfo,value:byte);
+	begin
+	ELFO::setMINDURATION(elfo,value);
+	Slider::setValue(sMINDURATION+(elfo*CS),value);
+	end;
+
+procedure setREPEATE(elfo,value:byte);
+	begin
+	ELFO::setREPEATE(elfo,value);
+	CheckBox::setValue(cREPEATE,value);
+	end;
+
+procedure setKEYSYNC(elfo,value:byte);
+	begin
+	ELFO::setKEYSYNC(elfo,value);	
+	CheckBox::setValue(cKEYSYNC,value);
+	end;
 
 
 procedure handlesliderchange();
@@ -121,9 +176,29 @@ procedure handlesliderchange();
 	
 		case Slider::clickedSlider of
 			sDT:		setDT(0,Slider::getValue(sDT));
+			sDT+CS:		setDT(1,Slider::getValue(sDT+CS));
+			sDT+CS2:	setDT(2,Slider::getValue(sDT+CS2));
+			sDT+CS3:	setDT(3,Slider::getValue(sDT+CS3));						
 			sVOL:		setVOL(0,Slider::getValue(sVOL));
+			sVOL+CS:	setVOL(1,Slider::getValue(sVOL+CS));
+			sVOL+CS2:	setVOL(2,Slider::getValue(sVOL+CS2));
+			sVOL+CS3:	setVOL(3,Slider::getValue(sVOL+CS3));									
 			sWF:		setWF(0,Slider::getValue(sWF));
+			sWF+CS:		setWF(1,Slider::getValue(sWF+CS));
+			sWF+CS2:	setWF(2,Slider::getValue(sWF+CS2));
+			sWF+CS3:	setWF(3,Slider::getValue(sWF+CS3));
 			sPW:		setPW(0,Slider::getValue(sPW));
+			sPW+CS:		setPW(1,Slider::getValue(sPW+CS));
+			sPW+CS2:	setPW(2,Slider::getValue(sPW+CS2));
+			sPW+CS3:	setPW(3,Slider::getValue(sPW+CS3));
+			
+			sUPDURATION:	setUPDURATION(0,Slider::getValue(sUPDURATION));
+			sMAXLEVEL:		setMAXLEVEL(0,Slider::getValue(sMAXLEVEL));
+			sMAXDURATION:	setMAXDURATION(0,Slider::getValue(sMAXDURATION));
+			sDOWNDURATION:	setDOWNDURATION(0,Slider::getValue(sDOWNDURATION));
+			sMINLEVEL:		setMINLEVEL(0,Slider::getValue(sMINLEVEL));
+			sMINDURATION:	setMINDURATION(0,Slider::getValue(sMINDURATION));															
+
 			sTRANSPOSE:	setTRANSPOSE(Slider::getValue(sTRANSPOSE));
 			end;
 
@@ -133,7 +208,17 @@ procedure handlecheckboxchange();
 	begin
 	case CheckBox::clickedcheckbox of
 		cL:		 	setL(0,CheckBox::getValue(cL));
+		cL+CS:	 	setL(1,CheckBox::getValue(cL+CS));
+		cL+CS2:	 	setL(2,CheckBox::getValue(cL+CS2));
+		cL+CS3:	 	setL(3,CheckBox::getValue(cL+CS3));
 		cR:		 	setR(0,CheckBox::getValue(cR));
+		cR+CS:	 	setR(1,CheckBox::getValue(cR+CS));
+		cR+CS2:	 	setR(2,CheckBox::getValue(cR+CS2));
+		cR+CS3:	 	setR(3,CheckBox::getValue(cR+CS3));
+		
+		cREPEATE:	setREPEATE(0,CheckBox::getValue(cREPEATE));
+		cKEYSYNC:	setKEYSYNC(0,CheckBox::getValue(cKEYSYNC));		
+
 		cHOLDKEY:	setHOLDKEY(CheckBox::getValue(cHOLDKEY));
 	end;
 	CheckBox::clickedcheckbox:=$FF;
@@ -182,33 +267,41 @@ procedure handlemouse();
 procedure createPSGChnBlock(chn,Xpos,Ypos:byte);
 var chnmult,color:byte;
 	begin
-	chnmult:=chn*10;	
+	chnmult:=chn*CS;	
 	color:=1;
 	
 	SCF::DrawHexByte(Xpos,Ypos,chn,color);
+	Xpos:=Xpos+3;
 
-	CommonUI::CreateStdHorizontalSlider(sVOL+chnmult,Xpos,Ypos+3,16,63,color,"VOL");
-	CommonUI::CreateStdHorizontalSlider(sPW+chnmult,Xpos,Ypos+4,16,63,color,"PW");
-	CommonUI::CreateStdHorizontalSlider(sWF+chnmult,Xpos,Ypos+5,3,3,color,"WF");
+	color:=7;	
+	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos,16,63,color,"DT");
 
-	SCF::TextAtPos(Xpos+11,Ypos+5,"L",color);
-	CheckBox::Create(cL+chnmult,Xpos+13,Ypos+5,3,1,5,2);
+	color:=1;
+	inc(Ypos);
+	CommonUI::CreateStdHorizontalSlider(sVOL+chnmult,Xpos,Ypos,16,63,color,"VOL");
+	inc(Ypos);
+	CommonUI::CreateStdHorizontalSlider(sPW+chnmult,Xpos,Ypos,16,63,color,"PW");
+	inc(Ypos);	
+	CommonUI::CreateStdHorizontalSlider(sWF+chnmult,Xpos,Ypos,3,3,color,"WF");
 
-	SCF::TextAtPos(Xpos+18,Ypos+5,"R",color);
-	CheckBox::Create(cR+chnmult,Xpos+20,Ypos+5,3,1,5,2);	
+	SCF::TextAtPos(Xpos+11,Ypos,"L",color);
+	CheckBox::Create(cL+chnmult,Xpos+13,Ypos,3,1,5,2);
+
+	SCF::TextAtPos(Xpos+18,Ypos,"R",color);
+	CheckBox::Create(cR+chnmult,Xpos+20,Ypos,3,1,5,2);	
 
 	
-	color:=7;	
-	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos+2,16,63,color,"DT");
+
 	end;
 	
 procedure createELFOBlock(chn,Xpos,Ypos:byte);
 var chnmult,color:byte;
 	begin
-	chnmult:=chn*10;
+	chnmult:=chn*CS;
 	color:=7;
 	
 	SCF::DrawHexByte(Xpos,Ypos,chn,color);
+
 
 	CommonUI::CreateStdHorizontalSlider(sMAXLEVEL+chnmult,Xpos,Ypos+3,16,63,color,"MXL");
 	CommonUI::CreateStdHorizontalSlider(sMINLEVEL+chnmult,Xpos,Ypos+4,16,63,color,"MNL");
@@ -219,7 +312,7 @@ var chnmult,color:byte;
 	CommonUI::CreateStdHorizontalSlider(sMINDURATION+chnmult,Xpos,Ypos+8,16,63,color,"MND");
 
 	SCF::TextAtPos(Xpos,Ypos+9,"REP",color);
-	CheckBox::Create(cREPEAT+chnmult,Xpos+4,Ypos+9,3,1,5,2);
+	CheckBox::Create(cREPEATE+chnmult,Xpos+4,Ypos+9,3,1,5,2);
 
 	SCF::TextAtPos(Xpos,Ypos+10,"KS",color);
 	CheckBox::Create(cKEYSYNC+chnmult,Xpos+4,Ypos+10,3,1,5,2);	
@@ -243,7 +336,14 @@ var Ypos,color:byte;
 	
 	Ypos:=5;
 	createPSGChnBlock(0,1,Ypos);
+	Ypos:=Ypos+5;
+	createPSGChnBlock(1,1,Ypos);
+	Ypos:=Ypos+5;
+	createPSGChnBlock(2,1,Ypos);
+	Ypos:=Ypos+5;
+	createPSGChnBlock(3,1,Ypos);		
 
+	Ypos:=5;
 	createELFOBlock(0,40,Ypos);
 	end;
 
@@ -256,7 +356,16 @@ procedure dumpRegs();
 
 procedure DoThisInIRQ();
 	begin
-	//if PSGChns[currentchanel].VOL<>0 then setVOL(currentchanel,PSGChns[currentchanel].VOL-1);
+	ELFO::CalcNextValue(0);
+	setVOL(currentchanel,ELFO::getCurrentValue(0));
+	
+//	if PSGChns[currentchanel].VOL<>0 then 
+//		begin
+//		setVOL(currentchanel,PSGChns[currentchanel].VOL-1);
+//		setVOL(currentchanel+1,PSGChns[currentchanel].VOL);
+//		setVOL(currentchanel+2,PSGChns[currentchanel].VOL);
+//		setVOL(currentchanel+3,PSGChns[currentchanel].VOL);
+//		end;
 	end;
 
 procedure SetIRQToMyHandler();
@@ -299,8 +408,40 @@ irq_done:
 
 
 
+procedure DoThisOnKeyDown();
+	begin
+	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose	
+	ELFO::KeyDown(0);
+/*
+	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
+	setVOL(currentchanel,63);
+	inc(currentchanel);
+	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
+	setVOL(currentchanel,63);
+	inc(currentchanel);	
+	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
+	setVOL(currentchanel,63);
+	inc(currentchanel);
+	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
+	setVOL(currentchanel,63);
+	currentchanel:=0;
+*/
+	end;
 
-
+procedure DoThisOnKeyUp();
+	begin
+	ELFO::KeyUp(0);
+/*
+	setVOL(currentchanel,0);
+	inc(currentchanel);
+	setVOL(currentchanel,0);
+	inc(currentchanel);	
+	setVOL(currentchanel,0);
+	inc(currentchanel);
+	setVOL(currentchanel,0);
+	currentchanel:=0;
+*/	
+	end;
 
 begin
 PSG::Reset();
@@ -318,35 +459,52 @@ setPW(0,31);
 setL(0,1);
 setR(0,1);
 
+setUPDURATION(0,63);
+setMAXLEVEL(0,63);
+setMAXDURATION(0,0);
+setDOWNDURATION(0,1);
+setMINLEVEL(0,0);
+setMINDURATION(0,0);
+setREPEATE(0,0);
+setKEYSYNC(0,1);	
+
 setHOLDKEY(0);
 setTRANSPOSE(3);
 
-SetIRQToMyHandler();
+//SetIRQToMyHandler();
 
 
 Input::key:=$0;	
 while (Input::key<>3) do
 	begin
-	Slider::processSetLaterValues();
+	if (sliderupdatecount>=3) then
+		begin
+		Slider::processSetLaterValues();
+		sliderupdatecount:=0;
+		end;
 	Input::getin();
 	if (holdkey=0) then
-		if (Input::key=0 and Input::lastkey<>0) then begin /*PSG::SetVol(currentchanel,0);volume:=0;*/end;
+		if (Input::key=0 and Input::lastkey<>0) then DoThisOnKeyUp();
 
 	if (Input::key<>0) then 
 		begin
 		if (Input::key=$0D) then dumpRegs();
-		if (holdkey=1 and Input::key=$20) then setVOL(currentchanel,0);
+		if (holdkey=1 and Input::key=$20) then DoThisOnKeyUp();
 		
 		SCF::DrawHexByte(75, 55, Input::key, 5);
 		Input::key2note();
 		if(Input::note<>$FF) then
 			begin
-			PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
-			setVOL(currentchanel,63);
+			DoThisOnKeyDown();
 			end;
 		end;
 	Input::lastkey:=Input::key;
 	handlemouse();
+	if Ticks::TickedByte()<>0 then 
+		begin
+		DoThisInIRQ();
+		inc(sliderupdatecount);
+		end;
 	end;
 
 X16Mouse::CursorOff();

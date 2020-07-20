@@ -53,7 +53,8 @@ procedure key2note();
 procedure getin();
 	begin
 	asm("
-		jsr $FFE4
+		//jsr $FF9F //SCNKEY
+		jsr $FFE4 //GETIN
 		sta Input_key
 	");
 	end;

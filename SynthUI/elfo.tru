@@ -3,19 +3,130 @@ Unit ELFO;
 
 var  
    	@define ELFOCount 4
+   	const stateIdle:byte = 0;
+   	const stateGoingUp:byte = 1;
+   	const stateSustainMaxLevel:byte = 2;
+   	const stateGoingDown:byte = 3;
+   	const stateSustainMinLevel:byte = 4;
 		
 	tELFO = record 
-		UPDURATION,MAXLEVEL,MAXDURATION,DOWNDURATION,MINLEVEL,MINDURATION : byte;
+		UPDURATION,MAXLEVEL,MAXDURATION,DOWNDURATION,MINLEVEL,MINDURATION,KEYSYNC,REPEATE,
+		state, currentvalue, durationcounter: byte;
 	end;	
 
 	ELFOz:array[@ELFOCount] of ELFO::tELFO;
 
+procedure setUPDURATION(elfo,value:byte);
+	begin
+	ELFOz[elfo].UPDURATION:=value;
+	end;
+
+procedure setMAXLEVEL(elfo,value:byte);
+	begin
+	ELFOz[elfo].MAXLEVEL:=value;
+	end;
+
+procedure setMAXDURATION(elfo,value:byte);
+	begin
+	ELFOz[elfo].MAXDURATION:=value;
+	end;
+	
+procedure setDOWNDURATION(elfo,value:byte);
+	begin
+	ELFOz[elfo].DOWNDURATION:=value;
+	end;
+	
+procedure setMINLEVEL(elfo,value:byte);
+	begin
+	ELFOz[elfo].MINLEVEL:=value;
+	end;
+
+procedure setMINDURATION(elfo,value:byte);
+	begin
+	ELFOz[elfo].MINDURATION:=value;
+	end;
+	
+procedure setKEYSYNC(elfo,value:byte);
+	begin
+	ELFOz[elfo].KEYSYNC:=value;
+	end;
+	
+procedure setREPEATE(elfo,value:byte);
+	begin
+	if ELFOz[elfo].state=stateIdle then ELFOz[elfo].state:=stateGoingUp;
+	ELFOz[elfo].REPEATE:=value;
+	end;
+	
+procedure KeyDown(elfo:byte);
+	begin
+	if ELFOz[elfo].KEYSYNC=1 then
+		begin
+		ELFOz[elfo].state:=stateGoingUp;
+		ELFOz[elfo].currentvalue:=ELFOz[elfo].MINLEVEL;
+		end;
+	end;
+	
+procedure KeyUp(elfo:byte);
+	begin
+	if ELFOz[elfo].KEYSYNC=1 then
+		begin
+		ELFOz[elfo].state:=stateGoingDown;
+		end;
+	end;
+
+procedure getCurrentValue(elfo:byte);
+	begin
+	returnvalue(ELFOz[elfo].currentvalue);
+	end;
 
 
+procedure CalcNextValue(elfo:byte);
+	begin
+	if ELFOz[elfo].state=stateIdle then return();
+	if ELFOz[elfo].state=stateGoingUp then
+		begin
+		ELFOz[elfo].currentvalue:=ELFOz[elfo].currentvalue+ELFOz[elfo].UPDURATION;
+		if ELFOz[elfo].currentvalue>=ELFOz[elfo].MAXLEVEL then 
+			begin
+			ELFOz[elfo].currentvalue:=ELFOz[elfo].MAXLEVEL;
+			ELFOz[elfo].state:=stateSustainMaxLevel;
+			ELFOz[elfo].durationcounter:=0;
+			end;
+		return();		
+		end;
+	if ELFOz[elfo].state=stateSustainMaxLevel then
+		begin
+		inc(ELFOz[elfo].durationcounter);
+		if ELFOz[elfo].durationcounter>=ELFOz[elfo].MAXDURATION then
+			begin
+			ELFOz[elfo].state:=stateGoingDown;
+			end;
+		return();			
+		end;
+	if ELFOz[elfo].state=stateGoingDown then
+		begin
+		ELFOz[elfo].currentvalue:=ELFOz[elfo].currentvalue+127;
+		ELFOz[elfo].currentvalue:=ELFOz[elfo].currentvalue-ELFOz[elfo].DOWNDURATION;
+		if ELFOz[elfo].currentvalue<=ELFOz[elfo].MINLEVEL+127 then
+			begin
+			ELFOz[elfo].currentvalue:=ELFOz[elfo].MINLEVEL;
+			ELFOz[elfo].state:=stateSustainMinLevel;
+			ELFOz[elfo].durationcounter:=0;
+			return();
+			end;
+		ELFOz[elfo].currentvalue:=ELFOz[elfo].currentvalue-127;
+		return();
+		end;
+	if ELFOz[elfo].state=stateSustainMinLevel then
+		begin
+		inc(ELFOz[elfo].durationcounter);
+		if ELFOz[elfo].durationcounter>=ELFOz[elfo].MINDURATION then
+			begin
+			if ELFOz[elfo].REPEATE=1 then ELFOz[elfo].state:=stateGoingUp else ELFOz[elfo].state:=stateIdle;
+			end;
+		return();			
+		end;			
 
-
-procedure myProcedure();
-begin
-end;
+	end;
 
 end.
