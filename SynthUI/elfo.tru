@@ -18,43 +18,56 @@ var
 
 procedure setUPDURATION(elfo,value:byte);
 	begin
-	ELFOz[elfo].UPDURATION:=value;
+	if value>63 then value:=63;
+	ELFOz[elfo].UPDURATION:=63-value;
 	end;
 
 procedure setMAXLEVEL(elfo,value:byte);
 	begin
+	if value>63 then value:=63;
 	ELFOz[elfo].MAXLEVEL:=value;
 	end;
 
 procedure setMAXDURATION(elfo,value:byte);
 	begin
+	if value>63 then value:=63;	
 	ELFOz[elfo].MAXDURATION:=value;
 	end;
 	
 procedure setDOWNDURATION(elfo,value:byte);
 	begin
-	ELFOz[elfo].DOWNDURATION:=value;
+	if value>63 then value:=63;	
+	ELFOz[elfo].DOWNDURATION:=63-value;
 	end;
 	
 procedure setMINLEVEL(elfo,value:byte);
 	begin
+	if value>63 then value:=63;
 	ELFOz[elfo].MINLEVEL:=value;
 	end;
 
 procedure setMINDURATION(elfo,value:byte);
 	begin
+	if value>63 then value:=63;
 	ELFOz[elfo].MINDURATION:=value;
 	end;
 	
 procedure setKEYSYNC(elfo,value:byte);
 	begin
+	if value>1 then value:=1;
 	ELFOz[elfo].KEYSYNC:=value;
 	end;
 	
 procedure setREPEATE(elfo,value:byte);
 	begin
+	if value=0 then 
+		begin
+		ELFOz[elfo].REPEATE:=0;
+		return();
+		end;
+	//if ELFOz[elfo].REPEATE=1 then return();
 	if ELFOz[elfo].state=stateIdle then ELFOz[elfo].state:=stateGoingUp;
-	ELFOz[elfo].REPEATE:=value;
+	ELFOz[elfo].REPEATE:=1;
 	end;
 	
 procedure KeyDown(elfo:byte);
