@@ -1,0 +1,92 @@
+program MyProgram;
+
+@use "SCF"
+@use "Ticks"
+@use "X16Mouse"
+@use "Input"
+
+var  
+	Default_irq_handler:pointer;
+	justanumber:integer;
+	i,j : integer;
+
+procedure DoThisInIRQ();
+	begin
+	inc(justanumber);
+	end;
+
+
+procedure SetIRQToMyHandler();
+	begin
+	asm("
+	sei
+    lda $0314
+    sta Default_irq_handler
+    lda $0315
+    sta Default_irq_handler+1
+	lda #<custom_irq_handler
+	sta $0314
+	lda #>custom_irq_handler
+	sta $0315
+	cli
+	rts
+	
+custom_irq_handler:
+//Handle only VSYNC interrupt, so we run only 60 times per second
+    lda $9F27	
+    and #$01
+    beq irq_done
+    ; Whatever code your program
+    ; wanted to execute...
+	");
+
+	DoThisInIRQ();
+	
+	asm("
+//This is recommended to only have VSYNC interrupt. Or what and how.	
+    lda #$01
+    sta $9F27
+irq_done:
+    ; Return to Kernal handling:
+    jmp (Default_irq_handler)
+
+	");
+	end;
+
+procedure SetIRQToDefaultHandler();
+	begin
+	asm("
+	sei
+	lda Default_irq_handler
+	sta $0314
+	lda Default_irq_handler+1
+	sta $0315
+	cli
+	rts
+	");
+	end;
+
+begin
+X16Mouse::CursorOn();
+SetIRQToMyHandler();
+
+fori i:=10 to 50 do
+	begin
+	for j:=0 to 60 do
+		begin
+		Input::getin();
+		if (Input::key<>0) then 
+			begin
+			SCF::DrawHexByte(75, 55, Input::key, 5);
+			end;
+		Ticks::WaitTicks(1);
+		Input::lastkey:=Input::key;
+		end;
+	SCF::DrawHexInt(10, i, justanumber, 1);		
+	justanumber:=0;
+	end;
+
+SetIRQToDefaultHandler();
+X16Mouse::CursorOff();
+return();
+end.
