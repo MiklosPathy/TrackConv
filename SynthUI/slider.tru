@@ -203,6 +203,6 @@ var WID,i:byte;
 			end;
 		end;
 
-	DrawSlide(slID);
+	Slider::DrawSlide(slID);
 	end;
 end.

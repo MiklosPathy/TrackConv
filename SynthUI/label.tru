@@ -19,7 +19,7 @@ procedure Draw(lbl:byte);
 procedure setValue(lbl,value:byte);
 	begin
 	labels[lbl].Value:=value;
-	Draw(lbl);
+	Label::Draw(lbl);
 	end;
 
 procedure Create(lbID,posX,posY,Color:byte);
@@ -28,7 +28,7 @@ procedure Create(lbID,posX,posY,Color:byte);
 	labels[lbID].posY:=posY;
 	labels[lbID].Value:=0;
 	labels[lbID].Color:=Color;
-	Draw(lbID);
+	Label::Draw(lbID);
 	//Label not true Widget. No mouseclick. No Widgetmap
 	end;
 
