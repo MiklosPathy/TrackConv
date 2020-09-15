@@ -445,7 +445,7 @@ var Ypos,color:byte;
 	
 	SCF::TextAtPos(0,59,"TRANSPOSE",color);
 	Label::Create(sTRANSPOSE,10,59,color);
-	Slider::Create(sTRANSPOSE,13,59,6,color,6,Horizontal,sTRANSPOSE);	
+	Slider::Create(sTRANSPOSE,13,59,6,color,6,Commonui::Horizontal,sTRANSPOSE);	
 
 //	Button::Create(0,13,59,1,1,7,45);
 //	Button::Create(1,16,59,1,1,7,43);
