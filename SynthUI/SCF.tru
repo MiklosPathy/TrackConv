@@ -77,7 +77,7 @@ procedure DrawHexByte(X, Y, Number:byte, Col: byte);
 	VERA_DATA1 := Col;
     end; 
 
-procedure DrawHexInt(X, Y, Number:integer, Col: byte);
+procedure DrawHexInt(X, Y:byte, Number:integer, Col: byte);
 	begin
 	X := X * 2;
 	VERA_ADDR_HI := $20;
@@ -86,18 +86,25 @@ procedure DrawHexInt(X, Y, Number:integer, Col: byte);
 
 	VERA_DATA1 := hex[Number >> 12];
 	inc(X);
+	VERA_ADDR_LO := X;
 	VERA_DATA1 := Col;
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := hex[(Number >> 8)&$F];
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := Col;
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := hex[(Number >> 4)&$F];
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := Col;
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := hex[Number & $F];
 	inc(X);
+	VERA_ADDR_LO := X;	
 	VERA_DATA1 := Col;
     end; 
 

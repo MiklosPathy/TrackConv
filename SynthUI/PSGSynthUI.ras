@@ -64,7 +64,7 @@ procedure setDT(chn,value:byte);
 	begin
 	PSGChns[chn].DT:=value;
 	Slider::setValueLater(sDT+(chn*CS),value);
-	PSG::SetNote(chn,Input::octave+transpose,Input::note+PSGChns[chn].DT);
+	PSG::SetNote(chn,Input::octave+transpose,Input::note,PSGChns[chn].DT);
 	end;
 	
 procedure setVOL(chn,value:byte);
@@ -274,7 +274,7 @@ var chnmult,color:byte;
 	Xpos:=Xpos+3;
 
 	color:=7;	
-	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos,16,63,color,"DT");
+	CommonUI::CreateStdHorizontalSlider(sDT+chnmult,Xpos,Ypos,16,31,color,"DT");
 
 	color:=1;
 	inc(Ypos);
@@ -342,7 +342,15 @@ var Ypos,color:byte;
 	createPSGChnBlock(2,1,Ypos);
 	Ypos:=Ypos+5;
 	createPSGChnBlock(3,1,Ypos);		
-
+	Ypos:=Ypos+5;
+	createPSGChnBlock(4,1,Ypos);	
+	Ypos:=Ypos+5;
+	createPSGChnBlock(5,1,Ypos);	
+	Ypos:=Ypos+5;
+	createPSGChnBlock(6,1,Ypos);	
+	Ypos:=Ypos+5;
+	createPSGChnBlock(7,1,Ypos);
+		
 	Ypos:=5;
 	createELFOBlock(0,40,Ypos);
 	end;
@@ -356,8 +364,8 @@ procedure dumpRegs();
 
 procedure DoThisInIRQ();
 	begin
-	ELFO::CalcNextValue(0);
-	setVOL(currentchanel,ELFO::getCurrentValue(0));
+//	ELFO::CalcNextValue(0);
+//	setVOL(currentchanel,ELFO::getCurrentValue(0));
 	
 //	if PSGChns[currentchanel].VOL<>0 then 
 //		begin
@@ -410,7 +418,15 @@ irq_done:
 
 procedure DoThisOnKeyDown();
 	begin
-	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose	
+	PSG::SetNote(0,Input::octave+transpose,Input::note,PSGChns[0].DT);
+	PSG::SetNote(1,Input::octave+transpose,Input::note,PSGChns[1].DT);
+	PSG::SetNote(2,Input::octave+transpose,Input::note,PSGChns[2].DT);
+	PSG::SetNote(3,Input::octave+transpose,Input::note,PSGChns[3].DT);
+	PSG::SetNote(4,Input::octave+transpose,Input::note,PSGChns[4].DT);
+	PSG::SetNote(5,Input::octave+transpose,Input::note,PSGChns[5].DT);
+	PSG::SetNote(6,Input::octave+transpose,Input::note,PSGChns[6].DT);
+	PSG::SetNote(7,Input::octave+transpose,Input::note,PSGChns[7].DT);
+	
 	ELFO::KeyDown(0);
 /*
 	PSG::SetNote(currentchanel,Input::octave+transpose,Input::note+PSGChns[currentchanel].DT); //Transpose
