@@ -4,7 +4,10 @@ Unit CheckBox;
 @use "Widget"
 @use "X16Mouse"
 
-@define MaxCheckBoxCount 64
+@define MaxCheckBoxCount 128
+@define WTMASK 128
+@define WIDMASK 127
+@define CHECKBOXTYPE 128
 
 var
 
@@ -42,10 +45,10 @@ procedure HandleClick();
 	var cbID,WID,WT:byte;
 	begin
 	WID:=Widget::getMapValue(X16Mouse::mouseXchposAtClick,X16Mouse::mouseYchposAtClick);
-	WT:=WID&%11000000;
-	if (WT=%10000000) then //10 checkbox
+	WT:=WID&@WTMASK;
+	if (WT=@CHECKBOXTYPE) then //1 checkbox
 		begin
-		cbID:=WID&%00111111;
+		cbID:=WID&@WIDMASK;
 		if (checkboxes[cbID].Value=0) then checkboxes[cbID].Value:=1 else checkboxes[cbID].Value:=0;
 		Draw(cbID);
 		clickedcheckbox:=cbID;
@@ -62,7 +65,7 @@ var WID:byte;
 	checkboxes[cbID].ColorOn:=ColorOn;
 	checkboxes[cbID].ColorOff:=ColorOff;
 
-	WID:=cbID|%10000000; //Cb type is 10;
+	WID:=cbID|@CHECKBOXTYPE; //Cb type is 1;
 	Widget::PlaceOnMap(posX,posY,Width,Height,WID);
 	Draw(cbID);
 	end;

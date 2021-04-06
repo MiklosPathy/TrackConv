@@ -5,7 +5,10 @@ Unit Slider;
 @use "X16Mouse"
 @use "Label"
 
-@define SliderMaxCount 64
+@define SliderMaxCount 128
+@define WTMASK 128
+@define WIDMASK 127
+@define SLIDERTYPE 0
 
 var
 
@@ -162,10 +165,10 @@ procedure HandleClick();
 		begin
 		clickedSlider:=$FF;
 		WID:=Widget::getMapValue(X16Mouse::Xch,X16Mouse::Ych);
-		WT:=WID&%11000000;
-		if WT=%01000000 then //Slider
+		WT:=WID&@WTMASK;
+		if WT=@SLIDERTYPE then //Slider
 			begin
-			slID:=WID&%00111111;
+			slID:=WID&@WIDMASK;
 			clickedSlider:=slID;
 			calcSliderValue(clickedSlider);
 			end;
@@ -187,7 +190,7 @@ var WID,i:byte;
 	sliders[slID].AttachedLabel:=AttachedLabelID;
 	sliders[slID].NeedToSetValueLater:=0;
 
-	WID:=slID|%01000000;
+	WID:=slID&@WIDMASK; //Set first bit 0 = slider
 	case Mode of
 		Horizontal:
 			begin
