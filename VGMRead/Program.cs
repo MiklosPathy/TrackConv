@@ -20,7 +20,7 @@ namespace VGMRead
         static void Main(string[] args)
         {
             //VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\03 Water.vgm");
-            VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\06 Chani's Eyes.vgm");
+            VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\Dune Vgzs\06 Chani's Eyes.vgm");
             //VGMRead reader = new VGMRead(@"C:\Users\mpathy\Desktop\TrackerMuzax\vgzs\07 Sign of the Worm.vgm");
             reader.Open();
 

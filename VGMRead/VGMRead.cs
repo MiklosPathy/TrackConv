@@ -456,6 +456,29 @@ namespace VGMRead
         public YM3812Command(byte[] filedata, ref int offset) : base(filedata, ref offset, Byte_0x5A, 2) { }
         public byte Register { get { return Data[0]; } }
         public byte Value { get { return Data[1]; } }
+        public override string ToString()
+        {
+            if (Register >= 0x20 && Register <= 0x35) return "AM/VIB/EG-TYPE/KSR/MULTIPLE " + (Register - 0x20).ToString();
+            if (Register >= 0x40 && Register <= 0x55) return "KSL/TOTAL LEVEL " + (Register - 0x40).ToString();
+            if (Register >= 0x60 && Register <= 0x75) return "ATTACK RATE/DECAY RATE " + (Register - 0x60).ToString();
+            if (Register >= 0x80 && Register <= 0x95) return "SUSTAIN RATE/RELEASE RATE " + (Register - 0x80).ToString();
+            if (Register >= 0xA0 && Register <= 0xA8) return "Frequency (low 8 bits) " + (Register - 0xA0).ToString();
+            if (Register >= 0xB0 && Register <= 0xB8) return "Key On / Octave / Frequency (high 2 bits) " + (Register - 0xB0).ToString();
+            if (Register >= 0xC0 && Register <= 0xC8) return "FEEDBACK/CONNECTION " + (Register - 0xC0).ToString();
+            if (Register >= 0xE0 && Register <= 0xF5) return "WAVE SELECT " + (Register - 0xE0).ToString();
+
+            switch (Register)
+            {
+                case 0x01: return "TEST";
+                case 0x02: return "TIMER-1";
+                case 0x03: return "TIMER-2";
+                case 0x04: return "IRQ/RESET CONTROL OF RIMER-1,2";
+                case 0x08: return "CSM SPEECH SYNTHESYS MODE/NOTE SELECT";
+                case 0xBD: return "DEPTH(AM/VIB)/RHYTHM(BD·SD·TOM •TC• HH)";
+                default:
+                    return "Undefined register: 0x" + Register.ToString("X2");
+            }
+        }
     }
 
     public class VGMwait : VGMCommand
@@ -476,18 +499,21 @@ namespace VGMRead
         {
             waitsamples = Data.ReadAsLittleendianWord(0);
         }
+        public override string ToString() { return $"VGM Wait {waitsamples} samples: {(waitsamples * 1000 / 44100).ToString()} msec"; }
     }
 
     public class VGMwait735samples : VGMwait
     {
         public const byte Byte_0x62 = 0x62;
         public VGMwait735samples() : base(Byte_0x62) { waitsamples = 735; }
+        public string ToString() { return "VGM Wait 1/60 sec"; }
     }
 
     public class VGMwait882samples : VGMwait
     {
         public const byte Byte_0x63 = 0x63;
         public VGMwait882samples() : base(Byte_0x63) { waitsamples = 882; }
+        public string ToString() { return "VGM Wait 1/50 sec"; }
     }
 
     public class VGMendofsounddata : VGMCommand
