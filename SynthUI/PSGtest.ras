@@ -1,0 +1,90 @@
+program MyProgram;
+
+@use "PSG"
+@use "SCF"
+@use "Ticks"
+@use "X16Mouse"
+@use "Input"
+
+var  
+	Default_irq_handler:pointer;
+	i,j : integer;
+
+procedure DoThisInIRQ();
+	begin
+	end;
+
+
+procedure SetIRQToMyHandler();
+	begin
+	asm("
+	sei
+    lda $0314
+    sta Default_irq_handler
+    lda $0315
+    sta Default_irq_handler+1
+	lda #<custom_irq_handler
+	sta $0314
+	lda #>custom_irq_handler
+	sta $0315
+	cli
+	rts
+	
+custom_irq_handler:
+//Handle only VSYNC interrupt, so we run only 60 times per second
+    lda $9F27	
+    and #$01
+    beq irq_done
+    ; Whatever code your program
+    ; wanted to execute...
+	");
+
+	DoThisInIRQ();
+	
+	asm("
+//This is recommended to only have VSYNC interrupt. Or what and how.	
+    lda #$01
+    sta $9F27
+irq_done:
+    ; Return to Kernal handling:
+    jmp (Default_irq_handler)
+
+	");
+	end;
+
+procedure SetIRQToDefaultHandler();
+	begin
+	asm("
+	sei
+	lda Default_irq_handler
+	sta $0314
+	lda Default_irq_handler+1
+	sta $0315
+	cli
+	rts
+	");
+	end;
+
+begin
+X16Mouse::CursorOn();
+SetIRQToMyHandler();
+
+
+//	SCF::TextAtPos(0,PSG::yp,"OCTAVE",7);
+//	SCF::TextAtPos(10,PSG::yp,"NOTE",7);
+//	SCF::TextAtPos(20,PSG::yp,"DETUNE",7);	
+//	SCF::TextAtPos(30,PSG::yp,"NTP",7);	
+//	SCF::TextAtPos(40,PSG::yp,"TABLESEL",7);	
+//	SCF::TextAtPos(50,PSG::yp,"TABLEPOS",7);	
+//	SCF::TextAtPos(60,PSG::yp,"RELADDR",7);	
+//	SCF::TextAtPos(70,PSG::yp,"PSGNOTE",7);	
+//	inc(PSG::yp);
+
+fori i:=0 to 31 do
+	PSG::getFreq(10,0,i);
+
+
+SetIRQToDefaultHandler();
+X16Mouse::CursorOff();
+return();
+end.
